@@ -70,6 +70,7 @@ nel listone, le rose partono vuote). Da lì la testata diventa la fascia scura
   avversari non possono più contendersi, per slot pieni o crediti finiti, con il
   prezzo realistico accanto a quello atteso. Il prezzo realistico è il massimo che
   può offrire il rivale più ricco con uno slot libero in quel ruolo, più uno.
+- **Tabellone** (la fascia in alto): giocatori assegnati sul totale con una barra per ruolo, ultimo acquisto, rivale con l'offerta massima più alta, da quanto dura l'asta; a destra crediti, offerta massima, rosa e slot liberi per ruolo della tua squadra.
 - **Giocatore chiamato**: cerchi il nome e vedi punti attesi, valore, prezzo
   atteso e la tua offerta massima. Poi **fin dove spingerti**: il prezzo più alto a
   cui la rosa migliore con lui resta forte almeno quanto la rosa migliore senza di

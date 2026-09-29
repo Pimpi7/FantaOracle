@@ -255,14 +255,38 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .asta-btn .pallone svg, .pallone-volo svg { display: block; width: 100%; height: 100%; }
 .pallone-volo { position: fixed; z-index: 60; pointer-events: none; filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.35)); }
 .live { display: inline-flex; align-items: center; gap: 8px; font: 700 15px/1 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--live); }
+.live .da { font: 600 12px/1 var(--font-body); letter-spacing: 0.02em; text-transform: none; color: var(--stage-2); }
+
+/* --- il tabellone: la fascia in alto durante l'asta ---
+   Ogni blocco ha la stessa struttura (valore alto 26px + etichetta), cosi' tutto sta in riga. */
+.tabellone { display: none; }
+:root[data-asta] .top { --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c; align-items: center; gap: 12px 28px; }
+:root[data-asta] .top::before { display: none; }
+:root[data-asta] .top .meta { display: none; }
+:root[data-asta] .tabellone { display: flex; gap: 12px 28px; align-items: center; flex-wrap: wrap; min-width: 0; }
+:root[data-asta] .budget { align-items: center; padding-left: 28px; border-left: 1px solid rgb(255 255 255 / 0.14); }
+.tb, :root[data-asta] .stat { display: grid; grid-template-rows: 26px auto; align-items: end; row-gap: 3px; min-width: 0; }
+.tb b { font: 700 20px/1 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.tb b em { font-style: normal; color: var(--stage-2); }
+.tb small { color: var(--stage-2); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb .role { width: 18px; height: 18px; font-size: 11px; flex: none; }
+.tb .den { font-size: 15px; color: var(--stage-2); }
+.tb-ultimo { max-width: 260px; }
+/* riempimento della lega per ruolo: ogni segmento e' largo quanto gli slot di quel ruolo */
+.tb-bar { display: flex; gap: 3px; width: 120px; height: 8px; margin-left: 6px; }
+.tb-bar span { position: relative; border-radius: 2px; background: rgb(255 255 255 / 0.12); overflow: hidden; }
+.tb-bar i { position: absolute; inset: 0 auto 0 0; background: var(--c); }
+:root[data-asta] .stat b .lib { font: inherit; }
+.lib-r { display: inline-flex; gap: 5px; }
 .live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--live); }
 .live button { font: 600 12px/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--stage-2); background: none; border: 1px solid currentColor; border-radius: 999px; padding: 4px 9px; }
 :root[data-asta] .top { background: var(--stage); color: var(--stage-fg); border-bottom: 3px solid var(--live); }
 :root[data-asta] .top::before { border-color: rgb(255 75 95 / 0.18); }
 :root[data-asta] .top .brand span { color: #ffffff; }
+:root[data-asta] .brand { display: flex; align-items: center; }
 :root[data-asta] .top .meta, :root[data-asta] .stat small { color: var(--stage-2); }
 :root[data-asta] .top { --cs: 78%; --cl: 64%; }
-:root[data-asta] .brand span { background: linear-gradient(transparent 58%, var(--live) 58%, var(--live) 92%, transparent 92%); }
+:root[data-asta] .brand span { background: var(--live); color: var(--live-fg); padding: 2px 5px 1px; margin-right: 3px; border-radius: 4px; }
 :root[data-asta] .tabs { display: flex; }
 @media (prefers-reduced-motion: no-preference) {
   .asta-btn.pulse { animation: pulsa 2s ease-in-out infinite; }
@@ -344,6 +368,13 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
 
 @media (max-width: 900px) {
   .tabs { display: flex; }
+  :root[data-asta] .brand { order: 0; }
+  :root[data-asta] #asta-ctl { order: 1; margin-left: auto; }
+  :root[data-asta] .tabellone { order: 2; flex-basis: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+  :root[data-asta] .budget { order: 3; flex-basis: 100%; padding: 12px 0 0; border-left: 0; border-top: 1px solid rgb(255 255 255 / 0.14);
+    display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 10px; }
+  :root[data-asta] .budget .stat b { font-size: 22px; }
+  .tb-ultimo { max-width: none; }
   .asta { grid-template-columns: minmax(0, 1fr); }
   .main { grid-template-columns: minmax(0, 1fr); }
   .main[data-view="listone"] .pane.p-rosa, .main[data-view="rosa"] .pane.p-listone { display: none; }
@@ -365,6 +396,7 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
   <header class="top">
     <h1 class="brand"><span>fanta</span>Oracle</h1>
     <div class="meta" id="meta">Carico i dati…</div>
+    <div class="tabellone" id="tabellone"></div>
     <div class="budget" id="budget"></div>
     <div id="asta-ctl"></div>
   </header>
@@ -760,10 +792,17 @@ function renderBudget() {
   const m = mia(), speso = Object.values(m).reduce((a, p) => a + +p, 0);
   const n = Object.keys(m).length, tot = RUOLI.reduce((a, r) => a + META.slot[r], 0);
   const resto = META.crediti - speso, max = resto - Math.max(0, tot - n - 1);
+  const a = inAsta();
+  let liberi = "";
+  if (a) {
+    const k = { P: 0, D: 0, C: 0, A: 0 };
+    for (const id of Object.keys(m)) { const g = BY_ID.get(+id); if (g) k[g.r]++; }
+    liberi = `<div class="stat"><b class="lib-r">${RUOLI.map((r) => `<span style="color:var(--r-${r.toLowerCase()})" title="${NOMI_RUOLO[r]} da prendere">${META.slot[r] - k[r]}</span>`).join("")}</b><small><span class="solo-desk">Slot liberi </span>P·D·C·A</small></div>`;
+  }
   $("#budget").innerHTML = `
-    <div class="stat"><b>${cr(resto, META.crediti)}</b><small>Crediti liberi</small></div>
-    <div class="stat${max < 1 ? " warn" : ""}"><b>${cr(Math.max(0, max), META.crediti - tot + 1)}</b><small>Offerta massima</small></div>
-    <div class="stat"><b>${n}/${tot}</b><small>Giocatori</small></div>`;
+    <div class="stat"><b>${cr(resto, META.crediti)}</b><small>${a ? '<span class="solo-desk">I tuoi </span>crediti' : "Crediti liberi"}</small></div>
+    <div class="stat${max < 1 ? " warn" : ""}"><b>${cr(Math.max(0, max), META.crediti - tot + 1)}</b><small>${a ? '<span class="solo-desk">La tua </span>offerta max' : "Offerta massima"}</small></div>
+    <div class="stat"><b>${n}/${tot}</b><small>${a ? '<span class="solo-desk">La tua </span>rosa' : "Giocatori"}</small></div>${liberi}`;
 }
 
 function renderRosa() {
@@ -1088,15 +1127,49 @@ function vista(v) {
     b.dataset.view === v || (v === "rosa" && b.dataset.view === "listone" && innerWidth > 900)));
 }
 
+// da quanto dura l'asta: dall'avvio, o dal primo acquisto per le aste salvate prima di questo campo
+function durata() {
+  const t0 = S.asta?.inizio || S.asta?.log?.[0]?.ora;
+  if (!t0) return "";
+  const min = Math.max(0, Math.floor((Date.now() - Date.parse(t0)) / 60000));
+  return min < 60 ? `da ${min}'` : `da ${Math.floor(min / 60)}h ${String(min % 60).padStart(2, "0")}'`;
+}
+setInterval(() => { const el = document.getElementById("asta-da"); if (el && inAsta()) el.textContent = durata(); }, 30000);
+
+// Il tabellone: a che punto e' la lega, l'ultimo colpo, e chi puo' ancora fare paura.
+function renderTabellone() {
+  const st = statoSquadre(), nSq = st.length;
+  const ass = { P: 0, D: 0, C: 0, A: 0 };
+  for (const id of OWNER.keys()) { const g = BY_ID.get(id); if (g) ass[g.r]++; }
+  const totSlot = RUOLI.reduce((a, r) => a + META.slot[r] * nSq, 0), nAss = OWNER.size;
+  const barra = RUOLI.map((r) => {
+    const cap = META.slot[r] * nSq;
+    return `<span style="flex:${cap}" title="${NOMI_RUOLO[r]}: ${ass[r]} su ${cap}"><i style="--c:var(--r-${r.toLowerCase()});width:${(100 * ass[r] / cap).toFixed(1)}%"></i></span>`;
+  }).join("");
+  const u = S.asta.log[S.asta.log.length - 1], gu = u && BY_ID.get(u.id);
+  const ultimo = gu
+    ? `<div class="tb tb-ultimo"><b><span class="role ${gu.r}">${gu.r}</span>${esc(gu.nome)} <em>${u.p}</em></b><small>Ultimo · ${esc(S.asta.squadre[u.t].nome)}</small></div>`
+    : `<div class="tb tb-ultimo"><b><em>Nessuno</em></b><small>Ultimo acquisto</small></div>`;
+  const rivali = st.filter((t) => t.i !== S.asta.io && t.liberiTot > 0).sort((a, b) => b.maxOff - a.maxOff);
+  const riv = rivali[0]
+    ? `<div class="tb"><b>${esc(rivali[0].nome)} <span>${cr(rivali[0].maxOff, META.crediti - totSlot / nSq + 1)}</span></b><small>Rivale più ricco<span class="solo-desk"> · offerta max</span></small></div>`
+    : "";
+  $("#tabellone").innerHTML = `
+    <div class="tb"><b><span>${nAss}<span class="den">/${totSlot}</span></span><span class="tb-bar">${barra}</span></b><small>Assegnati · P ${ass.P} D ${ass.D} C ${ass.C} A ${ass.A}</small></div>
+    ${ultimo}${riv}`;
+}
+
 function renderControlloAsta() {
   const root = document.documentElement;
   if (inAsta()) {
     root.setAttribute("data-asta", "on");
     $("#tab-asta").hidden = false;
-    $("#asta-ctl").innerHTML = `<span class="live"><span class="dot"></span>In asta
+    $("#asta-ctl").innerHTML = `<span class="live"><span class="dot"></span>Live <span class="da" id="asta-da">${durata()}</span>
       <button id="asta-chiudi" title="Sospendi o chiudi l'asta">Esci</button></span>`;
+    renderTabellone();
   } else {
     root.removeAttribute("data-asta");
+    $("#tabellone").innerHTML = "";
     $("#tab-asta").hidden = true;
     if ($("#main").dataset.view === "asta") vista("listone");
     $("#asta-ctl").innerHTML = `<button class="asta-btn pulse" id="asta-avvia">${S.asta ? "Riprendi l'asta" : "Modalità asta"}<span class="ombra"></span><span class="pallone">${PALLONE}</span></button>`;
@@ -1331,7 +1404,7 @@ function dialogoAvvio() {
   const parti = (nuova) => {
     const n = leggiNomi();
     if (!S.asta || nuova) {
-      S.asta = { attiva: true, io: 0, squadre: n.map((nome) => ({ nome, rosa: {} })), log: [],
+      S.asta = { attiva: true, io: 0, inizio: new Date().toISOString(), squadre: n.map((nome) => ({ nome, rosa: {} })), log: [],
                  obiettivi: Object.keys(S.piani[piano]).map(Number), presiPiano: S.presi,
                  chiamato: null, scelta: null, aperta: null };
     } else {
