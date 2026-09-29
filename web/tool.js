@@ -886,23 +886,27 @@ function calcioDInizio(btn) {
   orig.style.opacity = "0";           // non visibility: i gradienti del pallone devono restare attivi
   btn.querySelector(".ombra").style.opacity = "0";
 
-  const d = b.width;
-  // rotola sopra il bottone, a meta' fra il bordo alto e il testo, senza uscire dallo schermo
-  const sopra = Math.max(k.top - b.top - d * 0.3, 2 - b.top);
-  const corsa = k.left - b.left + d * 0.1;                       // verso sinistra, fino all'inizio del bottone (negativa)
-  const giri = (corsa / (Math.PI * d)) * 360;                    // rotola senza strisciare: verso sinistra gira in senso antiorario
+  // 1) rotola verso sinistra lungo la linea del bottone, fino alla curva sinistra (senza strisciare:
+  //    la rotazione e' la distanza fratto la circonferenza); 2) cade oltre il fondo dello schermo;
+  // 3) fuori schermo si porta al centro in basso; 4) risale e viene addosso all'utente, ingrandendosi.
+  const d = b.width, H = k.height;
+  const corsa = (k.left + H / 2) - (b.left + d / 2);            // negativa: verso sinistra
+  const giri = (corsa / (Math.PI * d)) * 360;                    // verso sinistra gira in senso antiorario
+  const giu = innerHeight - b.top + d * 0.3;                     // sotto il bordo inferiore dello schermo
+  const deriva = -Math.min(90, k.left * 0.5);                    // un po' di slancio a sinistra mentre cade
   const cx = innerWidth / 2 - (b.left + d / 2), cy = innerHeight / 2 - (b.top + d / 2);
   const zoom = Math.max(innerWidth, innerHeight) / d * 1.4;
+  const T = 1850, t = (ms) => ms / T;
   const anim = volo.animate([
-    { transform: "translate(0,0) rotate(0deg) scale(1)", offset: 0, easing: "cubic-bezier(.3,0,.6,1)" },
-    { transform: `translate(${-d * 0.35}px,${sopra}px) rotate(${giri * 0.12}deg) scale(1)`, offset: 0.16, easing: "linear" },
-    { transform: `translate(${corsa}px,${sopra}px) rotate(${giri}deg) scale(1)`, offset: 0.55, easing: "cubic-bezier(.2,0,.9,.6)" },
-    { transform: `translate(${corsa - 10}px,${sopra + 16}px) rotate(${giri - 40}deg) scale(1.3)`, offset: 0.64, easing: "cubic-bezier(.5,0,1,1)" },
-    { transform: `translate(${cx * 0.9}px,${cy * 0.9}px) rotate(${giri - 250}deg) scale(${zoom * 0.45})`, offset: 0.88, opacity: 1 },
-    { transform: `translate(${cx}px,${cy}px) rotate(${giri - 300}deg) scale(${zoom})`, offset: 1, opacity: 0 },
-  ], { duration: 1500, fill: "forwards" });
+    { transform: "translate(0,0) rotate(0deg) scale(1)", offset: 0, easing: "cubic-bezier(.45,0,.8,.8)" },
+    { transform: `translate(${corsa}px,0) rotate(${giri}deg) scale(1)`, offset: t(620), easing: "cubic-bezier(.45,0,1,.9)" },
+    { transform: `translate(${corsa + deriva}px,${giu}px) rotate(${giri - 260}deg) scale(1)`, offset: t(1060), easing: "linear" },
+    { transform: `translate(${cx}px,${giu + d}px) rotate(${giri - 300}deg) scale(1.6)`, offset: t(1140), easing: "cubic-bezier(.15,.6,.35,1)" },
+    { transform: `translate(${cx}px,${cy}px) rotate(${giri - 140}deg) scale(${zoom * 0.45})`, offset: t(1650), opacity: 1, easing: "ease-in" },
+    { transform: `translate(${cx}px,${cy}px) rotate(${giri - 110}deg) scale(${zoom})`, offset: 1, opacity: 0 },
+  ], { duration: T, fill: "forwards" });
   // il setup si apre mentre il pallone arriva addosso, prima che sparisca del tutto
-  setTimeout(() => dialogoAvvio(), 1250);
+  setTimeout(() => dialogoAvvio(), 1560);
   anim.finished.finally(() => {
     volo.remove();
     orig.style.opacity = "";
