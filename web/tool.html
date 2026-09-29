@@ -272,6 +272,8 @@ table.sq { font-size: 13px; }
 table.sq td, table.sq th { position: static; padding: 6px 6px; }
 table.sq tr.io td { font-weight: 700; background: var(--tint); }
 table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; }
+.lr { font-weight: 700; } .lr.P { color: var(--r-p); } .lr.D { color: var(--r-d); } .lr.C { color: var(--r-c); } .lr.A { color: var(--r-a); }
+.lr.zero { opacity: 0.35; }
 .log div { display: flex; gap: 8px; justify-content: space-between; font-size: 13px; padding: 4px 0; border-top: 1px dashed var(--rule); }
 .log div:first-child { border-top: 0; }
 .tag.own { color: var(--ink-2); } .tag.obj { color: var(--live); }
@@ -1010,10 +1012,10 @@ function renderAsta() {
 
   // --- squadre ---
   $("#squadre").innerHTML = `<h2>Squadre</h2><div style="overflow-x:auto"><table class="sq">
-    <thead><tr><th class="l">Squadra</th><th>Crediti</th><th title="Offerta massima possibile adesso">Max</th><th class="l" title="Slot liberi per ruolo">Liberi P·D·C·A</th><th></th></tr></thead>
+    <thead><tr><th class="l">Squadra</th><th>Crediti</th><th title="Offerta massima possibile adesso">Max</th><th class="l" title="Slot liberi per ruolo">Liberi ${RUOLI.map((r) => `<span class="lr ${r}">${r}</span>`).join("·")}</th><th></th></tr></thead>
     <tbody>${st.map((t) => `<tr class="${t.i === S.asta.io ? "io" : ""}">
       <td class="l">${esc(t.nome)}</td><td>${cr(t.crediti, META.crediti)}</td><td>${cr(t.maxOff, MAXOFF0())}</td>
-      <td class="l lib">${RUOLI.map((r) => t.liberi[r]).join(" · ")}</td>
+      <td class="l lib">${RUOLI.map((r) => `<span class="lr ${r}${t.liberi[r] <= 0 ? " zero" : ""}" title="${NOMI_RUOLO[r]} liberi">${t.liberi[r]}</span>`).join(" · ")}</td>
       <td><button class="btn small" data-vedi="${t.i}">${S.asta.aperta === t.i ? "Chiudi" : "Rosa"}</button></td></tr>
       ${S.asta.aperta === t.i ? `<tr><td colspan="5" class="l" style="white-space:normal">${RUOLI.map((r) => {
         const l = Object.entries(S.asta.squadre[t.i].rosa).map(([id, pz]) => ({ g: BY_ID.get(+id), pz })).filter((x) => x.g && x.g.r === r);
