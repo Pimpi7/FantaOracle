@@ -237,10 +237,10 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
             <th data-k="pg" title="Punti attesi a giornata: presenze x fantavoto atteso">Pt/g</th>
             <th data-k="fm" class="hide-s" title="Fantavoto atteso quando gioca">FM att.</th>
             <th data-k="pv" class="hide-s" title="Probabilita' di prendere voto">Pres.</th>
+            <th data-k="qa" class="hide-s" title="Quotazione attuale Fantacalcio.it">QA</th>
             <th data-k="val" title="Quanto vale per noi, in crediti">Valore</th>
             <th data-k="pa" title="Prezzo atteso nella nostra asta">Prezzo</th>
             <th data-k="aff" title="Valore meno prezzo atteso">Affare</th>
-            <th data-k="qa" class="hide-s" title="Quotazione attuale Fantacalcio.it">QA</th>
             <th></th>
           </tr></thead>
           <tbody id="rows"><tr><td colspan="11" class="l loading">Carico il listone…</td></tr></tbody>
@@ -464,10 +464,10 @@ function renderListone() {
       <td class="big">${fmt(g.pg, 2)}</td>
       <td class="hide-s">${fmt(g.fm, 2)}</td>
       <td class="hide-s">${pct(g.pv)}</td>
+      <td class="hide-s">${fmt(g.qa, 0)}</td>
       <td>${fmt(g.val, 0)}</td>
       <td class="big">${prezzoAtteso(g)}</td>
       <td class="${aff > 0 ? "pos" : aff < 0 ? "neg" : ""}">${segno(aff)}</td>
-      <td class="hide-s">${fmt(g.qa, 0)}</td>
       <td class="act">
         <button class="ic ${m[g.id] != null ? "on" : ""}" data-add="${g.id}" title="${m[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}" aria-label="Mia rosa">${m[g.id] != null ? "✓" : "+"}</button>
         <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}" aria-label="Preso da altri">✕</button>
