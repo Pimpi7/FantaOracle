@@ -200,7 +200,11 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .alts span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .squadre { display: flex; flex-wrap: wrap; gap: 6px; }
 .campo-card { padding: 0; }
-.campo-card .ruolo-h { padding: 12px 12px 6px; margin: 0; border: 0; }
+.campo-card .ruolo-h { padding: 12px 12px 6px; margin: 0; border: 0; cursor: pointer; list-style: none; }
+.campo-card:not([open]) .ruolo-h { padding-bottom: 12px; }
+.campo-card .ruolo-h::-webkit-details-marker { display: none; }
+.campo-card .ruolo-h h3::before { content: "▾"; display: inline-block; width: 1em; color: var(--ink-2); transition: transform 0.15s; }
+.campo-card:not([open]) .ruolo-h h3::before { transform: rotate(-90deg); }
 .campo { display: block; width: 100%; height: auto; aspect-ratio: 600 / 340; border-radius: 0 0 var(--radius) var(--radius); }
 .campo text { font-family: var(--font-body); }
 .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); text-transform: capitalize; }
@@ -233,9 +237,18 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .loading { padding: 40px 0; color: var(--ink-2); }
 
 /* --- modalita' asta --- */
-.asta-btn { border: 0; border-radius: 999px; padding: 8px 16px; background: var(--live); color: var(--live-fg);
-  font: 700 15px/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; }
-.asta-btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 7px; vertical-align: 1px; }
+/* il bottone e' un pallone: pill bianca con le cuciture, e un pallone vero appoggiato a sinistra */
+.asta-btn { position: relative; margin-left: 20px; border: 2px solid #16201a; border-radius: 999px; padding: 9px 18px 9px 30px;
+  color: #16201a; font: 700 15px/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  background:
+    radial-gradient(circle at 0 50%, transparent 0 13px, rgb(22 32 26 / 0.07) 13px 14px, transparent 14px) 0 0 / 28px 100% repeat-x,
+    linear-gradient(180deg, #ffffff 0%, #f1f3f0 70%, #dfe4df 100%);
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.25); }
+.asta-btn:hover { background-color: #ffffff; transform: translateY(-1px); }
+.asta-btn .pallone { position: absolute; left: -22px; top: 50%; width: 42px; height: 42px; margin-top: -21px;
+  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 0.35)); pointer-events: none; }
+.asta-btn .pallone svg, .pallone-volo svg { display: block; width: 100%; height: 100%; }
+.pallone-volo { position: fixed; z-index: 60; pointer-events: none; filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.35)); }
 .live { display: inline-flex; align-items: center; gap: 8px; font: 700 15px/1 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--live); }
 .live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--live); }
 .live button { font: 600 12px/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--stage-2); background: none; border: 1px solid currentColor; border-radius: 999px; padding: 4px 9px; }
@@ -248,8 +261,11 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 :root[data-asta] .tabs { display: flex; }
 @media (prefers-reduced-motion: no-preference) {
   .asta-btn.pulse { animation: pulsa 2s ease-in-out infinite; }
-  @keyframes pulsa { 0%, 100% { box-shadow: 0 0 0 0 rgb(211 32 58 / 0.55); } 60% { box-shadow: 0 0 0 11px rgb(211 32 58 / 0); } }
-  .live .dot, .asta-btn .dot { animation: batte 1.2s ease-in-out infinite; }
+  @keyframes pulsa { 0%, 100% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 0 rgb(255 255 255 / 0.6); } 60% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 11px rgb(255 255 255 / 0); } }
+  /* il pallone palleggia piano sul posto */
+  .asta-btn.pulse .pallone { animation: palleggio 2s ease-in-out infinite; }
+  @keyframes palleggio { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-12deg); } }
+  .live .dot { animation: batte 1.2s ease-in-out infinite; }
   @keyframes batte { 50% { opacity: 0.25; } }
   :root[data-asta] .top.entra::after { content: ""; position: absolute; left: 0; bottom: -3px; height: 3px; width: 100%; background: var(--stage-fg); transform-origin: left; animation: accende 0.9s ease-out forwards; }
   @keyframes accende { from { transform: scaleX(0); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
@@ -351,7 +367,7 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
         </div>
         <select id="sq" aria-label="Squadra"><option value="">Tutte le squadre</option></select>
         <input id="pmax" type="number" min="1" placeholder="Prezzo max" aria-label="Prezzo atteso massimo">
-        <label class="check"><input id="hide" type="checkbox"> Nascondi i presi</label>
+        <label class="check"><input id="hide" type="checkbox"> Nascondi gli esclusi</label>
         <span class="count" id="count"></span>
       </div>
       <div class="table-wrap">
@@ -419,7 +435,7 @@ let DATA = null, BY_ID = new Map(), META = null;
 const S = {
   piano: "A",
   piani: { A: {}, B: {}, C: {} },   // id -> prezzo, per piano
-  presi: {},                         // id -> true: comprati da altri
+  presi: {},                         // id -> true: esclusi dai suggerimenti (non li voglio o li do per persi)
   margine: 0.10, esenzioneP: true, tetto: 3, modo: "omogenea",
   budgetRuolo: null,                 // null = automatico, altrimenti {P, D, C, A}
   f: { q: "", r: "", sq: "", pmax: null, hide: false },
@@ -432,13 +448,13 @@ let SUGG = { ids: new Set(), lista: [], forza: 0, costo: 0, errore: null, alt: {
 
 function salva() {
   try { localStorage.setItem(KEY, JSON.stringify({ piano: S.piano, piani: S.piani, presi: S.presi,
-    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, asta: S.asta, archivio: S.archivio })); } catch (e) { /* storage non disponibile */ }
+    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, asta: S.asta, archivio: S.archivio, campoChiuso: !!S.campoChiuso })); } catch (e) { /* storage non disponibile */ }
 }
 function carica() {
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || "null");
     if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
-      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, asta: x.asta || null, archivio: x.archivio || [] });
+      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, asta: x.asta || null, archivio: x.archivio || [], campoChiuso: !!x.campoChiuso });
   } catch (e) { /* storage non disponibile */ }
 }
 // In asta "la mia rosa" e' la rosa reale, non piu' un piano.
@@ -696,7 +712,7 @@ function renderListone() {
     const azioni = inAsta()
       ? (OWNER.has(g.id) ? "" : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`)
       : `<button class="ic ${m[g.id] != null ? "on" : ""}" data-add="${g.id}" title="${m[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}" aria-label="Mia rosa">${m[g.id] != null ? "✓" : "+"}</button>
-        <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}" aria-label="Preso da altri">✕</button>`;
+        <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti fra i disponibili" : "Escludi dai suggerimenti (non lo voglio, o lo do per perso)"}" aria-label="Escludi">✕</button>`;
     const aff = g.aff ?? 0;
     out.push(`<tr class="${cls}" data-id="${g.id}">
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
@@ -895,8 +911,8 @@ function campo(tutti) {
     }).join("");
   }).join("");
   const strisce = Array.from({ length: 8 }, (_, i) => `<rect x="${i * 75}" y="0" width="37.5" height="${H}" fill="rgb(255 255 255 / 0.05)"/>`).join("");
-  return `<div class="card campo-card">
-    <div class="ruolo-h"><h3>Formazione tipo ${f.m}</h3><span class="lbl">${fmt(f.tot - (+f.m[0] >= 4 ? 1.5 : 0), 1)} pt/g attesi dagli 11 · cerchiati i suggeriti</span></div>
+  return `<details class="card campo-card" id="campo" ${S.campoChiuso ? "" : "open"}>
+    <summary class="ruolo-h"><h3>Formazione tipo ${f.m}</h3><span class="lbl">${fmt(f.tot - (+f.m[0] >= 4 ? 1.5 : 0), 1)} pt/g attesi dagli 11 · cerchiati i suggeriti</span></summary>
     <svg class="campo" viewBox="0 0 ${W} ${H}" role="img" aria-label="Formazione tipo ${f.m}">
       <rect width="${W}" height="${H}" fill="var(--grass-1)"/>${strisce}
       <g fill="none" stroke="rgb(255 255 255 / 0.55)" stroke-width="2">
@@ -908,7 +924,7 @@ function campo(tutti) {
       </g>
       ${pallini}
     </svg>
-  </div>`;
+  </details>`;
 }
 // --- scheda giocatore e dialoghi ----------------------------------------------------------
 function chiudi() { $("#overlay").hidden = true; $("#overlay").innerHTML = ""; }
@@ -954,7 +970,7 @@ function scheda(id) {
     </table></div>
     <div class="actions">${inAsta()
       ? (OWNER.has(g.id) ? `<span class="lbl">Preso da ${esc(S.asta.squadre[OWNER.get(g.id)].nome)} a ${S.asta.squadre[OWNER.get(g.id)].rosa[g.id]} crediti</span>` : `<button class="btn primary" data-chiama="${g.id}">Chiama all'asta</button>`)
-      : `<button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}</button>
+      : `<button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti fra i disponibili" : "Escludi"}</button>
       <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>`}
     </div>`);
 }
@@ -1063,7 +1079,7 @@ function renderControlloAsta() {
     root.removeAttribute("data-asta");
     $("#tab-asta").hidden = true;
     if ($("#main").dataset.view === "asta") vista("listone");
-    $("#asta-ctl").innerHTML = `<button class="asta-btn pulse" id="asta-avvia"><span class="dot"></span>${S.asta ? "Riprendi l'asta" : "Modalità asta"}</button>`;
+    $("#asta-ctl").innerHTML = `<button class="asta-btn pulse" id="asta-avvia"><span class="pallone">${PALLONE}</span>${S.asta ? "Riprendi l'asta" : "Modalità asta"}</button>`;
   }
 }
 
@@ -1227,6 +1243,48 @@ function annullaUltimo() {
   aggiorna();
 }
 
+// --- il calcio d'inizio: il pallone rotola sul bottone, viene verso di te e apre il setup ---
+const PALLONE = `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="pallone-clip"><circle cx="50" cy="50" r="47"/></clipPath><radialGradient id="pallone-luce" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#eef0ee"/><stop offset="1" stop-color="#aab1ac"/></radialGradient></defs><circle cx="50" cy="50" r="47" fill="url(#pallone-luce)"/><g clip-path="url(#pallone-clip)" fill="#16201a"><polygon points="50.0,35.0 64.3,45.4 58.8,62.1 41.2,62.1 35.7,45.4"/><polygon points="69.4,23.3 63.2,4.3 79.4,-7.5 95.6,4.3 89.4,23.3"/><polygon points="81.4,60.2 97.6,48.5 113.7,60.2 107.5,79.2 87.6,79.2"/><polygon points="50.0,83.0 66.2,94.7 60.0,113.8 40.0,113.8 33.8,94.7"/><polygon points="18.6,60.2 12.4,79.2 -7.5,79.2 -13.7,60.2 2.4,48.5"/><polygon points="30.6,23.3 10.6,23.3 4.4,4.3 20.6,-7.5 36.8,4.3"/><path d="M50.0 35.0L50.0 19.0M50.0 19.0L36.8 4.3M50.0 19.0L63.2 4.3M64.3 45.4L79.5 40.4M79.5 40.4L89.4 23.3M79.5 40.4L97.6 48.5M58.8 62.1L68.2 75.1M68.2 75.1L87.6 79.2M68.2 75.1L66.2 94.7M41.2 62.1L31.8 75.1M31.8 75.1L33.8 94.7M31.8 75.1L12.4 79.2M35.7 45.4L20.5 40.4M20.5 40.4L2.4 48.5M20.5 40.4L10.6 23.3" stroke="#16201a" stroke-width="2.4" fill="none" stroke-linecap="round"/></g><circle cx="50" cy="50" r="47" fill="none" stroke="#16201a" stroke-width="3"/></svg>`;
+let inVolo = false;
+function calcioDInizio(btn) {
+  const orig = btn.querySelector(".pallone");
+  if (inVolo) return;
+  if (!orig || !window.matchMedia("(prefers-reduced-motion: no-preference)").matches || !Element.prototype.animate) return dialogoAvvio();
+  inVolo = true;
+  const b = orig.getBoundingClientRect(), k = btn.getBoundingClientRect();
+  const volo = document.createElement("div");
+  volo.className = "pallone-volo";
+  volo.innerHTML = PALLONE;
+  Object.assign(volo.style, { left: b.left + "px", top: b.top + "px", width: b.width + "px", height: b.height + "px" });
+  document.body.appendChild(volo);
+  orig.style.opacity = "0";           // non visibility: il clipPath del pallone deve restare attivo
+  btn.classList.remove("pulse");
+
+  const d = b.width;
+  // rotola sopra il bottone, a meta' fra il bordo alto e il testo, senza uscire dallo schermo
+  const sopra = Math.max(k.top - b.top - d * 0.3, 2 - b.top);
+  const corsa = k.right - b.left - d * 0.85;                     // fino alla fine del bottone
+  const giri = (corsa / (Math.PI * d)) * 360;                    // rotola senza strisciare
+  const cx = innerWidth / 2 - (b.left + d / 2), cy = innerHeight / 2 - (b.top + d / 2);
+  const zoom = Math.max(innerWidth, innerHeight) / d * 1.4;
+  const anim = volo.animate([
+    { transform: "translate(0,0) rotate(0deg) scale(1)", offset: 0, easing: "cubic-bezier(.3,0,.6,1)" },
+    { transform: `translate(${d * 0.35}px,${sopra}px) rotate(${giri * 0.12}deg) scale(1)`, offset: 0.16, easing: "linear" },
+    { transform: `translate(${corsa}px,${sopra}px) rotate(${giri}deg) scale(1)`, offset: 0.55, easing: "cubic-bezier(.2,0,.9,.6)" },
+    { transform: `translate(${corsa + 10}px,${sopra + 16}px) rotate(${giri + 40}deg) scale(1.3)`, offset: 0.64, easing: "cubic-bezier(.5,0,1,1)" },
+    { transform: `translate(${cx * 0.9}px,${cy * 0.9}px) rotate(${giri + 250}deg) scale(${zoom * 0.45})`, offset: 0.88, opacity: 1 },
+    { transform: `translate(${cx}px,${cy}px) rotate(${giri + 300}deg) scale(${zoom})`, offset: 1, opacity: 0 },
+  ], { duration: 1500, fill: "forwards" });
+  // il setup si apre mentre il pallone arriva addosso, prima che sparisca del tutto
+  setTimeout(() => dialogoAvvio(), 1250);
+  anim.finished.finally(() => {
+    volo.remove();
+    orig.style.opacity = "";
+    btn.classList.add("pulse");
+    inVolo = false;
+  });
+}
+
 function dialogoAvvio() {
   const nomi = S.asta ? S.asta.squadre.map((t) => t.nome) : NOMI_DEFAULT.slice(0, META.n_squadre);
   apri(`<h3>Modalità asta</h3>
@@ -1338,6 +1396,10 @@ function risultatiRicerca() {
 }
 
 // --- eventi -----------------------------------------------------------------------------
+// formazione tipo aperta o chiusa: la scelta resta fra un ricalcolo e l'altro
+document.addEventListener("toggle", (e) => {
+  if (e.target.id === "campo") { S.campoChiuso = !e.target.open; salva(); }
+}, true);
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button, [data-close]");
   if (e.target.id === "overlay") return chiudi();
@@ -1348,7 +1410,7 @@ document.addEventListener("click", (e) => {
   if (d.chiama) { chiudi(); return chiama(+d.chiama); }
   if (d.squadra !== undefined) { S.asta.scelta = +d.squadra; return renderChiamato(); }
   if (d.occ) { chiudi(); return chiama(+d.occ); }
-  if (t.id === "asta-avvia") return dialogoAvvio();
+  if (t.id === "asta-avvia") return calcioDInizio(t);
   if (t.id === "asta-chiudi") return dialogoChiusura();
   if (t.id === "registra") return registraDaForm();
   if (t.id === "annulla-ultimo") return annullaUltimo();
