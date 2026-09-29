@@ -144,6 +144,11 @@ input[type="checkbox"] { accent-color: var(--brand); width: 15px; height: 15px; 
 /* impostazioni della rosa: la selezione resta nera (inchiostro), non verde, anche in asta */
 #rosa > .card:first-child .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 #rosa > .card:first-child input[type="checkbox"] { accent-color: var(--ink); }
+/* stessa regola per i filtri del listone: ruolo attivo e interruttore acceso in nero */
+.tools .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.tools .toggle input:checked { background: var(--ink); }
+.tools .toggle input:checked::after { background: var(--paper); }
+.tools .toggle:has(input:checked) { border-color: var(--ink); }
 .count { color: var(--ink-2); font-size: 12.5px; margin-left: auto; }
 
 /* --- listone --- */
