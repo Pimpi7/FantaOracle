@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>fantaOracle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: listone annotato a sinistra, la rosa in costruzione a destra; su telefono due schede */
+:root {
+  --paper: #f3f6f2;        /* fondo: carta del listone stampato */
+  --sheet: #ffffff;        /* superfici */
+  --ink: #16201a;          /* testo */
+  --ink-2: #57655c;        /* testo secondario */
+  --rule: #d9e1da;         /* righe e bordi */
+  --tint: #e9efe9;         /* righe alternate, hover */
+  --mark: #f6d743;         /* evidenziatore: i suggerimenti */
+  --mark-bg: #fdf1a8;
+  --mark-fg: #2e2600;
+  --brand: #16201a;        /* pulsante primario */
+  --brand-fg: #f3f6f2;
+  --go: #1d7a4a; --warn: #a86a12; --bad: #b3261e;
+  --r-p: #d9821b; --r-d: #2b8a4c; --r-c: #2d68b8; --r-a: #c53a2e;  /* colori di ruolo */
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1512; --sheet: #161e1a; --ink: #e5ece6; --ink-2: #9aa89f;
+    --rule: #28342d; --tint: #1c2621; --mark: #e2c436; --mark-bg: #4a4012; --mark-fg: #fff3b8;
+    --brand: #e5ece6; --brand-fg: #0f1512;
+    --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
+    --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1512; --sheet: #161e1a; --ink: #e5ece6; --ink-2: #9aa89f;
+  --rule: #28342d; --tint: #1c2621; --mark: #e2c436; --mark-bg: #4a4012; --mark-fg: #fff3b8;
+  --brand: #e5ece6; --brand-fg: #0f1512;
+  --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
+  --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 14px/1.45 var(--font-body); font-variant-numeric: tabular-nums;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--r-c); outline-offset: 2px; }
+
+.app { display: grid; grid-template-rows: auto auto 1fr; height: 100%; padding-inline: 16px; }
+
+/* --- testata --- */
+.top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px;
+  padding-block: 14px 10px; border-bottom: 2px solid var(--ink);
+}
+.brand { font: 700 30px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; }
+.brand span { background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 92%, transparent 92%); padding-inline: 2px; }
+.meta { color: var(--ink-2); font-size: 12.5px; }
+.budget { margin-left: auto; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
+.stat { display: grid; }
+.stat b { font: 700 24px/1 var(--font-display); }
+.stat small { color: var(--ink-2); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
+.stat.warn b { color: var(--bad); }
+
+.tabs { display: none; gap: 6px; padding-block: 10px 0; }
+.tabs button { flex: 1; padding: 8px; border: 1px solid var(--rule); background: var(--sheet); border-radius: var(--radius); font-weight: 600; }
+.tabs button[aria-selected="true"] { background: var(--brand); color: var(--brand-fg); border-color: var(--brand); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr); gap: 18px; padding-block: 14px 16px; min-height: 0; }
+.pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.pane h2 { font: 700 20px/1 var(--font-display); letter-spacing: 0.01em; margin: 0; text-transform: uppercase; }
+
+/* --- filtri --- */
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 0 10px; }
+.tools input[type="search"] { flex: 1 1 180px; min-width: 0; padding: 7px 10px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); }
+.tools select, .tools input[type="number"] { padding: 7px 8px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); }
+.tools input[type="number"] { width: 112px; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--sheet); }
+.seg button { border: 0; background: none; padding: 7px 11px; font-weight: 600; border-right: 1px solid var(--rule); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-fg); }
+.check { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: 13px; }
+.count { color: var(--ink-2); font-size: 12.5px; margin-left: auto; }
+
+/* --- listone --- */
+.table-wrap { overflow: auto; min-height: 0; flex: 1; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { position: sticky; top: 0; background: var(--sheet); z-index: 1; text-align: right; font: 600 12px/1.2 var(--font-body); color: var(--ink-2);
+     padding: 9px 8px; border-bottom: 1px solid var(--ink); white-space: nowrap; user-select: none; }
+th[data-k] { cursor: pointer; }
+th[data-k]:hover { color: var(--ink); }
+th.sorted { color: var(--ink); }
+th.sorted::after { content: " ▾"; }
+th.sorted.asc::after { content: " ▴"; }
+th.l, td.l { text-align: left; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--tint); text-align: right; white-space: nowrap; }
+tr:hover td { background: var(--tint); }
+tr.sugg td { background: var(--mark-bg); color: var(--mark-fg); }
+tr.mine td { background: var(--tint); }
+tr.mine td.nm { font-weight: 700; }
+tr.taken td { opacity: 0.38; text-decoration: line-through; }
+tr.taken td.act { opacity: 1; text-decoration: none; }
+td.nm { font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+td.nm button { border: 0; background: none; padding: 0; font-weight: inherit; text-align: left; }
+td.nm button:hover { text-decoration: underline; }
+td.sq { color: var(--ink-2); text-transform: capitalize; }
+td.big { font-weight: 700; }
+.pos { color: var(--go); } .neg { color: var(--bad); }
+.role { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 4px; color: #fff; font: 700 12px/1 var(--font-display); }
+.role.P { background: var(--r-p); } .role.D { background: var(--r-d); } .role.C { background: var(--r-c); } .role.A { background: var(--r-a); }
+.tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 5px; vertical-align: 1px; border: 1px solid currentColor; letter-spacing: 0.02em; }
+.tag.rig { color: var(--r-c); } .tag.tifo { color: var(--warn); }
+td.act { display: flex; gap: 4px; justify-content: flex-end; }
+.ic { width: 26px; height: 26px; display: inline-grid; place-items: center; border: 1px solid var(--rule); background: var(--sheet); border-radius: 5px; font-weight: 700; line-height: 1; }
+.ic:hover { border-color: var(--ink); }
+.ic.on { background: var(--brand); color: var(--brand-fg); border-color: var(--brand); }
+
+/* --- rosa --- */
+.rosa { overflow: auto; min-height: 0; flex: 1; display: grid; gap: 14px; align-content: start; }
+.card { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: 12px; }
+.bar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; background: var(--tint); }
+.bar i { display: block; height: 100%; }
+.bar i.P { background: var(--r-p); } .bar i.D { background: var(--r-d); } .bar i.C { background: var(--r-c); } .bar i.A { background: var(--r-a); }
+.bar i.s { opacity: 0.45; background-image: repeating-linear-gradient(45deg, transparent 0 3px, var(--sheet) 3px 5px); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 12px; color: var(--ink-2); }
+.legend b { color: var(--ink); font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row + .row { margin-top: 8px; }
+.btn { padding: 7px 12px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); font-weight: 600; }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--brand); color: var(--brand-fg); border-color: var(--brand); }
+.btn.small { padding: 4px 8px; font-size: 12px; }
+.lbl { font-size: 12px; color: var(--ink-2); }
+
+.ruolo-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.ruolo-h h3 { font: 700 17px/1 var(--font-display); margin: 0; text-transform: uppercase; letter-spacing: 0.02em; }
+.ruolo-h .lbl { margin-left: auto; }
+.slot { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 6px 6px; border-radius: 5px; }
+.slot + .slot { border-top: 1px solid var(--tint); }
+.slot.sugg { background: var(--mark-bg); color: var(--mark-fg); }
+.slot .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot .who b { font-weight: 700; }
+.slot .who small { color: inherit; opacity: 0.7; text-transform: capitalize; margin-left: 4px; }
+.slot .num { text-align: right; font-size: 12.5px; }
+.slot .num b { font-size: 14px; }
+.slot .empty { color: var(--ink-2); font-style: italic; }
+.alts { grid-column: 2 / -1; display: grid; gap: 2px; margin-top: 4px; padding: 6px; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: 5px; }
+.alts div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; font-size: 12.5px; }
+.alts span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.squadre { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); text-transform: capitalize; }
+.chip.full { border-color: var(--warn); color: var(--warn); font-weight: 600; }
+.chip.over { border-color: var(--bad); color: var(--bad); font-weight: 700; }
+.alert { color: var(--bad); font-weight: 600; font-size: 13px; }
+details.help summary { cursor: pointer; font-weight: 600; }
+details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
+
+/* --- scheda e dialoghi --- */
+.overlay { position: fixed; inset: 0; background: rgb(10 15 12 / 0.45); display: grid; place-items: center; padding: 16px; z-index: 10; }
+.dialog { background: var(--sheet); color: var(--ink); border-radius: 8px; width: min(560px, 100%); max-height: 90%; overflow: auto; padding: 18px; border: 1px solid var(--rule); }
+.dialog h3 { font: 700 26px/1.05 var(--font-display); margin: 0; }
+.dialog .sub { color: var(--ink-2); text-transform: capitalize; margin-top: 2px; }
+.kv { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.kv div { display: grid; }
+.kv b { font: 700 22px/1.1 var(--font-display); }
+.kv small { color: var(--ink-2); font-size: 11.5px; }
+.breakdown { display: grid; gap: 4px; font-size: 13px; margin-bottom: 12px; }
+.breakdown div { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--rule); padding-block: 3px; }
+.breakdown div.tot { border-bottom: 0; border-top: 1px solid var(--ink); font-weight: 700; }
+.spark { display: flex; gap: 4px; align-items: flex-end; height: 44px; margin: 6px 0 12px; }
+.spark span { flex: 1; max-width: 34px; background: var(--r-c); border-radius: 2px 2px 0 0; position: relative; }
+.spark span.sv { background: var(--rule); }
+.spark span em { position: absolute; top: -16px; left: 0; right: 0; text-align: center; font-size: 10.5px; font-style: normal; color: var(--ink-2); }
+.dialog table td, .dialog table th { padding: 5px 6px; position: static; }
+.dialog .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.dialog input[type="number"] { width: 110px; padding: 8px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-size: 18px; font-weight: 700; }
+.dialog textarea { width: 100%; min-height: 160px; padding: 8px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-size: 12px; }
+.loading { padding: 40px 0; color: var(--ink-2); }
+
+@media (max-width: 900px) {
+  .tabs { display: flex; }
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .main[data-view="listone"] .pane.p-rosa, .main[data-view="rosa"] .pane.p-listone { display: none; }
+  .budget { margin-left: 0; }
+  th.hide-s, td.hide-s { display: none; }
+  .kv { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .slot.sugg { grid-template-columns: 22px minmax(0, 1fr) auto auto; }
+  .slot.sugg > .row { grid-column: 2 / -1; justify-content: flex-end; }
+  .tools input[type="search"] { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  tr.sugg td, .slot.sugg { transition: background-color 0.25s; }
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1 class="brand"><span>fanta</span>Oracle</h1>
+    <div class="meta" id="meta">Carico i dati…</div>
+    <div class="budget" id="budget"></div>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button id="tab-listone" role="tab" aria-selected="true" data-view="listone">Listone</button>
+    <button id="tab-rosa" role="tab" aria-selected="false" data-view="rosa">La mia rosa</button>
+  </nav>
+
+  <main class="main" id="main" data-view="listone">
+    <section class="pane p-listone" aria-label="Listone">
+      <div class="tools">
+        <input id="q" type="search" placeholder="Cerca un giocatore" aria-label="Cerca un giocatore">
+        <div class="seg" id="ruoli" role="group" aria-label="Ruolo">
+          <button data-r="" aria-pressed="true">Tutti</button>
+          <button data-r="P" aria-pressed="false">P</button>
+          <button data-r="D" aria-pressed="false">D</button>
+          <button data-r="C" aria-pressed="false">C</button>
+          <button data-r="A" aria-pressed="false">A</button>
+        </div>
+        <select id="sq" aria-label="Squadra"><option value="">Tutte le squadre</option></select>
+        <input id="pmax" type="number" min="1" placeholder="Prezzo max" aria-label="Prezzo atteso massimo">
+        <label class="check"><input id="hide" type="checkbox"> Nascondi i presi</label>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="l">R</th>
+            <th class="l" data-k="nome">Giocatore</th>
+            <th class="l hide-s" data-k="sq">Squadra</th>
+            <th data-k="pg" title="Punti attesi a giornata: presenze x fantavoto atteso">Pt/g</th>
+            <th data-k="fm" class="hide-s" title="Fantavoto atteso quando gioca">FM att.</th>
+            <th data-k="pv" class="hide-s" title="Probabilita' di prendere voto">Pres.</th>
+            <th data-k="val" title="Quanto vale per noi, in crediti">Valore</th>
+            <th data-k="pa" title="Prezzo atteso nella nostra asta">Prezzo</th>
+            <th data-k="aff" title="Valore meno prezzo atteso">Affare</th>
+            <th data-k="qa" class="hide-s" title="Quotazione attuale Fantacalcio.it">QA</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="rows"><tr><td colspan="11" class="l loading">Carico il listone…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="pane p-rosa" aria-label="La mia rosa">
+      <div class="rosa" id="rosa"></div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" hidden></div>
+
+<script>
+"use strict";
+// --- stato e persistenza ------------------------------------------------------
+const RUOLI = ["P", "D", "C", "A"];
+const NOMI_RUOLO = { P: "Portieri", D: "Difensori", C: "Centrocampisti", A: "Attaccanti" };
+// Peso di ciascun posto nella gerarchia del ruolo: i titolari contano pieno, le
+// riserve in proporzione a quanto giocheranno. Il difensore 5 conta di piu'
+// della 5a riserva di altri ruoli perche' il modificatore vuole la difesa a 4.
+const PESI = { P: [1, 0.10, 0.03], D: [1, 1, 1, 1, 0.45, 0.25, 0.12, 0.06],
+               C: [1, 1, 1, 0.75, 0.40, 0.20, 0.10, 0.05], A: [1, 1, 0.55, 0.30, 0.12, 0.05] };
+const KEY = "fantaoracle:v1";
+
+let DATA = null, BY_ID = new Map(), META = null;
+const S = {
+  piano: "A",
+  piani: { A: {}, B: {}, C: {} },   // id -> prezzo, per piano
+  presi: {},                         // id -> true: comprati da altri
+  margine: 0.10, esenzioneP: true, tetto: 3,
+  f: { q: "", r: "", sq: "", pmax: null, hide: false },
+  sort: { k: "pg", dir: -1 },
+  aperte: {},                        // alternative aperte per slot suggerito
+};
+let SUGG = { ids: new Set(), lista: [], forza: 0, costo: 0, errore: null, alt: {} };
+
+function salva() {
+  try { localStorage.setItem(KEY, JSON.stringify({ piano: S.piano, piani: S.piani, presi: S.presi,
+    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto })); } catch (e) { /* storage non disponibile */ }
+}
+function carica() {
+  try {
+    const x = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
+      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3 });
+  } catch (e) { /* storage non disponibile */ }
+}
+const mia = () => S.piani[S.piano];
+
+// --- utilita' -------------------------------------------------------------------
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (x, d = 1) => (x == null || Number.isNaN(x) ? "–" : Number(x).toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d }));
+const pct = (x) => (x == null ? "–" : Math.round(x * 100) + "%");
+const segno = (x) => (x > 0 ? "+" : "") + fmt(x, 0);
+const nomeSq = (s) => (DATA.squadre.find((x) => x.slug === s) || { nome: s }).nome;
+const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * (1 + S.margine)));
+
+// --- ottimizzatore ----------------------------------------------------------------
+// Forza di un ruolo: somma pesata dei punti a giornata, ordinati dal migliore.
+function forzaRuolo(punti, r) {
+  const s = punti.slice().sort((a, b) => b - a), w = PESI[r];
+  let t = 0;
+  for (let i = 0; i < s.length; i++) t += (w[i] || 0) * s[i];
+  return t;
+}
+
+function contaSquadre(ids) {
+  const c = {};
+  for (const id of ids) {
+    const g = BY_ID.get(+id);
+    if (!g || (S.esenzioneP && g.r === "P")) continue;
+    c[g.sq] = (c[g.sq] || 0) + 1;
+  }
+  return c;
+}
+
+// Completa la rosa rispettando budget, slot per ruolo, 1 credito minimo per
+// slot e tetto per squadra. Greedy su guadagno - lambda * prezzo per piu'
+// valori di lambda, poi ricerca locale per scambi migliorativi.
+function ottimizza() {
+  const cred = META.crediti, slot = META.slot;
+  const scelti = Object.entries(mia()).map(([id, p]) => ({ g: BY_ID.get(+id), p: +p })).filter((x) => x.g);
+  const speso = scelti.reduce((a, x) => a + x.p, 0);
+  const B = cred - speso;
+  const liberi = {}, base = {};
+  for (const r of RUOLI) { base[r] = scelti.filter((x) => x.g.r === r).map((x) => x.g.pg); liberi[r] = slot[r] - base[r].length; }
+  const nLiberi = RUOLI.reduce((a, r) => a + Math.max(0, liberi[r]), 0);
+  const esclusi = new Set([...Object.keys(mia()).map(Number), ...Object.keys(S.presi).map(Number)]);
+  const cand = DATA.giocatori.filter((g) => !esclusi.has(g.id)).map((g) => ({ g, p: prezzoAtteso(g) }));
+  const sq0 = contaSquadre(Object.keys(mia()));
+  const ok = (sq, g) => (S.esenzioneP && g.r === "P") || (sq[g.sq] || 0) < S.tetto;
+
+  const errore = RUOLI.filter((r) => liberi[r] < 0).map((r) => `troppi ${NOMI_RUOLO[r].toLowerCase()} (${base[r].length}/${slot[r]})`);
+  if (errore.length) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: "Rosa non valida: " + errore.join(", "), alt: {} };
+  if (B < nLiberi) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: `Budget insufficiente: restano ${B} crediti per ${nLiberi} slot.`, alt: {} };
+
+  const forzaTot = (pts) => RUOLI.reduce((a, r) => a + forzaRuolo(pts[r], r), 0);
+
+  function greedy(lambda) {
+    const pts = {}; for (const r of RUOLI) pts[r] = base[r].slice();
+    const f = {}; for (const r of RUOLI) f[r] = forzaRuolo(pts[r], r);
+    const lib = { ...liberi }, sq = { ...sq0 }, usati = new Set(), lista = [];
+    let costo = 0;
+    for (let k = 0; k < nLiberi; k++) {
+      const disp = B - costo - (nLiberi - k - 1);
+      let best = null, bestNet = -Infinity, bestGain = 0;
+      for (const c of cand) {
+        const g = c.g;
+        if (lib[g.r] <= 0 || usati.has(g.id) || c.p > disp || !ok(sq, g)) continue;
+        pts[g.r].push(g.pg);
+        const gain = forzaRuolo(pts[g.r], g.r) - f[g.r];
+        pts[g.r].pop();
+        const net = gain - lambda * c.p;
+        if (net > bestNet) { bestNet = net; best = c; bestGain = gain; }
+      }
+      if (!best) return null;
+      const g = best.g;
+      usati.add(g.id); lista.push(best); pts[g.r].push(g.pg); f[g.r] += bestGain;
+      lib[g.r]--; costo += best.p;
+      if (!(S.esenzioneP && g.r === "P")) sq[g.sq] = (sq[g.sq] || 0) + 1;
+    }
+    return { lista, costo, pts, forza: forzaTot(pts) };
+  }
+
+  let best = null;
+  for (const lambda of [0, 0.002, 0.005, 0.01, 0.015, 0.02, 0.03, 0.04, 0.06, 0.08, 0.11, 0.15, 0.2, 0.3]) {
+    const s = greedy(lambda);
+    if (s && (!best || s.forza > best.forza)) best = s;
+  }
+  if (!best) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: "Nessuna rosa possibile con questi vincoli.", alt: {} };
+
+  // Ricerca locale: scambio di un suggerito con un non scelto dello stesso ruolo.
+  const inRosa = new Set(best.lista.map((c) => c.g.id));
+  for (let it = 0; it < 80; it++) {
+    const sq = contaSquadre([...Object.keys(mia()), ...best.lista.map((c) => c.g.id)]);
+    let mig = null, migD = 1e-6;
+    for (let i = 0; i < best.lista.length; i++) {
+      const s = best.lista[i], r = s.g.r;
+      const senza = best.pts[r].slice(); senza.splice(senza.indexOf(s.g.pg), 1);
+      const f0 = forzaRuolo(best.pts[r], r);
+      for (const c of cand) {
+        if (c.g.r !== r || inRosa.has(c.g.id)) continue;
+        if (best.costo - s.p + c.p > B) continue;
+        if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sq[c.g.sq] || 0) >= S.tetto) continue;
+        senza.push(c.g.pg);
+        const d = forzaRuolo(senza, r) - f0;
+        senza.pop();
+        if (d > migD) { migD = d; mig = { i, c }; }
+      }
+    }
+    if (!mig) break;
+    const s = best.lista[mig.i], r = s.g.r;
+    best.pts[r].splice(best.pts[r].indexOf(s.g.pg), 1); best.pts[r].push(mig.c.g.pg);
+    inRosa.delete(s.g.id); inRosa.add(mig.c.g.id);
+    best.costo += mig.c.p - s.p; best.lista[mig.i] = mig.c; best.forza += migD;
+  }
+
+  // Alternative per ogni suggerito: scambi possibili ordinati per forza risultante.
+  const alt = {};
+  const sqTot = contaSquadre([...Object.keys(mia()), ...best.lista.map((c) => c.g.id)]);
+  for (const s of best.lista) {
+    const r = s.g.r;
+    const senza = best.pts[r].slice(); senza.splice(senza.indexOf(s.g.pg), 1);
+    const f0 = forzaRuolo(best.pts[r], r);
+    const opz = [];
+    for (const c of cand) {
+      if (c.g.r !== r || inRosa.has(c.g.id)) continue;
+      if (best.costo - s.p + c.p > B) continue;
+      if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sqTot[c.g.sq] || 0) >= S.tetto) continue;
+      senza.push(c.g.pg);
+      opz.push({ c, d: forzaRuolo(senza, r) - f0 });
+      senza.pop();
+    }
+    opz.sort((a, b) => b.d - a.d);
+    alt[s.g.id] = opz.slice(0, 5);
+  }
+
+  return { ids: inRosa, lista: best.lista, forza: best.forza, costo: best.costo, errore: null, alt };
+}
+
+// --- rendering del listone -----------------------------------------------------------
+function filtrati() {
+  const q = S.f.q.trim().toLowerCase();
+  let l = DATA.giocatori.filter((g) =>
+    (!S.f.r || g.r === S.f.r) && (!S.f.sq || g.sq === S.f.sq) &&
+    (!q || g.nome.toLowerCase().includes(q)) &&
+    (!S.f.pmax || prezzoAtteso(g) <= S.f.pmax) &&
+    (!S.f.hide || !S.presi[g.id]));
+  const k = S.sort.k, d = S.sort.dir;
+  l.sort((a, b) => {
+    const x = a[k], y = b[k];
+    if (typeof x === "string") return d * x.localeCompare(y);
+    return d * ((x ?? -1e9) - (y ?? -1e9));
+  });
+  return l;
+}
+
+function tag(g) {
+  let t = "";
+  if ((g.qrig || 0) >= 0.4) t += '<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">RIG</span>';
+  if ((g.tifo || 1) > 1) t += '<span class="tag tifo" title="Prezzo atteso maggiorato: squadra con molti tifosi in lega">TIFO</span>';
+  return t;
+}
+
+function renderListone() {
+  const l = filtrati();
+  const m = mia();
+  $("#count").textContent = `${l.length} giocatori`;
+  const out = [];
+  for (const g of l) {
+    const cls = m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : SUGG.ids.has(g.id) ? "sugg" : "";
+    const aff = g.aff ?? 0;
+    out.push(`<tr class="${cls}" data-id="${g.id}">
+      <td class="l"><span class="role ${g.r}">${g.r}</span></td>
+      <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}</td>
+      <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
+      <td class="big">${fmt(g.pg, 2)}</td>
+      <td class="hide-s">${fmt(g.fm, 2)}</td>
+      <td class="hide-s">${pct(g.pv)}</td>
+      <td>${fmt(g.val, 0)}</td>
+      <td class="big">${prezzoAtteso(g)}</td>
+      <td class="${aff > 0 ? "pos" : aff < 0 ? "neg" : ""}">${segno(aff)}</td>
+      <td class="hide-s">${fmt(g.qa, 0)}</td>
+      <td class="act">
+        <button class="ic ${m[g.id] != null ? "on" : ""}" data-add="${g.id}" title="${m[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}" aria-label="Mia rosa">${m[g.id] != null ? "✓" : "+"}</button>
+        <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}" aria-label="Preso da altri">✕</button>
+      </td></tr>`);
+  }
+  $("#rows").innerHTML = out.join("") || '<tr><td colspan="11" class="l loading">Nessun giocatore con questi filtri.</td></tr>';
+  document.querySelectorAll("th[data-k]").forEach((th) => {
+    th.classList.toggle("sorted", th.dataset.k === S.sort.k);
+    th.classList.toggle("asc", th.dataset.k === S.sort.k && S.sort.dir === 1);
+  });
+}
+
+// --- rendering della rosa ------------------------------------------------------------
+function renderBudget() {
+  const m = mia(), speso = Object.values(m).reduce((a, p) => a + +p, 0);
+  const n = Object.keys(m).length, tot = RUOLI.reduce((a, r) => a + META.slot[r], 0);
+  const resto = META.crediti - speso, max = resto - Math.max(0, tot - n - 1);
+  $("#budget").innerHTML = `
+    <div class="stat"><b>${resto}</b><small>Crediti liberi</small></div>
+    <div class="stat${max < 1 ? " warn" : ""}"><b>${Math.max(0, max)}</b><small>Offerta massima</small></div>
+    <div class="stat"><b>${n}/${tot}</b><small>Giocatori</small></div>`;
+}
+
+function renderRosa() {
+  const m = mia();
+  const scelti = Object.entries(m).map(([id, p]) => ({ g: BY_ID.get(+id), p: +p })).filter((x) => x.g);
+  const speso = scelti.reduce((a, x) => a + x.p, 0);
+  const tutti = [...scelti.map((x) => ({ ...x, s: false })), ...SUGG.lista.map((c) => ({ g: c.g, p: c.p, s: true }))];
+
+  // barra del budget per ruolo: pieno = scelti, tratteggiato = suggeriti
+  const segs = [];
+  for (const r of RUOLI) {
+    const a = tutti.filter((x) => x.g.r === r && !x.s).reduce((s, x) => s + x.p, 0);
+    const b = tutti.filter((x) => x.g.r === r && x.s).reduce((s, x) => s + x.p, 0);
+    if (a) segs.push(`<i class="${r}" style="width:${(a / META.crediti) * 100}%"></i>`);
+    if (b) segs.push(`<i class="${r} s" style="width:${(b / META.crediti) * 100}%"></i>`);
+  }
+  const spesaR = (r) => tutti.filter((x) => x.g.r === r).reduce((s, x) => s + x.p, 0);
+  const tot = speso + SUGG.costo;
+  const sq = contaSquadre(tutti.map((x) => x.g.id));
+  const chips = Object.entries(sq).sort((a, b) => b[1] - a[1]).map(([s, n]) =>
+    `<span class="chip ${n > S.tetto ? "over" : n === S.tetto ? "full" : ""}">${esc(nomeSq(s))} ${n}</span>`).join("");
+
+  let h = `<div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2>La mia rosa</h2>
+      <div class="seg" id="piani" role="group" aria-label="Piano">${["A", "B", "C"].map((p) =>
+        `<button data-piano="${p}" aria-pressed="${S.piano === p}">Piano ${p}</button>`).join("")}</div>
+    </div>
+    <div class="row" style="margin-top:10px"><div class="bar" style="flex:1">${segs.join("")}</div></div>
+    <div class="legend">${RUOLI.map((r) => `<span>${NOMI_RUOLO[r]} <b>${spesaR(r)}</b></span>`).join("")}
+      <span>Totale <b>${tot}</b> / ${META.crediti}</span>
+      <span>Forza attesa <b>${fmt(SUGG.forza + 0, 1)}</b> pt/g</span></div>
+    ${SUGG.errore ? `<p class="alert">${esc(SUGG.errore)}</p>` : ""}
+    <div class="row" style="margin-top:10px">
+      <label class="lbl" for="margine">Margine sui prezzi</label>
+      <select id="margine">${[0, 0.1, 0.2, 0.3].map((x) => `<option value="${x}" ${x === S.margine ? "selected" : ""}>+${x * 100}%</option>`).join("")}</select>
+      <label class="lbl" for="tetto">Max per squadra</label>
+      <select id="tetto">${[2, 3, 4, 5].map((x) => `<option ${x === S.tetto ? "selected" : ""}>${x}</option>`).join("")}</select>
+      <label class="check"><input id="esenzione" type="checkbox" ${S.esenzioneP ? "checked" : ""}> Blocco portieri libero</label>
+    </div>
+    ${chips ? `<div class="squadre" style="margin-top:10px">${chips}</div>` : ""}
+    <div class="row" style="margin-top:10px">
+      <button class="btn small" id="svuota">Svuota il piano</button>
+      <button class="btn small" id="esporta">Esporta</button>
+      <button class="btn small" id="importa">Importa</button>
+    </div>
+  </div>`;
+
+  for (const r of RUOLI) {
+    const miei = scelti.filter((x) => x.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
+    const sug = SUGG.lista.filter((c) => c.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
+    const vuoti = Math.max(0, META.slot[r] - miei.length - sug.length);
+    h += `<div class="card"><div class="ruolo-h"><span class="role ${r}">${r}</span><h3>${NOMI_RUOLO[r]}</h3>
+      <span class="lbl">${miei.length} scelti · ${sug.length} suggeriti · ${spesaR(r)} crediti</span></div>`;
+    for (const x of miei) {
+      h += `<div class="slot"><span class="role ${r}">${r}</span>
+        <span class="who"><b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
+        <span class="num"><b>${fmt(x.g.pg, 2)}</b> pt/g</span>
+        <span class="num"><b>${x.p}</b> cr</span>
+        <button class="ic" data-add="${x.g.id}" title="Togli dalla rosa" aria-label="Togli">−</button></div>`;
+    }
+    for (const c of sug) {
+      const aperta = S.aperte[c.g.id];
+      h += `<div class="slot sugg"><span class="role ${r}">${r}</span>
+        <span class="who"><button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${c.g.id}"><b>${esc(c.g.nome)}</b></button><small>${esc(nomeSq(c.g.sq))}</small></span>
+        <span class="num"><b>${fmt(c.g.pg, 2)}</b> pt/g</span>
+        <span class="num"><b>${c.p}</b> cr</span>
+        <span class="row" style="gap:4px;flex-wrap:nowrap">
+          <button class="btn small" data-prendi="${c.g.id}" title="Mettilo nella mia rosa a questo prezzo">Scegli</button>
+          <button class="btn small" data-alt="${c.g.id}" aria-expanded="${!!aperta}">${aperta ? "Chiudi" : "Altri"}</button>
+        </span>
+        ${aperta ? `<div class="alts">${(SUGG.alt[c.g.id] || []).map((a) => `<div>
+            <span class="n"><b>${esc(a.c.g.nome)}</b> <small style="text-transform:capitalize">${esc(nomeSq(a.c.g.sq))}</small></span>
+            <span>${fmt(a.c.g.pg, 2)} pt/g</span><span><b>${a.c.p}</b> cr</span>
+            <button class="btn small" data-prendi="${a.c.g.id}">Scegli</button></div>`).join("") || "<span class='lbl'>Nessuna alternativa nel budget.</span>"}</div>` : ""}
+      </div>`;
+    }
+    for (let i = 0; i < vuoti; i++) h += `<div class="slot"><span class="role ${r}">${r}</span><span class="empty">slot libero</span></div>`;
+    h += `</div>`;
+  }
+
+  h += `<div class="card"><details class="help"><summary>Come leggere i numeri</summary>
+    <p><b>Pt/g</b> sono i punti attesi a giornata: probabilita' di prendere voto per fantavoto atteso, sulle ${META.giornate_residue} giornate che restano. Per portieri e difensori include la quota del modificatore difesa.</p>
+    <p><b>Valore</b> e' quanto vale il giocatore per noi in crediti, rispetto a chi potresti prendere al suo posto. <b>Prezzo</b> e' quanto costera' presumibilmente nella nostra asta, tarato sui ${META.crediti * META.n_squadre} crediti della lega e maggiorato per Roma e Lazio. <b>Affare</b> e' la differenza.</p>
+    <p>I suggerimenti evidenziati completano la rosa massimizzando la forza dell'undici schierabile: i titolari pesano pieno, le riserve in base a quanto giocheranno. Usano il prezzo atteso piu' il margine scelto, e rispettano il tetto per squadra.</p>
+    <p>Sulle due stagioni passate il punteggio ordina i giocatori meglio della fantamedia e dei punti delle prime giornate, ma di poco. Le stelle offensive costano molto piu' di quanto il modello le valuta: e' un'indicazione, non una regola. Se vuoi una stella, sceglila e lascia che il tool ricostruisca il resto.</p>
+  </details></div>`;
+  $("#rosa").innerHTML = h;
+}
+
+function aggiorna() {
+  SUGG = ottimizza();
+  renderBudget(); renderListone(); renderRosa(); salva();
+}
+
+// --- scheda giocatore e dialoghi ----------------------------------------------------------
+function chiudi() { $("#overlay").hidden = true; $("#overlay").innerHTML = ""; }
+function apri(html) { const o = $("#overlay"); o.innerHTML = `<div class="dialog" role="dialog" aria-modal="true">${html}</div>`; o.hidden = false; const f = o.querySelector("input, button"); if (f) f.focus(); }
+
+function scheda(id) {
+  const g = BY_ID.get(id); if (!g) return;
+  const por = g.r === "P";
+  const righe = por ? [
+    ["Voto atteso", fmt(g.va, 2)],
+    ["Imbattibilita' (prob. clean sheet)", "+" + fmt(g.cs, 2)],
+    ["Gol subiti attesi", "−" + fmt(g.gs, 2)],
+  ] : [
+    ["Voto atteso", fmt(g.va, 2)],
+    [`Gol attesi (${fmt(g.gol, 2)} x 3)`, "+" + fmt((g.gol || 0) * 3, 2)],
+    [`Assist attesi`, "+" + fmt(g.ass, 2)],
+    [`Rigori (${pct(g.qrig)} dei rigori della squadra)`, "+" + fmt((g.rig || 0) * 1.68, 2)],
+    ["Malus attesi (cartellini, autogol)", "−" + fmt(g.ma, 2)],
+  ];
+  const ul = g.ul.map(([gi, fv]) => `<span class="${fv == null ? "sv" : ""}" style="height:${fv == null ? 8 : Math.max(6, Math.min(100, (fv / 16) * 100))}%" title="Giornata ${gi}: ${fv == null ? "senza voto" : fv}"><em>${fv == null ? "sv" : fmt(fv, 1)}</em></span>`).join("");
+  apri(`
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h3><span class="role ${g.r}" style="vertical-align:4px">${g.r}</span> ${esc(g.nome)}${tag(g)}</h3>
+        <div class="sub">${esc(nomeSq(g.sq))} · quotazione ${fmt(g.qa, 0)} (iniziale ${fmt(g.qi, 0)}) · FVM ${fmt(g.fvm, 0)}</div></div>
+      <button class="ic" data-close aria-label="Chiudi">✕</button>
+    </div>
+    <div class="kv">
+      <div><b>${fmt(g.pg, 2)}</b><small>punti a giornata</small></div>
+      <div><b>${pct(g.pv)}</b><small>prob. di voto</small></div>
+      <div><b>${fmt(g.val, 0)}</b><small>valore (crediti)</small></div>
+      <div><b>${prezzoAtteso(g)}</b><small>prezzo atteso</small></div>
+    </div>
+    <div class="breakdown">
+      ${righe.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("")}
+      <div class="tot"><span>Fantavoto atteso quando gioca</span><span>${fmt(g.fm, 2)}</span></div>
+      ${g.qm ? `<div><span>Quota del modificatore difesa</span><b>${g.qm > 0 ? "+" : ""}${fmt(g.qm, 2)}</b></div>` : ""}
+      <div><span>Da titolare / minuti a presenza</span><b>${pct(g.pt)} · ${fmt(g.min, 0)}'</b></div>
+    </div>
+    ${ul ? `<div class="lbl">Fantavoti di questa stagione</div><div class="spark">${ul}</div>` : ""}
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th class="l">Stagione</th><th class="l">Squadra</th><th>Pres.</th><th>Media</th><th>FM</th><th>Gol</th><th>Ass.</th></tr></thead>
+      <tbody>${g.st.slice().reverse().map((s) => `<tr><td class="l">${s[0]}</td><td class="l sq">${esc(nomeSq(s[1]))}</td><td>${s[2]}</td><td>${fmt(s[3], 2)}</td><td>${fmt(s[4], 2)}</td><td>${s[5]}</td><td>${s[6]}</td></tr>`).join("") || '<tr><td colspan="7" class="l">Nessuna presenza in Serie A negli ultimi tre anni.</td></tr>'}</tbody>
+    </table></div>
+    <div class="actions">
+      <button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}</button>
+      <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>
+    </div>`);
+}
+
+function chiediPrezzo(id) {
+  const g = BY_ID.get(id);
+  apri(`<h3>${esc(g.nome)}</h3><div class="sub">${esc(nomeSq(g.sq))} · prezzo atteso ${prezzoAtteso(g)} · valore ${fmt(g.val, 0)}</div>
+    <form id="fprezzo" class="row" style="margin-top:14px">
+      <label class="lbl" for="prezzo">Prezzo</label>
+      <input id="prezzo" type="number" min="1" max="${META.crediti}" value="${prezzoAtteso(g)}" required>
+      <span class="lbl">crediti</span>
+    </form>
+    <div class="actions"><button class="btn" data-close>Annulla</button><button class="btn primary" id="okprezzo">Metti nella mia rosa</button></div>`);
+  const conferma = () => { const p = Math.max(1, Math.round(+$("#prezzo").value || 1)); mia()[id] = p; delete S.presi[id]; chiudi(); aggiorna(); };
+  $("#okprezzo").onclick = conferma;
+  $("#fprezzo").onsubmit = (e) => { e.preventDefault(); conferma(); };
+  $("#prezzo").select();
+}
+
+function esporta() {
+  const txt = JSON.stringify({ piano: S.piano, rosa: mia(), presi: S.presi }, null, 0);
+  apri(`<h3>Esporta il piano ${S.piano}</h3><p class="lbl">Copia il testo e conservalo: con Importa lo ricarichi qui o su un altro dispositivo.</p>
+    <textarea id="txt" readonly>${esc(txt)}</textarea>
+    <div class="actions"><button class="btn" data-close>Chiudi</button><button class="btn primary" id="copia">Copia</button></div>`);
+  $("#copia").onclick = async () => {
+    try { await navigator.clipboard.writeText(txt); $("#copia").textContent = "Copiato"; }
+    catch (e) { $("#txt").select(); $("#copia").textContent = "Selezionato: premi Ctrl+C"; }
+  };
+}
+
+function importa() {
+  apri(`<h3>Importa un piano</h3><p class="lbl">Incolla il testo esportato. Sostituisce il piano ${S.piano}.</p>
+    <textarea id="txt" placeholder='{"rosa":{...}}'></textarea>
+    <p class="alert" id="errimp" hidden></p>
+    <div class="actions"><button class="btn" data-close>Annulla</button><button class="btn primary" id="okimp">Importa</button></div>`);
+  $("#okimp").onclick = () => {
+    try {
+      const x = JSON.parse($("#txt").value);
+      if (!x.rosa || typeof x.rosa !== "object") throw new Error("manca la rosa");
+      S.piani[S.piano] = Object.fromEntries(Object.entries(x.rosa).filter(([id]) => BY_ID.has(+id)));
+      if (x.presi) S.presi = x.presi;
+      chiudi(); aggiorna();
+    } catch (e) { const el = $("#errimp"); el.textContent = "Testo non valido: incolla esattamente quello copiato da Esporta."; el.hidden = false; }
+  };
+}
+
+// --- eventi -----------------------------------------------------------------------------
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button, [data-close]");
+  if (e.target.id === "overlay") return chiudi();
+  if (!t) return;
+  const d = t.dataset;
+  if (d.close !== undefined) return chiudi();
+  if (d.open) return scheda(+d.open);
+  if (d.add) {
+    const id = +d.add;
+    if (mia()[id] != null) { delete mia()[id]; chiudi(); return aggiorna(); }
+    return chiediPrezzo(id);
+  }
+  if (d.taken) {
+    const id = +d.taken;
+    if (S.presi[id]) delete S.presi[id]; else { S.presi[id] = true; delete mia()[id]; }
+    chiudi(); return aggiorna();
+  }
+  if (d.prendi) { const id = +d.prendi; const g = BY_ID.get(id); mia()[id] = prezzoAtteso(g); S.aperte = {}; return aggiorna(); }
+  if (d.alt) { const id = +d.alt; S.aperte[id] = !S.aperte[id]; return renderRosa(); }
+  if (d.piano) { S.piano = d.piano; S.aperte = {}; return aggiorna(); }
+  if (d.r !== undefined && t.parentElement.id === "ruoli") {
+    S.f.r = d.r; document.querySelectorAll("#ruoli button").forEach((b) => b.setAttribute("aria-pressed", b === t));
+    return renderListone();
+  }
+  if (d.view) {
+    $("#main").dataset.view = d.view;
+    document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b === t));
+    return;
+  }
+  if (t.id === "svuota") { S.piani[S.piano] = {}; return aggiorna(); }
+  if (t.id === "esporta") return esporta();
+  if (t.id === "importa") return importa();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#overlay").hidden) chiudi(); });
+document.addEventListener("change", (e) => {
+  const id = e.target.id;
+  if (id === "margine") { S.margine = +e.target.value; aggiorna(); }
+  if (id === "tetto") { S.tetto = +e.target.value; aggiorna(); }
+  if (id === "esenzione") { S.esenzioneP = e.target.checked; aggiorna(); }
+  if (id === "sq") { S.f.sq = e.target.value; renderListone(); }
+  if (id === "hide") { S.f.hide = e.target.checked; renderListone(); }
+});
+$("#q").addEventListener("input", (e) => { S.f.q = e.target.value; renderListone(); });
+$("#pmax").addEventListener("input", (e) => { S.f.pmax = +e.target.value || null; renderListone(); });
+document.querySelector("thead").addEventListener("click", (e) => {
+  const th = e.target.closest("th[data-k]"); if (!th) return;
+  const k = th.dataset.k;
+  S.sort = { k, dir: S.sort.k === k ? -S.sort.dir : (k === "nome" || k === "sq" ? 1 : -1) };
+  renderListone();
+});
+
+// --- avvio ------------------------------------------------------------------------------
+fetch("data.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then((d) => {
+  DATA = d; META = d.meta; BY_ID = new Map(d.giocatori.map((g) => [g.id, g]));
+  carica();
+  $("#meta").textContent = `Serie A ${META.stagione} · dati alla ${META.giornata}ª giornata · ${META.giornate_residue} giornate da comprare · ${META.n_squadre} squadre, ${META.crediti} crediti`;
+  $("#sq").innerHTML += d.squadre.map((s) => `<option value="${s.slug}">${esc(s.nome)}</option>`).join("");
+  aggiorna();
+}).catch((err) => {
+  $("#meta").textContent = "Impossibile caricare data.json: " + err.message + ". Rigenera i dati con `make export`.";
+  $("#rows").innerHTML = '<tr><td colspan="11" class="l loading">Dati non disponibili.</td></tr>';
+});
+</script>
+
+</body>
+</html>
