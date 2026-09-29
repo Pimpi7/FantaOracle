@@ -117,6 +117,7 @@ td.nm { font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ell
 td.nm button { border: 0; background: none; padding: 0; font-weight: inherit; text-align: left; }
 td.nm button:hover { text-decoration: underline; }
 td.sq { color: var(--ink-2); text-transform: capitalize; }
+td.rank { color: var(--ink-2); font-size: 12px; width: 1%; }
 td.big { font-weight: 700; }
 .pos { color: var(--go); } .neg { color: var(--bad); }
 .role { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 4px; color: #fff; font: 700 12px/1 var(--font-display); }
@@ -238,6 +239,7 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
       <div class="table-wrap">
         <table>
           <thead><tr>
+            <th title="Posizione nell'ordinamento scelto, dentro il ruolo selezionato">#</th>
             <th class="l">R</th>
             <th class="l" data-k="nome">Giocatore</th>
             <th class="l hide-s" data-k="sq">Squadra</th>
@@ -250,7 +252,7 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
             <th data-k="aff" title="Valore meno prezzo atteso">Affare</th>
             <th></th>
           </tr></thead>
-          <tbody id="rows"><tr><td colspan="11" class="l loading">Carico il listone…</td></tr></tbody>
+          <tbody id="rows"><tr><td colspan="12" class="l loading">Carico il listone…</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -433,6 +435,27 @@ function ottimizza() {
 }
 
 // --- rendering del listone -----------------------------------------------------------
+function confronta(a, b) {
+  const k = S.sort.k, d = S.sort.dir, x = a[k], y = b[k];
+  if (typeof x === "string") return d * x.localeCompare(y);
+  return d * ((x ?? -1e9) - (y ?? -1e9));
+}
+
+// Posizione di ogni giocatore nell'ordinamento corrente. Si calcola su tutto il
+// listone del ruolo selezionato, ignorando ricerca, squadra, prezzo e presi:
+// cercando un nome si vede dove sta davvero, non "1 di 1". A parita' di valore
+// la posizione e' la stessa (1, 2, 2, 4).
+function posizioni() {
+  const l = DATA.giocatori.filter((g) => !S.f.r || g.r === S.f.r).sort(confronta);
+  const pos = new Map();
+  let prec = null, rango = 0;
+  l.forEach((g, i) => {
+    if (prec === null || confronta(prec, g) !== 0) rango = i + 1;
+    pos.set(g.id, rango); prec = g;
+  });
+  return { pos, tot: l.length };
+}
+
 function filtrati() {
   const q = S.f.q.trim().toLowerCase();
   let l = DATA.giocatori.filter((g) =>
@@ -440,12 +463,7 @@ function filtrati() {
     (!q || g.nome.toLowerCase().includes(q)) &&
     (!S.f.pmax || prezzoAtteso(g) <= S.f.pmax) &&
     (!S.f.hide || !S.presi[g.id]));
-  const k = S.sort.k, d = S.sort.dir;
-  l.sort((a, b) => {
-    const x = a[k], y = b[k];
-    if (typeof x === "string") return d * x.localeCompare(y);
-    return d * ((x ?? -1e9) - (y ?? -1e9));
-  });
+  l.sort(confronta);
   return l;
 }
 
@@ -458,6 +476,7 @@ function tag(g) {
 
 function renderListone() {
   const l = filtrati();
+  const { pos, tot } = posizioni();
   const m = mia();
   $("#count").textContent = `${l.length} giocatori`;
   const out = [];
@@ -465,6 +484,7 @@ function renderListone() {
     const cls = m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : SUGG.ids.has(g.id) ? "sugg" : "";
     const aff = g.aff ?? 0;
     out.push(`<tr class="${cls}" data-id="${g.id}">
+      <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
       <td class="l"><span class="role ${g.r}">${g.r}</span></td>
       <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}</td>
       <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
@@ -480,7 +500,7 @@ function renderListone() {
         <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}" aria-label="Preso da altri">✕</button>
       </td></tr>`);
   }
-  $("#rows").innerHTML = out.join("") || '<tr><td colspan="11" class="l loading">Nessun giocatore con questi filtri.</td></tr>';
+  $("#rows").innerHTML = out.join("") || '<tr><td colspan="12" class="l loading">Nessun giocatore con questi filtri.</td></tr>';
   document.querySelectorAll("th[data-k]").forEach((th) => {
     th.classList.toggle("sorted", th.dataset.k === S.sort.k);
     th.classList.toggle("asc", th.dataset.k === S.sort.k && S.sort.dir === 1);
@@ -742,7 +762,7 @@ fetch("data.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status);
   aggiorna();
 }).catch((err) => {
   $("#meta").textContent = "Impossibile caricare data.json: " + err.message + ". Rigenera i dati con `make export`.";
-  $("#rows").innerHTML = '<tr><td colspan="11" class="l loading">Dati non disponibili.</td></tr>';
+  $("#rows").innerHTML = '<tr><td colspan="12" class="l loading">Dati non disponibili.</td></tr>';
 });
 </script>
 
