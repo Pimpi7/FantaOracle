@@ -886,27 +886,60 @@ function calcioDInizio(btn) {
   orig.style.opacity = "0";           // non visibility: i gradienti del pallone devono restare attivi
   btn.querySelector(".ombra").style.opacity = "0";
 
-  // 1) rotola verso sinistra lungo la linea del bottone, fino alla curva sinistra (senza strisciare:
-  //    la rotazione e' la distanza fratto la circonferenza); 2) cade oltre il fondo dello schermo;
-  // 3) fuori schermo si porta al centro in basso; 4) risale e viene addosso all'utente, ingrandendosi.
-  const d = b.width, H = k.height;
-  const corsa = (k.left + H / 2) - (b.left + d / 2);            // negativa: verso sinistra
-  const giri = (corsa / (Math.PI * d)) * 360;                    // verso sinistra gira in senso antiorario
-  const giu = innerHeight - b.top + d * 0.3;                     // sotto il bordo inferiore dello schermo
-  const deriva = -Math.min(90, k.left * 0.5);                    // un po' di slancio a sinistra mentre cade
-  const cx = innerWidth / 2 - (b.left + d / 2), cy = innerHeight / 2 - (b.top + d / 2);
-  const zoom = Math.max(innerWidth, innerHeight) / d * 1.4;
-  const T = 1850, t = (ms) => ms / T;
-  const anim = volo.animate([
-    { transform: "translate(0,0) rotate(0deg) scale(1)", offset: 0, easing: "cubic-bezier(.45,0,.8,.8)" },
-    { transform: `translate(${corsa}px,0) rotate(${giri}deg) scale(1)`, offset: t(620), easing: "cubic-bezier(.45,0,1,.9)" },
-    { transform: `translate(${corsa + deriva}px,${giu}px) rotate(${giri - 260}deg) scale(1)`, offset: t(1060), easing: "linear" },
-    { transform: `translate(${cx}px,${giu + d}px) rotate(${giri - 300}deg) scale(1.6)`, offset: t(1140), easing: "cubic-bezier(.15,.6,.35,1)" },
-    { transform: `translate(${cx}px,${cy}px) rotate(${giri - 140}deg) scale(${zoom * 0.45})`, offset: t(1650), opacity: 1, easing: "ease-in" },
-    { transform: `translate(${cx}px,${cy}px) rotate(${giri - 110}deg) scale(${zoom})`, offset: 1, opacity: 0 },
-  ], { duration: T, fill: "forwards" });
+  // Traiettoria simulata, non disegnata a mano:
+  // 1) rotola verso sinistra lungo la linea del bottone, accelerando da fermo; la rotazione e' la
+  //    distanza fratto la circonferenza, quindi non striscia;
+  // 2) arrivato alla curva sinistra cade dal bottone: moto parabolico, con la velocita' orizzontale
+  //    che aveva e la gravita';
+  // 3) tocca terra (a circa 2/3 dello schermo), si schiaccia per un istante e rimbalza verso la
+  //    telecamera: sale frenato dalla gravita' e si avvicina, quindi in prospettiva si ingrandisce e
+  //    converge al centro dello schermo, dove arriva al culmine del rimbalzo.
+  const d = b.width, r = d / 2, H = k.height;
+  const x0 = b.left + r, y0 = b.top + r;                          // centro del pallone a riposo
+  const L = x0 - (k.left + H / 2);                                // corsa sul bottone (verso sinistra)
+  const Tr = 0.5, a = 2 * L / (Tr * Tr), v = a * Tr;              // accelerazione costante da fermo
+  const g = 3400;                                                 // px/s^2
+  const yF = Math.max(y0 + 160, innerHeight * 0.66);              // quota del centro al rimbalzo
+  const Tf = Math.sqrt(2 * (yF - y0) / g);
+  const vx = Math.min(v, Math.max(0, (x0 - L - r - 8) / Tf));     // non esce dal bordo sinistro
+  const xF = x0 - L - vx * Tf;
+  const Ts = 0.06, Tc = 0.72;                                     // schiacciamento e rimbalzo
+  const T = Tr + Tf + Ts + Tc;
+  const Cx = innerWidth / 2, Cy = innerHeight / 2;
+  const smax = Math.max(innerWidth, innerHeight) / d * 1.6;
+  const gz = 2 * (yF - Cy) / (Tc * Tc);                           // gravita' "nel mondo" del rimbalzo
+  const deg = (dist) => (dist / (Math.PI * d)) * 360;
+  const frames = [];
+  const push = (t, x, y, rot, sx = 1, sy = 1, op = 1) => frames.push({
+    offset: Math.min(1, t / T), opacity: op,
+    transform: `translate(${(x - x0).toFixed(1)}px,${(y - y0).toFixed(1)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)}) rotate(${rot.toFixed(1)}deg)`,
+  });
+  const dt = 1 / 60;
+  for (let t = 0; t < Tr; t += dt) { const s = 0.5 * a * t * t; push(t, x0 - s, y0, -deg(s)); }
+  const rotE = -deg(L);
+  for (let t = 0; t < Tf; t += dt) push(Tr + t, x0 - L - vx * t, y0 + 0.5 * g * t * t, rotE - deg(vx * t + 0.5 * g * t * t * 0.15));
+  const rotF = rotE - deg(vx * Tf + 0.5 * g * Tf * Tf * 0.15);
+  push(Tr + Tf, xF, yF, rotF);
+  push(Tr + Tf + Ts * 0.5, xF, yF + r * 0.14, rotF - 6, 1.18, 0.78);   // schiacciato a terra
+  const t0 = Tr + Tf + Ts;
+  // passi da 1/60 s piu' l'istante finale esatto: se l'ultimo fotogramma non cade a offset 1 il browser
+  // ne aggiunge uno con la trasformazione di partenza e il pallone tornerebbe indietro all'ultimo
+  const passi = [];
+  for (let t = 0; t < Tc; t += dt) passi.push(t);
+  passi.push(Tc);
+  for (const t of passi) {
+    const u = Math.min(1, t / Tc);
+    const s = 1 / (1 - (1 - 1 / smax) * u);                       // avvicinamento costante: prospettiva
+    // (1 - u)^2: moltiplicato per la scala prospettica da' uno spostamento sullo schermo che converge
+    // al centro in modo regolare, invece di restare fermo e scattare al centro solo alla fine
+    const X = (xF - Cx) * (1 - u) * (1 - u);
+    const Y = (yF - Cy) - gz * Tc * t + 0.5 * gz * t * t;         // culmine esattamente al centro
+    const op = u < 0.86 ? 1 : Math.max(0, 1 - (u - 0.86) / 0.14);
+    push(t0 + t, Cx + X * s, Cy + Y * s, rotF - 10 - 260 * u, s, s, op);
+  }
+  const anim = volo.animate(frames, { duration: T * 1000, fill: "forwards" });
   // il setup si apre mentre il pallone arriva addosso, prima che sparisca del tutto
-  setTimeout(() => dialogoAvvio(), 1560);
+  setTimeout(() => dialogoAvvio(), (T - 0.2) * 1000);
   anim.finished.finally(() => {
     volo.remove();
     orig.style.opacity = "";
