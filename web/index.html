@@ -48,6 +48,14 @@
   color-scheme: dark;
 }
 
+/* Asta: il palco. Rosso diretta e una fascia scura che si accende sulla testata. */
+:root { --live: #d3203a; --live-fg: #ffffff; --stage: #1b0e12; --stage-fg: #fbecee; --stage-2: #e2aab3; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --live: #ff4b5f; --live-fg: #1b0e12; --stage: #2a0f16; --stage-fg: #fbecee; --stage-2: #dd9aa5; }
+}
+:root[data-theme="dark"] { --live: #ff4b5f; --live-fg: #1b0e12; --stage: #2a0f16; --stage-fg: #fbecee; --stage-2: #dd9aa5; }
+:root[data-asta] { --brand: var(--live); --brand-fg: var(--live-fg); }
+
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
@@ -209,8 +217,74 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .dialog textarea { width: 100%; min-height: 160px; padding: 8px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-size: 12px; }
 .loading { padding: 40px 0; color: var(--ink-2); }
 
+/* --- modalita' asta --- */
+.asta-btn { border: 0; border-radius: 999px; padding: 8px 16px; background: var(--live); color: var(--live-fg);
+  font: 700 15px/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; }
+.asta-btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 7px; vertical-align: 1px; }
+.live { display: inline-flex; align-items: center; gap: 8px; font: 700 15px/1 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--live); }
+.live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--live); }
+.live button { font: 600 12px/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--stage-2); background: none; border: 1px solid currentColor; border-radius: 999px; padding: 4px 9px; }
+:root[data-asta] .top { background: var(--stage); color: var(--stage-fg); border-bottom: 3px solid var(--live); margin-inline: -16px; padding-inline: 16px; position: relative; }
+:root[data-asta] .top .meta, :root[data-asta] .stat small { color: var(--stage-2); }
+:root[data-asta] .brand span { background: linear-gradient(transparent 58%, var(--live) 58%, var(--live) 92%, transparent 92%); }
+:root[data-asta] .tabs { display: flex; }
+@media (prefers-reduced-motion: no-preference) {
+  .asta-btn.pulse { animation: pulsa 2s ease-in-out infinite; }
+  @keyframes pulsa { 0%, 100% { box-shadow: 0 0 0 0 rgb(211 32 58 / 0.55); } 60% { box-shadow: 0 0 0 11px rgb(211 32 58 / 0); } }
+  .live .dot, .asta-btn .dot { animation: batte 1.2s ease-in-out infinite; }
+  @keyframes batte { 50% { opacity: 0.25; } }
+  :root[data-asta] .top.entra::after { content: ""; position: absolute; left: 0; bottom: -3px; height: 3px; width: 100%; background: var(--stage-fg); transform-origin: left; animation: accende 0.9s ease-out forwards; }
+  @keyframes accende { from { transform: scaleX(0); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
+}
+.p-asta { display: none; }
+.main[data-view="asta"] { grid-template-columns: minmax(0, 1fr); }
+.main[data-view="asta"] .p-asta { display: flex; }
+.main[data-view="asta"] .p-listone, .main[data-view="asta"] .p-rosa { display: none; }
+.asta { overflow: auto; min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 14px; align-content: start; }
+.asta > div { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.asta h2 { font: 700 18px/1 var(--font-display); text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 10px; }
+.card.hot { border-color: var(--live); box-shadow: inset 4px 0 0 var(--live); }
+.occ { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 4px; border-top: 1px solid var(--tint); }
+.occ:first-of-type { border-top: 0; }
+.occ .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.occ .who small { color: var(--ink-2); text-transform: capitalize; margin-left: 4px; }
+.occ .num { text-align: right; font-size: 12.5px; white-space: nowrap; }
+.occ .num s { color: var(--ink-2); }
+.cerca { position: relative; }
+.cerca input { width: 100%; padding: 10px 12px; font-size: 16px; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--sheet); }
+.risultati { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); margin-top: 4px; overflow: hidden; }
+.risultati button { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; width: 100%; text-align: left; padding: 8px 10px; border: 0; border-top: 1px solid var(--tint); background: none; align-items: center; }
+.risultati button:first-child { border-top: 0; }
+.risultati button:hover, .risultati button.sel { background: var(--tint); }
+.chiamato { display: grid; gap: 12px; margin-top: 12px; }
+.chiamato h3 { font: 700 30px/1 var(--font-display); margin: 0; }
+.spinta { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius); background: var(--tint); }
+.spinta b { font: 700 34px/1 var(--font-display); color: var(--live); }
+.conc { display: flex; flex-wrap: wrap; gap: 6px; }
+.conc span { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--rule); }
+.conc span.no { opacity: 0.45; text-decoration: line-through; }
+.chi { display: flex; flex-wrap: wrap; gap: 6px; }
+.chi button { padding: 7px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); font-weight: 600; font-size: 13px; }
+.chi button[aria-pressed="true"] { background: var(--live); color: var(--live-fg); border-color: var(--live); }
+.chi button:disabled { opacity: 0.35; cursor: not-allowed; }
+.registra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.registra input { width: 100px; padding: 8px 10px; font: 700 20px/1 var(--font-display); border: 2px solid var(--ink); border-radius: var(--radius); background: var(--sheet); }
+.btn.live-go { background: var(--live); color: var(--live-fg); border-color: var(--live); padding: 9px 16px; }
+table.sq { font-size: 13px; }
+table.sq td, table.sq th { position: static; padding: 6px 6px; }
+table.sq tr.io td { font-weight: 700; background: var(--tint); }
+table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; }
+.log div { display: flex; gap: 8px; justify-content: space-between; font-size: 13px; padding: 4px 0; border-top: 1px dashed var(--rule); }
+.log div:first-child { border-top: 0; }
+.tag.own { color: var(--ink-2); } .tag.obj { color: var(--live); }
+.nomi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.nomi label { display: grid; gap: 3px; font-size: 12px; color: var(--ink-2); }
+.nomi input { padding: 7px 9px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-size: 14px; color: var(--ink); }
+.nota { font-size: 12.5px; color: var(--ink-2); border-left: 3px solid var(--warn); padding-left: 8px; }
+
 @media (max-width: 900px) {
   .tabs { display: flex; }
+  .asta { grid-template-columns: minmax(0, 1fr); }
   .main { grid-template-columns: minmax(0, 1fr); }
   .main[data-view="listone"] .pane.p-rosa, .main[data-view="rosa"] .pane.p-listone { display: none; }
   .budget { margin-left: 0; }
@@ -232,8 +306,10 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
     <h1 class="brand"><span>fanta</span>Oracle</h1>
     <div class="meta" id="meta">Carico i dati…</div>
     <div class="budget" id="budget"></div>
+    <div id="asta-ctl"></div>
   </header>
   <nav class="tabs" role="tablist">
+    <button id="tab-asta" role="tab" aria-selected="false" data-view="asta" hidden>Asta</button>
     <button id="tab-listone" role="tab" aria-selected="true" data-view="listone">Listone</button>
     <button id="tab-rosa" role="tab" aria-selected="false" data-view="rosa">La mia rosa</button>
   </nav>
@@ -278,6 +354,26 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
     <section class="pane p-rosa" aria-label="La mia rosa">
       <div class="rosa" id="rosa"></div>
     </section>
+
+    <section class="pane p-asta" aria-label="Asta">
+      <div class="asta">
+        <div>
+          <div class="card" id="occasioni"></div>
+          <div class="card" id="chiamata">
+            <h2>Giocatore chiamato</h2>
+            <div class="cerca">
+              <input id="cerca-asta" type="search" autocomplete="off" placeholder="Scrivi il nome del giocatore chiamato" aria-label="Giocatore chiamato">
+              <div class="risultati" id="risultati" hidden></div>
+            </div>
+            <div id="chiamato"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" id="squadre"></div>
+          <div class="card" id="log"></div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -305,21 +401,24 @@ const S = {
   f: { q: "", r: "", sq: "", pmax: null, hide: false },
   sort: { k: "pg", dir: -1 },
   aperte: {},                        // alternative aperte per slot suggerito
+  asta: null,                        // stato dell'asta live (vedi avviaAsta)
 };
 let SUGG = { ids: new Set(), lista: [], forza: 0, costo: 0, errore: null, alt: {} };
 
 function salva() {
   try { localStorage.setItem(KEY, JSON.stringify({ piano: S.piano, piani: S.piani, presi: S.presi,
-    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo })); } catch (e) { /* storage non disponibile */ }
+    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, asta: S.asta })); } catch (e) { /* storage non disponibile */ }
 }
 function carica() {
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || "null");
     if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
-      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null });
+      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, asta: x.asta || null });
   } catch (e) { /* storage non disponibile */ }
 }
-const mia = () => S.piani[S.piano];
+// In asta "la mia rosa" e' la rosa reale, non piu' un piano.
+const inAsta = () => !!(S.asta && S.asta.attiva);
+const mia = () => (inAsta() ? S.asta.squadre[S.asta.io].rosa : S.piani[S.piano]);
 
 // --- utilita' -------------------------------------------------------------------
 const $ = (s) => document.querySelector(s);
@@ -328,7 +427,10 @@ const fmt = (x, d = 1) => (x == null || Number.isNaN(x) ? "–" : Number(x).toLo
 const pct = (x) => (x == null ? "–" : Math.round(x * 100) + "%");
 const segno = (x) => (x > 0 ? "+" : "") + fmt(x, 0);
 const nomeSq = (s) => (DATA.squadre.find((x) => x.slug === s) || { nome: s }).nome;
-const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * (1 + S.margine)));
+// INFL segue l'asta: se il tavolo spende piu' (o meno) del previsto, i prezzi
+// attesi dei giocatori rimasti si riscalano sui crediti che restano davvero.
+let INFL = 1;
+const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * INFL * (1 + S.margine)));
 
 // --- ottimizzatore ----------------------------------------------------------------
 // Forza di un ruolo: somma pesata dei punti a giornata, ordinati dal migliore.
@@ -558,11 +660,17 @@ function renderListone() {
   const out = [];
   for (const g of l) {
     const cls = m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : SUGG.ids.has(g.id) ? "sugg" : "";
+    const own = inAsta() && OWNER.has(g.id) ? `<span class="tag own">${esc(S.asta.squadre[OWNER.get(g.id)].nome)}</span>` : "";
+    const obj = inAsta() && S.asta.obiettivi.includes(g.id) && !OWNER.has(g.id) ? '<span class="tag obj" title="Era nel piano da cui sei partito">OBIETTIVO</span>' : "";
+    const azioni = inAsta()
+      ? (OWNER.has(g.id) ? "" : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`)
+      : `<button class="ic ${m[g.id] != null ? "on" : ""}" data-add="${g.id}" title="${m[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}" aria-label="Mia rosa">${m[g.id] != null ? "✓" : "+"}</button>
+        <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}" aria-label="Preso da altri">✕</button>`;
     const aff = g.aff ?? 0;
     out.push(`<tr class="${cls}" data-id="${g.id}">
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
       <td class="l"><span class="role ${g.r}">${g.r}</span></td>
-      <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}</td>
+      <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}${obj}${own}</td>
       <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
       <td class="big">${fmt(g.pg, 2)}</td>
       <td class="hide-s">${fmt(g.fm, 2)}</td>
@@ -571,10 +679,7 @@ function renderListone() {
       <td>${fmt(g.val, 0)}</td>
       <td class="big">${prezzoAtteso(g)}</td>
       <td class="${aff > 0 ? "pos" : aff < 0 ? "neg" : ""}">${segno(aff)}</td>
-      <td class="act">
-        <button class="ic ${m[g.id] != null ? "on" : ""}" data-add="${g.id}" title="${m[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}" aria-label="Mia rosa">${m[g.id] != null ? "✓" : "+"}</button>
-        <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}" aria-label="Preso da altri">✕</button>
-      </td></tr>`);
+      <td class="act">${azioni}</td></tr>`);
   }
   $("#rows").innerHTML = out.join("") || '<tr><td colspan="12" class="l loading">Nessun giocatore con questi filtri.</td></tr>';
   document.querySelectorAll("th[data-k]").forEach((th) => {
@@ -623,8 +728,8 @@ function renderRosa() {
   let h = `<div class="card">
     <div class="row" style="justify-content:space-between">
       <h2>La mia rosa</h2>
-      <div class="seg" id="piani" role="group" aria-label="Piano">${["A", "B", "C"].map((p) =>
-        `<button data-piano="${p}" aria-pressed="${S.piano === p}">Piano ${p}</button>`).join("")}</div>
+      ${inAsta() ? `<span class="live"><span class="dot"></span>Rosa reale</span>` : `<div class="seg" id="piani" role="group" aria-label="Piano">${["A", "B", "C"].map((p) =>
+        `<button data-piano="${p}" aria-pressed="${S.piano === p}">Piano ${p}</button>`).join("")}</div>`}
     </div>
     <div class="row" style="margin-top:10px"><div class="bar" style="flex:1">${segs.join("")}</div></div>
     <div class="legend">${RUOLI.map((r) => `<span>${NOMI_RUOLO[r]} <b>${spesaR(r)}</b>${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""}</span>`).join("")}
@@ -657,9 +762,9 @@ function renderRosa() {
     </div>
     ${chips ? `<div class="squadre" style="margin-top:10px">${chips}</div>` : ""}
     <div class="row" style="margin-top:10px">
-      <button class="btn small" id="svuota">Svuota il piano</button>
+      ${inAsta() ? "" : `<button class="btn small" id="svuota">Svuota il piano</button>
       <button class="btn small" id="esporta">Esporta</button>
-      <button class="btn small" id="importa">Importa</button>
+      <button class="btn small" id="importa">Importa</button>`}
     </div>
   </div>`;
 
@@ -708,8 +813,11 @@ function renderRosa() {
 }
 
 function aggiorna() {
+  if (inAsta()) sincronizzaAsta(); else INFL = 1;
   SUGG = ottimizza();
-  renderBudget(); renderListone(); renderRosa(); salva();
+  renderBudget(); renderListone(); renderRosa(); renderControlloAsta();
+  if (inAsta()) renderAsta();
+  salva();
 }
 
 // --- scheda giocatore e dialoghi ----------------------------------------------------------
@@ -754,9 +862,10 @@ function scheda(id) {
       <thead><tr><th class="l">Stagione</th><th class="l">Squadra</th><th>Pres.</th><th>Media</th><th>FM</th><th>Gol</th><th>Ass.</th></tr></thead>
       <tbody>${g.st.slice().reverse().map((s) => `<tr><td class="l">${s[0]}</td><td class="l sq">${esc(nomeSq(s[1]))}</td><td>${s[2]}</td><td>${fmt(s[3], 2)}</td><td>${fmt(s[4], 2)}</td><td>${s[5]}</td><td>${s[6]}</td></tr>`).join("") || '<tr><td colspan="7" class="l">Nessuna presenza in Serie A negli ultimi tre anni.</td></tr>'}</tbody>
     </table></div>
-    <div class="actions">
-      <button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}</button>
-      <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>
+    <div class="actions">${inAsta()
+      ? (OWNER.has(g.id) ? `<span class="lbl">Preso da ${esc(S.asta.squadre[OWNER.get(g.id)].nome)} a ${S.asta.squadre[OWNER.get(g.id)].rosa[g.id]} crediti</span>` : `<button class="btn primary" data-chiama="${g.id}">Chiama all'asta</button>`)
+      : `<button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti disponibile" : "Preso da un altro"}</button>
+      <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>`}
     </div>`);
 }
 
@@ -802,6 +911,319 @@ function importa() {
   };
 }
 
+// --- asta live --------------------------------------------------------------------------
+// Segnaposto finche' non li conosciamo: nomi dei partecipanti e tipo di asta.
+// Oggi ogni ruolo si puo' chiamare in qualsiasi momento (chiamata libera).
+const NOMI_DEFAULT = ["La mia squadra", "Squadra 2", "Squadra 3", "Squadra 4", "Squadra 5", "Squadra 6", "Squadra 7", "Squadra 8"];
+const TITOLARI_LEGA = { P: 8, D: 32, C: 28, A: 20 };   // 8 squadre x titolari tipici del ruolo
+let OWNER = new Map();                                  // id giocatore -> indice squadra
+let SOGLIA = {};                                        // pt/g dell'ultimo titolare della lega per ruolo
+let SPINTA = { chiave: null, val: null };
+
+function statoSquadre() {
+  const slot = META.slot;
+  return S.asta.squadre.map((t, i) => {
+    const n = { P: 0, D: 0, C: 0, A: 0 };
+    let spesa = 0;
+    for (const [id, pz] of Object.entries(t.rosa)) { const g = BY_ID.get(+id); if (g) { n[g.r]++; spesa += +pz; } }
+    const liberi = {}; let liberiTot = 0;
+    for (const r of RUOLI) { liberi[r] = slot[r] - n[r]; liberiTot += Math.max(0, liberi[r]); }
+    const crediti = META.crediti - spesa;
+    return { i, nome: t.nome, spesa, crediti, liberi, liberiTot, n,
+             maxOff: liberiTot > 0 ? crediti - (liberiTot - 1) : 0 };
+  });
+}
+
+function sincronizzaAsta() {
+  OWNER = new Map();
+  S.asta.squadre.forEach((t, i) => Object.keys(t.rosa).forEach((id) => OWNER.set(+id, i)));
+  // "Presi da altri" non si segna piu' a mano: sono le rose degli avversari.
+  S.presi = {};
+  for (const [id, i] of OWNER) if (i !== S.asta.io) S.presi[id] = true;
+  // Inflazione: crediti spendibili rimasti contro quello che il mercato avrebbe
+  // chiesto per i giocatori che servono ancora a riempire le rose.
+  const st = statoSquadre();
+  const disp = st.reduce((a, t) => a + Math.max(0, t.crediti - t.liberiTot), 0);
+  let dom = 0;
+  for (const r of RUOLI) {
+    const n = st.reduce((a, t) => a + Math.max(0, t.liberi[r]), 0);
+    const liberi = DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id)).sort((a, b) => b.pa - a.pa).slice(0, n);
+    dom += liberi.reduce((a, g) => a + Math.max(0, g.pa - 1), 0);
+  }
+  INFL = dom > 0 ? Math.min(2.5, Math.max(0.4, disp / dom)) : 1;
+}
+
+function vista(v) {
+  $("#main").dataset.view = v;
+  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.view === v));
+}
+
+function renderControlloAsta() {
+  const root = document.documentElement;
+  if (inAsta()) {
+    root.setAttribute("data-asta", "on");
+    $("#tab-asta").hidden = false;
+    $("#asta-ctl").innerHTML = `<span class="live"><span class="dot"></span>In asta
+      <button id="asta-chiudi" title="Chiudi l'asta">Chiudi</button></span>`;
+  } else {
+    root.removeAttribute("data-asta");
+    $("#tab-asta").hidden = true;
+    if ($("#main").dataset.view === "asta") vista("listone");
+    $("#asta-ctl").innerHTML = `<button class="asta-btn pulse" id="asta-avvia"><span class="dot"></span>${S.asta ? "Riprendi l'asta" : "Modalità asta"}</button>`;
+  }
+}
+
+function renderAsta() {
+  const st = statoSquadre(), me = st[S.asta.io];
+
+  // --- occasioni di fine ruolo ---
+  const occ = [];
+  for (const g of DATA.giocatori) {
+    if (OWNER.has(g.id) || me.liberi[g.r] <= 0 || g.pg < SOGLIA[g.r]) continue;
+    const rivali = st.filter((t) => t.i !== S.asta.io && t.liberi[g.r] > 0);
+    const maxRivali = rivali.reduce((a, t) => Math.max(a, t.maxOff), 0);
+    const pa = prezzoAtteso(g);
+    const reale = rivali.length ? Math.min(pa, maxRivali + 1) : 1;
+    if (reale > me.maxOff || reale > pa * 0.75) continue;
+    occ.push({ g, pa, reale, n: rivali.filter((t) => t.maxOff >= 2).length, maxRivali });
+  }
+  occ.sort((a, b) => b.g.pg - a.g.pg);
+  const libLega = RUOLI.map((r) => `${r} ${st.reduce((a, t) => a + Math.max(0, t.liberi[r]), 0)}`).join(" · ");
+  $("#occasioni").className = "card" + (occ.length ? " hot" : "");
+  $("#occasioni").innerHTML = `<h2>Occasioni di fine ruolo</h2>
+    <div class="lbl" style="margin:-4px 0 8px">Slot ancora liberi in lega: ${libLega} · mercato ${INFL >= 1 ? "+" : ""}${Math.round((INFL - 1) * 100)}% sui prezzi attesi</div>
+    ${occ.length ? occ.slice(0, 6).map((o) => `<div class="occ">
+        <span class="role ${o.g.r}">${o.g.r}</span>
+        <span class="who"><b>${esc(o.g.nome)}</b><small>${esc(nomeSq(o.g.sq))}</small></span>
+        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br>${o.n ? `${o.n} rivali, al massimo ${o.maxRivali}` : "nessun rivale"}</span>
+        <button class="btn small" data-occ="${o.g.id}">Chiama</button></div>`).join("")
+      : `<p class="lbl">Nessuna per ora. Compaiono quando in un ruolo restano titolari buoni e gli avversari non hanno piu' slot o crediti per contenderteli: li vedrai qui con il prezzo realistico.</p>`}`;
+
+  // --- squadre ---
+  $("#squadre").innerHTML = `<h2>Squadre</h2><div style="overflow-x:auto"><table class="sq">
+    <thead><tr><th class="l">Squadra</th><th>Crediti</th><th title="Offerta massima possibile adesso">Max</th><th class="l" title="Slot liberi per ruolo">Liberi P·D·C·A</th><th></th></tr></thead>
+    <tbody>${st.map((t) => `<tr class="${t.i === S.asta.io ? "io" : ""}">
+      <td class="l">${esc(t.nome)}</td><td>${t.crediti}</td><td><b>${t.maxOff}</b></td>
+      <td class="l lib">${RUOLI.map((r) => t.liberi[r]).join(" · ")}</td>
+      <td><button class="btn small" data-vedi="${t.i}">${S.asta.aperta === t.i ? "Chiudi" : "Rosa"}</button></td></tr>
+      ${S.asta.aperta === t.i ? `<tr><td colspan="5" class="l" style="white-space:normal">${RUOLI.map((r) => {
+        const l = Object.entries(S.asta.squadre[t.i].rosa).map(([id, pz]) => ({ g: BY_ID.get(+id), pz })).filter((x) => x.g && x.g.r === r);
+        return l.length ? `<div><span class="role ${r}">${r}</span> ${l.map((x) => `${esc(x.g.nome)} <b>${x.pz}</b>`).join(", ")}</div>` : "";
+      }).join("") || "<span class='lbl'>Nessun acquisto.</span>"}</td></tr>` : ""}`).join("")}</tbody></table></div>
+    <div class="row" style="margin-top:10px"><button class="btn small" id="esporta-asta">Esporta l'asta</button><button class="btn small" id="importa-asta">Importa</button></div>`;
+
+  // --- ultimi acquisti ---
+  const log = S.asta.log.slice(-8).reverse();
+  $("#log").innerHTML = `<h2>Ultimi acquisti</h2><div class="log">${log.map((x) => {
+    const g = BY_ID.get(x.id); return g ? `<div><span><span class="role ${g.r}">${g.r}</span> ${esc(g.nome)}</span><span>${esc(S.asta.squadre[x.t].nome)} · <b>${x.p}</b></span></div>` : "";
+  }).join("") || "<p class='lbl'>Ancora nessuno.</p>"}</div>
+    ${S.asta.log.length ? `<div class="row" style="margin-top:8px"><button class="btn small" id="annulla-ultimo">Annulla l'ultimo</button></div>` : ""}`;
+
+  renderChiamato();
+}
+
+function chiama(id) {
+  if (OWNER.has(id)) return;
+  S.asta.chiamato = id;
+  S.asta.scelta = null;
+  $("#risultati").hidden = true;
+  $("#cerca-asta").value = "";
+  vista("asta");
+  renderChiamato();
+  setTimeout(() => { const i = $("#prezzo-asta"); if (i) i.select(); }, 0);
+}
+
+// Fin dove conviene spingersi: il prezzo massimo a cui la rosa migliore CON lui
+// resta forte almeno quanto la rosa migliore SENZA di lui. Si trova per
+// bisezione rifacendo l'ottimizzazione a ogni prezzo provato.
+function calcolaSpinta(id) {
+  const g = BY_ID.get(id), me = statoSquadre()[S.asta.io];
+  if (me.liberi[g.r] <= 0) return { max: 0, motivo: `hai gia' tutti i ${NOMI_RUOLO[g.r].toLowerCase()}` };
+  const presi = S.presi;
+  S.presi = { ...presi, [id]: true };
+  const senza = ottimizza();
+  S.presi = presi;
+  const f0 = senza.errore ? -Infinity : senza.forza;
+  const rosa = mia();
+  const forzaA = (x) => { rosa[id] = x; const s = ottimizza(); delete rosa[id]; return s.errore ? -Infinity : s.forza; };
+  if (forzaA(1) < f0 - 1e-9) return { max: 0, motivo: "anche a 1 credito la rosa migliore senza di lui e' piu' forte" };
+  let lo = 1, hi = me.maxOff, best = 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (forzaA(mid) >= f0 - 1e-9) { best = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  return { max: best, motivo: best >= me.maxOff ? "e' la tua offerta massima: oltre non puoi" : "oltre, la rosa migliore senza di lui e' piu' forte" };
+}
+
+function renderChiamato() {
+  const box = $("#chiamato");
+  const id = S.asta.chiamato;
+  if (!id || OWNER.has(id)) {
+    box.innerHTML = `<p class="lbl" style="margin-top:10px">Scrivi il nome del giocatore chiamato: vedrai quanto vale per te, fin dove spingerti e chi puo' ancora contendertelo. Poi registri chi l'ha preso e a quanto.</p>`;
+    return;
+  }
+  const g = BY_ID.get(id), st = statoSquadre(), me = st[S.asta.io];
+  const chiave = `${id}|${S.asta.log.length}|${S.margine}|${S.modo}|${S.tetto}|${JSON.stringify(S.budgetRuolo)}`;
+  const pa = prezzoAtteso(g);
+  const rivali = st.filter((t) => t.i !== S.asta.io).map((t) => ({ t, ok: t.liberi[g.r] > 0 && t.maxOff >= 1 }));
+  const scelta = S.asta.scelta;
+  box.innerHTML = `<div class="chiamato">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><h3><span class="role ${g.r}" style="vertical-align:5px">${g.r}</span> ${esc(g.nome)}${tag(g)}${S.asta.obiettivi.includes(id) ? '<span class="tag obj">OBIETTIVO</span>' : ""}</h3>
+        <div class="sub lbl" style="text-transform:capitalize">${esc(nomeSq(g.sq))}</div></div>
+      <button class="btn small" data-open="${id}">Scheda</button>
+    </div>
+    <div class="kv" style="margin:0">
+      <div><b>${fmt(g.pg, 2)}</b><small>punti a giornata</small></div>
+      <div><b>${fmt(g.val, 0)}</b><small>valore</small></div>
+      <div><b>${pa}</b><small>prezzo atteso ora</small></div>
+      <div><b>${me.maxOff}</b><small>la tua offerta massima</small></div>
+    </div>
+    <div class="spinta" id="spinta">${SPINTA.chiave === chiave
+      ? `<span>Spingiti fino a</span><b>${SPINTA.val.max}</b><span>crediti</span><span class="lbl">${SPINTA.val.motivo}</span>`
+      : `<span class="lbl">Calcolo fin dove spingerti…</span>`}</div>
+    <div><div class="lbl" style="margin-bottom:6px">Chi puo' ancora prenderlo, e al massimo a quanto</div>
+      <div class="conc">${rivali.map(({ t, ok }) => `<span class="${ok ? "" : "no"}" title="${ok ? "" : t.liberi[g.r] <= 0 ? "ruolo pieno" : "crediti finiti"}">${esc(t.nome)} ${ok ? t.maxOff : "–"}</span>`).join("")}</div></div>
+    <div><div class="lbl" style="margin-bottom:6px">Chi l'ha preso</div>
+      <div class="chi">${st.map((t) => `<button data-squadra="${t.i}" aria-pressed="${scelta === t.i}" ${t.liberi[g.r] <= 0 ? "disabled" : ""}>${esc(t.nome)}</button>`).join("")}</div></div>
+    <form class="registra" id="fasta">
+      <label class="lbl" for="prezzo-asta">a</label>
+      <input id="prezzo-asta" type="number" min="1" max="${META.crediti}" value="${pa}">
+      <span class="lbl">crediti</span>
+      <button type="button" class="btn live-go" id="registra">Aggiudicato</button>
+      <span class="alert" id="err-asta" hidden></span>
+    </form>
+  </div>`;
+  $("#fasta").onsubmit = (e) => { e.preventDefault(); registraDaForm(); };
+  if (SPINTA.chiave !== chiave) {
+    setTimeout(() => {
+      if (S.asta.chiamato !== id) return;
+      SPINTA = { chiave, val: calcolaSpinta(id) };
+      const el = $("#spinta");
+      if (el) el.innerHTML = `<span>Spingiti fino a</span><b>${SPINTA.val.max}</b><span>crediti</span><span class="lbl">${SPINTA.val.motivo}</span>`;
+    }, 30);
+  }
+}
+
+function registraDaForm() {
+  const err = (m) => { const e = $("#err-asta"); e.textContent = m; e.hidden = false; };
+  const id = S.asta.chiamato, t = S.asta.scelta;
+  if (!id) return;
+  if (t == null) return err("Scegli chi l'ha preso.");
+  const prezzo = Math.round(+$("#prezzo-asta").value || 0);
+  const g = BY_ID.get(id), s = statoSquadre()[t];
+  if (prezzo < 1) return err("Il prezzo minimo e' 1 credito.");
+  if (s.liberi[g.r] <= 0) return err(`${s.nome} ha gia' tutti i ${NOMI_RUOLO[g.r].toLowerCase()}.`);
+  if (prezzo > s.maxOff) return err(`${s.nome} puo' offrire al massimo ${s.maxOff} crediti.`);
+  S.asta.squadre[t].rosa[id] = prezzo;
+  S.asta.log.push({ id, t, p: prezzo, ora: new Date().toISOString() });
+  S.asta.chiamato = null; S.asta.scelta = null;
+  aggiorna();
+  $("#cerca-asta").focus();
+}
+
+function rimuoviAcquisto(id) {
+  for (const t of S.asta.squadre) delete t.rosa[id];
+  S.asta.log = S.asta.log.filter((x) => x.id !== id);
+}
+
+function annullaUltimo() {
+  const x = S.asta.log.pop();
+  if (x) delete S.asta.squadre[x.t].rosa[x.id];
+  aggiorna();
+}
+
+function dialogoAvvio() {
+  const nomi = S.asta ? S.asta.squadre.map((t) => t.nome) : NOMI_DEFAULT.slice(0, META.n_squadre);
+  apri(`<h3>Modalità asta</h3>
+    <p class="lbl">Da qui in poi la tua rosa e' quella reale: registri ogni acquisto, tuo e degli altri, e il tool ricalcola suggerimenti, prezzi e occasioni.</p>
+    <div class="nomi">${nomi.map((n, i) => `<label>${i === 0 ? "La tua squadra" : "Avversario " + i}<input id="nome-${i}" value="${esc(n)}" maxlength="24"></label>`).join("")}</div>
+    ${S.asta ? "" : `<div class="row"><span class="lbl">Obiettivi dal piano</span><div class="seg mini">${["A", "B", "C"].map((p) =>
+      `<button type="button" data-obj="${p}" aria-pressed="${S.piano === p}">Piano ${p} (${Object.keys(S.piani[p]).length})</button>`).join("")}</div></div>
+    <p class="lbl">I giocatori del piano scelto restano segnati come OBIETTIVO nel listone. Non sono acquisti: le rose partono vuote.</p>`}
+    <p class="nota">Da definire: tipo di asta e ordine dei ruoli. Per ora ogni ruolo si puo' chiamare in qualsiasi momento.</p>
+    <div class="actions">
+      <button class="btn" data-close>Annulla</button>
+      ${S.asta ? `<button class="btn" id="asta-nuova">Nuova asta da zero</button>` : ""}
+      <button class="btn live-go" id="asta-ok">${S.asta ? "Riprendi l'asta" : "Avvia l'asta"}</button>
+    </div>`);
+  let piano = S.piano;
+  document.querySelectorAll("[data-obj]").forEach((b) => b.onclick = () => {
+    piano = b.dataset.obj;
+    document.querySelectorAll("[data-obj]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  });
+  const leggiNomi = () => nomi.map((n, i) => ($(`#nome-${i}`).value.trim() || n));
+  const parti = (nuova) => {
+    const n = leggiNomi();
+    if (!S.asta || nuova) {
+      S.asta = { attiva: true, io: 0, squadre: n.map((nome) => ({ nome, rosa: {} })), log: [],
+                 obiettivi: Object.keys(S.piani[piano]).map(Number), presiPiano: S.presi,
+                 chiamato: null, scelta: null, aperta: null };
+    } else {
+      S.asta.attiva = true;
+      S.asta.squadre.forEach((t, i) => { t.nome = n[i]; });
+    }
+    chiudi();
+    vista("asta");
+    aggiorna();
+    const top = document.querySelector(".top");
+    top.classList.remove("entra"); void top.offsetWidth; top.classList.add("entra");
+    $("#cerca-asta").focus();
+  };
+  $("#asta-ok").onclick = () => parti(false);
+  if ($("#asta-nuova")) $("#asta-nuova").onclick = () => parti(true);
+}
+
+function dialogoChiusura() {
+  apri(`<h3>Chiudere l'asta?</h3>
+    <p class="lbl">Gli acquisti restano salvati: puoi riprendere l'asta quando vuoi dal pulsante in alto. Il tool torna ai piani A, B e C.</p>
+    <div class="actions"><button class="btn" data-close>Resta in asta</button><button class="btn primary" id="asta-stop">Chiudi l'asta</button></div>`);
+  $("#asta-stop").onclick = () => {
+    S.asta.attiva = false;
+    S.presi = S.asta.presiPiano || {};
+    OWNER = new Map();
+    chiudi(); aggiorna();
+  };
+}
+
+function esportaAsta() {
+  const txt = JSON.stringify({ asta: S.asta });
+  apri(`<h3>Esporta l'asta</h3><p class="lbl">Tutto lo stato dell'asta: squadre, acquisti, obiettivi. Con Importa lo ricarichi qui o su un altro dispositivo.</p>
+    <textarea id="txt" readonly>${esc(txt)}</textarea>
+    <div class="actions"><button class="btn" data-close>Chiudi</button><button class="btn primary" id="copia">Copia</button></div>`);
+  $("#copia").onclick = async () => {
+    try { await navigator.clipboard.writeText(txt); $("#copia").textContent = "Copiato"; }
+    catch (e) { $("#txt").select(); $("#copia").textContent = "Selezionato: premi Ctrl+C"; }
+  };
+}
+
+function importaAsta() {
+  apri(`<h3>Importa un'asta</h3><p class="lbl">Incolla il testo esportato. Sostituisce l'asta in corso.</p>
+    <textarea id="txt"></textarea><p class="alert" id="errimp" hidden></p>
+    <div class="actions"><button class="btn" data-close>Annulla</button><button class="btn primary" id="okimp">Importa</button></div>`);
+  $("#okimp").onclick = () => {
+    try {
+      const x = JSON.parse($("#txt").value).asta;
+      if (!x || !Array.isArray(x.squadre) || !Array.isArray(x.log)) throw new Error();
+      S.asta = { ...x, attiva: true };
+      chiudi(); vista("asta"); aggiorna();
+    } catch (e) { const el = $("#errimp"); el.textContent = "Testo non valido: incolla esattamente quello copiato da Esporta l'asta."; el.hidden = false; }
+  };
+}
+
+function risultatiRicerca() {
+  const q = $("#cerca-asta").value.trim().toLowerCase();
+  const box = $("#risultati");
+  if (!q) { box.hidden = true; return []; }
+  const l = DATA.giocatori.filter((g) => !OWNER.has(g.id) && g.nome.toLowerCase().includes(q))
+    .sort((a, b) => (a.nome.toLowerCase().startsWith(q) ? 0 : 1) - (b.nome.toLowerCase().startsWith(q) ? 0 : 1) || b.pg - a.pg).slice(0, 7);
+  box.innerHTML = l.map((g, i) => `<button class="${i === 0 ? "sel" : ""}" data-chiama="${g.id}"><span class="role ${g.r}">${g.r}</span>
+    <span><b>${esc(g.nome)}</b> <small class="lbl" style="text-transform:capitalize">${esc(nomeSq(g.sq))}</small></span><span class="lbl">${fmt(g.pg, 2)} pt/g · ${prezzoAtteso(g)} cr</span></button>`).join("")
+    || `<div class="lbl" style="padding:8px 10px">Nessun giocatore libero con questo nome.</div>`;
+  box.hidden = false;
+  return l;
+}
+
 // --- eventi -----------------------------------------------------------------------------
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button, [data-close]");
@@ -810,6 +1232,24 @@ document.addEventListener("click", (e) => {
   const d = t.dataset;
   if (d.close !== undefined) return chiudi();
   if (d.open) return scheda(+d.open);
+  if (d.chiama) { chiudi(); return chiama(+d.chiama); }
+  if (d.squadra !== undefined) { S.asta.scelta = +d.squadra; return renderChiamato(); }
+  if (d.occ) { chiudi(); return chiama(+d.occ); }
+  if (t.id === "asta-avvia") return dialogoAvvio();
+  if (t.id === "asta-chiudi") return dialogoChiusura();
+  if (t.id === "registra") return registraDaForm();
+  if (t.id === "annulla-ultimo") return annullaUltimo();
+  if (t.id === "esporta-asta") return esportaAsta();
+  if (t.id === "importa-asta") return importaAsta();
+  if (d.vedi !== undefined) { S.asta.aperta = S.asta.aperta === +d.vedi ? null : +d.vedi; return renderAsta(); }
+  if (inAsta() && d.add) {
+    const id = +d.add;
+    const g = BY_ID.get(id);
+    return apri(`<h3>Annullare l'acquisto?</h3><p class="lbl">${esc(g.nome)} torna libero e i crediti tornano disponibili.</p>
+      <div class="actions"><button class="btn" data-close>No</button><button class="btn primary" data-annulla="${id}">Annulla l'acquisto</button></div>`);
+  }
+  if (d.annulla) { rimuoviAcquisto(+d.annulla); chiudi(); return aggiorna(); }
+  if (inAsta() && d.prendi) return chiama(+d.prendi);
   if (d.add) {
     const id = +d.add;
     if (mia()[id] != null) { delete mia()[id]; chiudi(); return aggiorna(); }
@@ -839,11 +1279,7 @@ document.addEventListener("click", (e) => {
     S.f.r = d.r; document.querySelectorAll("#ruoli button").forEach((b) => b.setAttribute("aria-pressed", b === t));
     return renderListone();
   }
-  if (d.view) {
-    $("#main").dataset.view = d.view;
-    document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b === t));
-    return;
-  }
+  if (d.view) return vista(d.view);
   if (t.id === "svuota") { S.piani[S.piano] = {}; return aggiorna(); }
   if (t.id === "esporta") return esporta();
   if (t.id === "importa") return importa();
@@ -859,6 +1295,11 @@ document.addEventListener("change", (e) => {
   if (id === "hide") { S.f.hide = e.target.checked; renderListone(); }
 });
 $("#q").addEventListener("input", (e) => { S.f.q = e.target.value; renderListone(); });
+$("#cerca-asta").addEventListener("input", risultatiRicerca);
+$("#cerca-asta").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); const l = risultatiRicerca(); if (l.length) chiama(l[0].id); }
+  if (e.key === "Escape") { $("#risultati").hidden = true; }
+});
 $("#pmax").addEventListener("input", (e) => { S.f.pmax = +e.target.value || null; renderListone(); });
 document.querySelector("thead").addEventListener("click", (e) => {
   const th = e.target.closest("th[data-k]"); if (!th) return;
@@ -871,6 +1312,11 @@ document.querySelector("thead").addEventListener("click", (e) => {
 fetch("data.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then((d) => {
   DATA = d; META = d.meta; BY_ID = new Map(d.giocatori.map((g) => [g.id, g]));
   carica();
+  for (const r of RUOLI) {
+    const l = d.giocatori.filter((g) => g.r === r).map((g) => g.pg).sort((a, b) => b - a);
+    SOGLIA[r] = l[Math.min(TITOLARI_LEGA[r], l.length) - 1] ?? 0;
+  }
+  if (inAsta()) vista("asta");
   $("#meta").textContent = `Serie A ${META.stagione} · dati alla ${META.giornata}ª giornata · ${META.giornate_residue} giornate da comprare · ${META.n_squadre} squadre, ${META.crediti} crediti`;
   $("#sq").innerHTML += d.squadre.map((s) => `<option value="${s.slug}">${esc(s.nome)}</option>`).join("");
   aggiorna();

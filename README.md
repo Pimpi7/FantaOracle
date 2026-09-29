@@ -58,6 +58,32 @@ residuo per ruolo resta visibile.
 
 Tre piani (A, B, C) salvati nel browser, esportabili e reimportabili come testo.
 
+**Modalità asta.** Il pulsante rosso in testata avvia l'asta live. Si danno i nomi
+alle 8 squadre e si sceglie da quale piano prendere gli obiettivi (restano segnati
+nel listone, le rose partono vuote). Da lì la testata diventa la fascia scura
+"In asta" e compare la sezione **Asta**:
+
+- **Occasioni di fine ruolo**, in cima: titolari buoni ancora liberi che gli
+  avversari non possono più contendersi, per slot pieni o crediti finiti, con il
+  prezzo realistico accanto a quello atteso. Il prezzo realistico è il massimo che
+  può offrire il rivale più ricco con uno slot libero in quel ruolo, più uno.
+- **Giocatore chiamato**: cerchi il nome e vedi punti attesi, valore, prezzo
+  atteso e la tua offerta massima. Poi **fin dove spingerti**: il prezzo più alto a
+  cui la rosa migliore con lui resta forte almeno quanto la rosa migliore senza di
+  lui. Si calcola rifacendo l'ottimizzazione a ogni prezzo provato, per bisezione.
+  Sotto, chi può ancora prenderlo e al massimo a quanto.
+- **Registrazione**: chi l'ha preso, a quanto, Aggiudicato. Il tool rifiuta le
+  offerte che superano il massimo possibile di quella squadra o un ruolo già pieno.
+- **Squadre**: crediti, offerta massima e slot liberi per ruolo di ognuna, con la
+  rosa apribile. **Ultimi acquisti**, con Annulla l'ultimo.
+
+Durante l'asta "La mia rosa" è la rosa reale: i tuoi acquisti al prezzo pagato,
+gli acquisti degli altri esclusi dai suggerimenti. I prezzi attesi dei giocatori
+rimasti seguono il mercato: si riscalano sui crediti che restano davvero rispetto
+a quelli che il mercato avrebbe chiesto per riempire le rose. Lo stato è salvato
+nel browser a ogni acquisto ed è esportabile. Da definire: tipo di asta e ordine
+dei ruoli (per ora ogni ruolo si può chiamare in qualsiasi momento).
+
 ---
 
 ## Avvio
@@ -320,9 +346,9 @@ funzioni a gradini la media non basta).
 
 ## Prossimi passi
 
-1. Modalità asta: stato dell'asta in tempo reale, crediti e rose degli
-   avversari, offerta massima consigliata sul giocatore chiamato. In cima, le
-   **occasioni di fine ruolo**: giocatori buoni rimasti liberi quando un ruolo
+1. Modalità asta, rifiniture: tipo di asta e ordine dei ruoli, stato condiviso
+   fra computer e telefono. (La prima versione è nel tool: vedi sopra. Nota
+   originale sulle **occasioni di fine ruolo**: giocatori buoni rimasti liberi quando un ruolo
    sta per chiudersi, che si possono prendere a pochissimo. Si avvia con un
    pulsante rosso lampeggiante **Modalità asta** in testata, con un passaggio di
    conferma e la scelta del piano da cui partire; ad asta avviata il pulsante
