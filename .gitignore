@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+
+# Snapshot grezzi: SI' in git. Sono la fonte di verita' da cui si ricostruisce
+# tutto, sono piccoli (Parquet) e append-only: ogni raccolta aggiunge una
+# partizione datata, non ne riscrive nessuna.
+# Cache HTTP: NO, sono le pagine grezze scaricate, rigenerabili dal web.
+data/cache/
+
+# Il database DuckDB si ricostruisce dagli snapshot in pochi secondi
+# (`make db`). Tenerlo in git farebbe crescere la repo di qualche MB a ogni
+# aggiornamento, per un file che non contiene nulla di non ricostruibile.
+data/*.duckdb
+data/*.duckdb.wal
+
+data/proc/*
+!data/proc/.gitkeep
