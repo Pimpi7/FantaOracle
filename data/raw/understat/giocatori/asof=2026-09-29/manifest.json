@@ -1,0 +1,36 @@
+{
+  "fonte": "understat",
+  "dataset": "giocatori",
+  "asof": "2026-09-29",
+  "scaricato_il": "2026-09-29T21:29:18",
+  "righe": 2223,
+  "colonne": [
+    "us_id",
+    "player_name",
+    "games",
+    "time",
+    "goals",
+    "xG",
+    "assists",
+    "xA",
+    "shots",
+    "key_passes",
+    "yellow_cards",
+    "red_cards",
+    "position",
+    "team_title",
+    "npg",
+    "npxG",
+    "xGChain",
+    "xGBuildup",
+    "anno",
+    "rigori_stimati",
+    "gol_rigore"
+  ],
+  "anni": [
+    2023,
+    2024,
+    2025,
+    2026
+  ]
+}

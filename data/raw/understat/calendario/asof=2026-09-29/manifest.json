@@ -1,0 +1,25 @@
+{
+  "fonte": "understat",
+  "dataset": "calendario",
+  "asof": "2026-09-29",
+  "scaricato_il": "2026-09-29T21:29:18",
+  "righe": 1520,
+  "colonne": [
+    "anno",
+    "us_match_id",
+    "giocata",
+    "data",
+    "casa",
+    "trasferta",
+    "gol_casa",
+    "gol_trasferta",
+    "xg_casa",
+    "xg_trasferta"
+  ],
+  "anni": [
+    2023,
+    2024,
+    2025,
+    2026
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "fonte": "fantacalcio_it",
+  "dataset": "voti",
+  "asof": "2026-09-29",
+  "scaricato_il": "2026-09-29T21:33:55",
+  "righe": 37304,
+  "colonne": [
+    "fc_id",
+    "squadra_slug",
+    "slug",
+    "nome",
+    "ruolo",
+    "subentrato",
+    "sostituito",
+    "sv",
+    "voto",
+    "fantavoto",
+    "ammonizione",
+    "espulsione",
+    "gol",
+    "gol_subiti",
+    "autogol",
+    "rigori_segnati",
+    "rigori_sbagliati",
+    "rigori_parati",
+    "assist",
+    "stagione",
+    "giornata",
+    "squadra",
+    "fonte_voti"
+  ],
+  "stagioni": {
+    "2023-24": 38,
+    "2024-25": 38,
+    "2025-26": 38,
+    "2026-27": 5
+  },
+  "errori": []
+}
