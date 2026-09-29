@@ -30,11 +30,19 @@ def _r(x, n=2):
 def pagina() -> None:
     """web/index.html = web/tool.html dentro un documento completo.
 
-    tool.html e' scritto come frammento (titolo, stile, markup, script) perche' e'
-    anche il sorgente della pagina pubblicata come artifact, che aggiunge da se'
-    doctype e head. Per GitHub Pages serve invece il documento intero.
+    Il tool e' diviso in tre file: tool.html (struttura), tool.css (stile) e
+    tool.js (logica). tool.html e' scritto come frammento (titolo, link, markup)
+    perche' e' anche il sorgente della pagina pubblicata come artifact, che
+    aggiunge da se' doctype e head. Per GitHub Pages serve il documento intero;
+    ai riferimenti a tool.css e tool.js si aggiunge un'impronta del contenuto,
+    cosi' dopo un aggiornamento il browser non tiene in cache la versione vecchia.
     """
+    import hashlib
+
     corpo = (WEB / "tool.html").read_text(encoding="utf-8")
+    for nome, attr in (("tool.css", "href"), ("tool.js", "src")):
+        impronta = hashlib.sha256((WEB / nome).read_bytes()).hexdigest()[:10]
+        corpo = corpo.replace(f'{attr}="{nome}"', f'{attr}="{nome}?v={impronta}"')
     (WEB / "index.html").write_text(
         "<!doctype html>\n<html lang=\"it\">\n<head>\n<meta charset=\"utf-8\">\n"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"

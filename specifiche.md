@@ -273,7 +273,7 @@ un'indicazione, non una regola.
 
 ## Il costruttore
 
-[`web/tool.html`](web/tool.html)
+[`web/tool.js`](web/tool.js)
 
 L'obiettivo non è la somma dei 25 giocatori ma la forza dell'undici che puoi
 schierare ogni settimana. Dentro ogni ruolo i giocatori sono ordinati per punti
@@ -326,7 +326,12 @@ fantaoracle/
   db.py                     schema e build del database
   store.py                  snapshot append-only
   export.py                 dati e pagina del tool
-web/                        il tool (tool.html è il sorgente, index.html il documento per Pages)
+web/
+  tool.html                 struttura della pagina (frammento, sorgente anche dell'artifact)
+  tool.css                  stile: token di colore per tema chiaro, scuro e modalità asta
+  tool.js                   logica: ottimizzatore, listone, rosa, formazione tipo, asta
+  index.html                documento completo per Pages, generato da `export`
+  data.json                 giocatori, proiezioni, valutazioni e regole della lega
 data/raw/                   snapshot in Parquet
 data/ref/                   tabelle curate a mano (override dei nomi)
 tests/                      63 test

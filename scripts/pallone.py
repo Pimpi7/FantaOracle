@@ -10,7 +10,7 @@ un riflesso per il volume.
     python scripts/pallone.py > /tmp/pallone.svg
 
 Stampa l'SVG su una riga, pronto da incollare nella costante PALLONE di
-web/tool.html.
+web/tool.js.
 """
 
 from __future__ import annotations
