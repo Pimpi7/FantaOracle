@@ -21,8 +21,11 @@
   --mark: #f6d743;         /* evidenziatore: i suggerimenti */
   --mark-bg: #fdf1a8;
   --mark-fg: #2e2600;
-  --brand: #16201a;        /* pulsante primario */
-  --brand-fg: #f3f6f2;
+  --brand: #1e6b35;        /* pulsante primario: verde campo */
+  --brand-fg: #ffffff;
+  --grass-1: #2e7d3c;      /* strisce d'erba della testata */
+  --grass-2: #2a7337;
+  --chalk: #f4f7f2;        /* linee di gesso */
   --go: #1d7a4a; --warn: #a86a12; --bad: #b3261e;
   --r-p: #d9821b; --r-d: #2b8a4c; --r-c: #2d68b8; --r-a: #c53a2e;  /* colori di ruolo */
   --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -33,7 +36,8 @@
   :root:not([data-theme="light"]) {
     --paper: #0f1512; --sheet: #161e1a; --ink: #e5ece6; --ink-2: #9aa89f;
     --rule: #28342d; --tint: #1c2621; --mark: #e2c436; --mark-bg: #4a4012; --mark-fg: #fff3b8;
-    --brand: #e5ece6; --brand-fg: #0f1512;
+    --brand: #4fc473; --brand-fg: #0b1a10;
+    --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
     --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
     --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
     color-scheme: dark;
@@ -42,7 +46,8 @@
 :root[data-theme="dark"] {
   --paper: #0f1512; --sheet: #161e1a; --ink: #e5ece6; --ink-2: #9aa89f;
   --rule: #28342d; --tint: #1c2621; --mark: #e2c436; --mark-bg: #4a4012; --mark-fg: #fff3b8;
-  --brand: #e5ece6; --brand-fg: #0f1512;
+  --brand: #4fc473; --brand-fg: #0b1a10;
+  --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
   --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
   --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
   color-scheme: dark;
@@ -72,8 +77,18 @@ button { cursor: pointer; }
 /* --- testata --- */
 .top {
   display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px;
-  padding-block: 14px 10px; border-bottom: 2px solid var(--ink);
+  padding-block: 14px 12px; margin-inline: -16px; padding-inline: 16px; position: relative;
+  color: #ffffff; border-bottom: 3px solid var(--chalk);
+  background: repeating-linear-gradient(90deg, var(--grass-1) 0 64px, var(--grass-2) 64px 128px);
 }
+/* meta' campo: cerchio di centrocampo accennato a destra della testata */
+.top::before { content: ""; position: absolute; right: 22%; top: 50%; width: 120px; height: 120px; margin-top: -60px;
+  border: 2px solid rgb(255 255 255 / 0.14); border-radius: 50%; pointer-events: none; }
+.top > * { position: relative; }
+.top .meta { color: rgb(255 255 255 / 0.78); }
+.top .stat small { color: rgb(255 255 255 / 0.72); }
+.top .brand { color: #ffffff; }
+.top .brand span { color: #1b1606; }
 .brand { font: 700 30px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; }
 .brand span { background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 92%, transparent 92%); padding-inline: 2px; }
 .meta { color: var(--ink-2); font-size: 12.5px; }
@@ -90,6 +105,9 @@ button { cursor: pointer; }
 .main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr); gap: 18px; padding-block: 14px 16px; min-height: 0; }
 .pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .pane h2 { font: 700 20px/1 var(--font-display); letter-spacing: 0.01em; margin: 0; text-transform: uppercase; }
+.tabs button { font: 700 15px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; padding: 10px; }
+th { border-bottom-color: var(--brand); }
+.ruolo-h { border-bottom: 2px solid var(--tint); padding-bottom: 6px; }
 
 /* --- filtri --- */
 .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 0 10px; }
@@ -188,6 +206,10 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .alts div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; font-size: 12.5px; }
 .alts span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .squadre { display: flex; flex-wrap: wrap; gap: 6px; }
+.campo-card { padding: 0; }
+.campo-card .ruolo-h { padding: 12px 12px 6px; margin: 0; border: 0; }
+.campo { display: block; width: 100%; height: auto; aspect-ratio: 600 / 340; border-radius: 0 0 var(--radius) var(--radius); }
+.campo text { font-family: var(--font-body); }
 .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); text-transform: capitalize; }
 .chip.full { border-color: var(--warn); color: var(--warn); font-weight: 600; }
 .chip.over { border-color: var(--bad); color: var(--bad); font-weight: 700; }
@@ -224,7 +246,9 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .live { display: inline-flex; align-items: center; gap: 8px; font: 700 15px/1 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--live); }
 .live .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--live); }
 .live button { font: 600 12px/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--stage-2); background: none; border: 1px solid currentColor; border-radius: 999px; padding: 4px 9px; }
-:root[data-asta] .top { background: var(--stage); color: var(--stage-fg); border-bottom: 3px solid var(--live); margin-inline: -16px; padding-inline: 16px; position: relative; }
+:root[data-asta] .top { background: var(--stage); color: var(--stage-fg); border-bottom: 3px solid var(--live); }
+:root[data-asta] .top::before { border-color: rgb(255 75 95 / 0.18); }
+:root[data-asta] .top .brand span { color: #ffffff; }
 :root[data-asta] .top .meta, :root[data-asta] .stat small { color: var(--stage-2); }
 :root[data-asta] .top { --cs: 78%; --cl: 64%; }
 :root[data-asta] .brand span { background: linear-gradient(transparent 58%, var(--live) 58%, var(--live) 92%, transparent 92%); }
@@ -782,6 +806,8 @@ function renderRosa() {
     </div>
   </div>`;
 
+  h += campo(tutti);
+
   for (const r of RUOLI) {
     const miei = scelti.filter((x) => x.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
     const sug = SUGG.lista.filter((c) => c.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
@@ -834,6 +860,63 @@ function aggiorna() {
   salva();
 }
 
+
+// --- la formazione tipo sul campo ---------------------------------------------------------
+// Gli 11 migliori della rosa (scelti + suggeriti) nel modulo che rende di piu'.
+// Con la difesa a 4 o 5 si aggiunge la stima del modificatore.
+const MODULI = ["3-4-3", "3-5-2", "4-3-3", "4-4-2", "4-5-1", "5-3-2", "5-4-1"];
+function formazioneTipo(tutti) {
+  // un giocatore gia' scelto non va contato (ne' cerchiato) anche come suggerito
+  const visti = new Set(), unici = [];
+  for (const x of [...tutti.filter((x) => !x.s), ...tutti.filter((x) => x.s)])
+    if (!visti.has(x.g.id)) { visti.add(x.g.id); unici.push(x); }
+  const per = {};
+  for (const r of RUOLI) per[r] = unici.filter((x) => x.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
+  let best = null;
+  for (const m of MODULI) {
+    const [d, c, a] = m.split("-").map(Number);
+    if (per.P.length < 1 || per.D.length < d || per.C.length < c || per.A.length < a) continue;
+    const xi = { P: per.P.slice(0, 1), D: per.D.slice(0, d), C: per.C.slice(0, c), A: per.A.slice(0, a) };
+    const tot = RUOLI.reduce((s, r) => s + xi[r].reduce((q, x) => q + x.g.pg, 0), 0) + (d >= 4 ? 1.5 : 0);
+    if (!best || tot > best.tot) best = { m, xi, tot };
+  }
+  return best;
+}
+
+function campo(tutti) {
+  const f = formazioneTipo(tutti);
+  if (!f) return "";
+  const W = 600, H = 340, cx = { P: 64, D: 190, C: 345, A: 500 };
+  const short = (n) => (n.length > 13 ? n.slice(0, 12) + "." : n);
+  const pallini = RUOLI.map((r) => {
+    const l = f.xi[r], n = l.length;
+    return l.map((x, i) => {
+      const y = n === 1 ? H / 2 - 8 : 34 + (i * (H - 96)) / (n - 1);
+      const col = { P: "var(--r-p)", D: "var(--r-d)", C: "var(--r-c)", A: "var(--r-a)" }[r];
+      return `<g>
+        ${x.s ? `<circle cx="${cx[r]}" cy="${y}" r="22" fill="none" stroke="var(--mark)" stroke-width="3.5"/>` : ""}
+        <circle cx="${cx[r]}" cy="${y}" r="18" fill="${col}" stroke="#ffffff" stroke-width="2.5"/>
+        <text x="${cx[r]}" y="${y + 5}" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">${fmt(x.g.pg, 1)}</text>
+        <text x="${cx[r]}" y="${y + 38}" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff" stroke="rgb(0 0 0 / 0.55)" stroke-width="3.5" paint-order="stroke">${esc(short(x.g.nome))}</text>
+      </g>`;
+    }).join("");
+  }).join("");
+  const strisce = Array.from({ length: 8 }, (_, i) => `<rect x="${i * 75}" y="0" width="37.5" height="${H}" fill="rgb(255 255 255 / 0.05)"/>`).join("");
+  return `<div class="card campo-card">
+    <div class="ruolo-h"><h3>Formazione tipo ${f.m}</h3><span class="lbl">${fmt(f.tot - (+f.m[0] >= 4 ? 1.5 : 0), 1)} pt/g attesi dagli 11 · cerchiati i suggeriti</span></div>
+    <svg class="campo" viewBox="0 0 ${W} ${H}" role="img" aria-label="Formazione tipo ${f.m}">
+      <rect width="${W}" height="${H}" fill="var(--grass-1)"/>${strisce}
+      <g fill="none" stroke="rgb(255 255 255 / 0.55)" stroke-width="2">
+        <rect x="8" y="8" width="${W - 16}" height="${H - 16}"/>
+        <line x1="${W / 2}" y1="8" x2="${W / 2}" y2="${H - 8}"/>
+        <circle cx="${W / 2}" cy="${H / 2}" r="42"/>
+        <rect x="8" y="${H / 2 - 70}" width="70" height="140"/><rect x="8" y="${H / 2 - 32}" width="24" height="64"/>
+        <rect x="${W - 78}" y="${H / 2 - 70}" width="70" height="140"/><rect x="${W - 32}" y="${H / 2 - 32}" width="24" height="64"/>
+      </g>
+      ${pallini}
+    </svg>
+  </div>`;
+}
 // --- scheda giocatore e dialoghi ----------------------------------------------------------
 function chiudi() { $("#overlay").hidden = true; $("#overlay").innerHTML = ""; }
 function apri(html) { const o = $("#overlay"); o.innerHTML = `<div class="dialog" role="dialog" aria-modal="true">${html}</div>`; o.hidden = false; const f = o.querySelector("input, button"); if (f) f.focus(); }
