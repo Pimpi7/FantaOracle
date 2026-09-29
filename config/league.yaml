@@ -101,6 +101,19 @@ asta:
   ordine_ruoli: PENDING       # es. [P, D, C, A] oppure "libero"
   prezzo_minimo: 1
 
+# Mercato della nostra asta: come si discosta dalle valutazioni medie.
+mercato:
+  # Maggiorazione del prezzo atteso per i giocatori delle squadre con piu' tifosi
+  # fra gli avversari. Peso basso di proposito: piu' romanisti che laziali.
+  # I crediti spesi qui mancano altrove: il resto del listone costa un po' meno.
+  tifo:
+    roma: 0.06
+    lazio: 0.03
+  # Tetto di giocatori della stessa squadra reale nella rosa suggerita.
+  max_per_squadra: 3
+  # Il blocco portieri (piu' portieri della stessa squadra) e' escluso dal tetto.
+  blocco_portieri_esente: true
+
 # Parametri del motore, non della lega. Modificabili liberamente.
 motore:
   n_simulazioni: 10000
