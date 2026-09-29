@@ -259,17 +259,17 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 
 /* --- modalita' asta --- */
 /* il bottone e' un pallone: pill bianca con le cuciture, e un pallone vero appoggiato a destra */
-.asta-btn { position: relative; margin-right: 8px; border: 2px solid #16201a; border-radius: 999px; padding: 9px 40px 9px 18px;
+.asta-btn { position: relative; margin-right: 0; border: 2px solid #16201a; border-radius: 999px; padding: 9px 42px 9px 18px;
   color: #16201a; font: 700 15px/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
   background:
     radial-gradient(circle at 0 50%, transparent 0 13px, rgb(22 32 26 / 0.07) 13px 14px, transparent 14px) 0 0 / 28px 100% repeat-x,
     linear-gradient(180deg, #ffffff 0%, #f1f3f0 70%, #dfe4df 100%);
   box-shadow: 0 2px 0 rgb(0 0 0 / 0.25); }
 .asta-btn:hover { background-color: #ffffff; transform: translateY(-1px); }
-.asta-btn .pallone { position: absolute; right: -8px; top: 50%; width: 42px; height: 42px; margin-top: -21px;
+.asta-btn .pallone { position: absolute; right: -6px; top: 50%; width: 42px; height: 42px; margin-top: -21px;
   transform-origin: 50% 100%; pointer-events: none; }
 /* ombra a terra sotto il pallone: si stringe e schiarisce quando sale */
-.asta-btn .ombra { position: absolute; right: -2px; top: 50%; width: 30px; height: 7px; margin-top: 18px; border-radius: 50%;
+.asta-btn .ombra { position: absolute; right: 0; top: 50%; width: 30px; height: 7px; margin-top: 18px; border-radius: 50%;
   background: radial-gradient(closest-side, rgb(0 0 0 / 0.45), transparent); pointer-events: none; }
 .asta-btn .pallone svg, .pallone-volo svg { display: block; width: 100%; height: 100%; }
 .pallone-volo { position: fixed; z-index: 60; pointer-events: none; filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.35)); }
