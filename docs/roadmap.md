@@ -1,5 +1,5 @@
 > Piano originale del 29 settembre 2026, scritto quando l'asta era prevista dopo il 20 ottobre.
-> L'asta è stata poi fissata al 2 ottobre: il piano è stato compresso e lo stato aggiornato è nel README.
+> L'asta è stata poi fissata al 2 ottobre: il piano è stato compresso e lo stato aggiornato è in [specifiche.md](../specifiche.md).
 
 # fantaoracle — Roadmap v1 (costruttore di rosa)
 
