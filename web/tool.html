@@ -42,11 +42,11 @@
 }
 
 /* Asta: il palco. Rosso diretta e una fascia scura che si accende sulla testata. */
-:root { --live: #d3203a; --live-fg: #ffffff; --stage: #1b0e12; --stage-fg: #fbecee; --stage-2: #e2aab3; }
+:root { --live: #d3203a; --live-fg: #ffffff; --stage: #1b0e12; --stage-fg: #fbecee; --stage-2: #e2aab3; --cs: 72%; --cl: 36%; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --live: #ff4b5f; --live-fg: #1b0e12; --stage: #2a0f16; --stage-fg: #fbecee; --stage-2: #dd9aa5; }
+  :root:not([data-theme="light"]) { --live: #ff4b5f; --live-fg: #1b0e12; --stage: #2a0f16; --stage-fg: #fbecee; --stage-2: #dd9aa5; --cs: 75%; --cl: 62%; }
 }
-:root[data-theme="dark"] { --live: #ff4b5f; --live-fg: #1b0e12; --stage: #2a0f16; --stage-fg: #fbecee; --stage-2: #dd9aa5; }
+:root[data-theme="dark"] { --live: #ff4b5f; --live-fg: #1b0e12; --stage: #2a0f16; --stage-fg: #fbecee; --stage-2: #dd9aa5; --cs: 75%; --cl: 62%; }
 :root[data-asta] { --brand: var(--live); --brand-fg: var(--live-fg); }
 
 * { box-sizing: border-box; }
@@ -219,6 +219,7 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .live button { font: 600 12px/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--stage-2); background: none; border: 1px solid currentColor; border-radius: 999px; padding: 4px 9px; }
 :root[data-asta] .top { background: var(--stage); color: var(--stage-fg); border-bottom: 3px solid var(--live); margin-inline: -16px; padding-inline: 16px; position: relative; }
 :root[data-asta] .top .meta, :root[data-asta] .stat small { color: var(--stage-2); }
+:root[data-asta] .top { --cs: 78%; --cl: 64%; }
 :root[data-asta] .brand span { background: linear-gradient(transparent 58%, var(--live) 58%, var(--live) 92%, transparent 92%); }
 :root[data-asta] .tabs { display: flex; }
 @media (prefers-reduced-motion: no-preference) {
@@ -238,6 +239,7 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .asta { overflow: auto; min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 14px; align-content: start; }
 .asta > div { display: grid; gap: 14px; align-content: start; min-width: 0; }
 .asta h2 { font: 700 18px/1 var(--font-display); text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 10px; }
+.cr { font-weight: 700; }
 .card.hot { border-color: var(--live); box-shadow: inset 4px 0 0 var(--live); }
 .occ { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 4px; border-top: 1px solid var(--tint); }
 .occ:first-of-type { border-top: 0; }
@@ -258,6 +260,7 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .conc { display: flex; flex-wrap: wrap; gap: 6px; }
 .conc span { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--rule); }
 .conc span.no { opacity: 0.45; text-decoration: line-through; }
+.conc span.cr { border: 0; padding: 0; border-radius: 0; font-size: inherit; }
 .chi { display: flex; flex-wrap: wrap; gap: 6px; }
 .chi button { padding: 7px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); font-weight: 600; font-size: 13px; }
 .chi button[aria-pressed="true"] { background: var(--live); color: var(--live-fg); border-color: var(--live); }
@@ -426,6 +429,12 @@ const nomeSq = (s) => (DATA.squadre.find((x) => x.slug === s) || { nome: s }).no
 // INFL segue l'asta: se il tavolo spende piu' (o meno) del previsto, i prezzi
 // attesi dei giocatori rimasti si riscalano sui crediti che restano davvero.
 let INFL = 1;
+// In asta i crediti si colorano da verde (pieni) a rosso (finiti), in proporzione.
+function cr(val, max) {
+  if (!inAsta()) return String(val);
+  const f = Math.max(0, Math.min(1, max > 0 ? val / max : 0));
+  return `<span class="cr" style="color:hsl(${Math.round(f * 128)} var(--cs) var(--cl))">${val}</span>`;
+}
 const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * INFL * (1 + S.margine)));
 
 // --- ottimizzatore ----------------------------------------------------------------
@@ -690,8 +699,8 @@ function renderBudget() {
   const n = Object.keys(m).length, tot = RUOLI.reduce((a, r) => a + META.slot[r], 0);
   const resto = META.crediti - speso, max = resto - Math.max(0, tot - n - 1);
   $("#budget").innerHTML = `
-    <div class="stat"><b>${resto}</b><small>Crediti liberi</small></div>
-    <div class="stat${max < 1 ? " warn" : ""}"><b>${Math.max(0, max)}</b><small>Offerta massima</small></div>
+    <div class="stat"><b>${cr(resto, META.crediti)}</b><small>Crediti liberi</small></div>
+    <div class="stat${max < 1 ? " warn" : ""}"><b>${cr(Math.max(0, max), META.crediti - tot + 1)}</b><small>Offerta massima</small></div>
     <div class="stat"><b>${n}/${tot}</b><small>Giocatori</small></div>`;
 }
 
@@ -916,6 +925,8 @@ let OWNER = new Map();                                  // id giocatore -> indic
 let SOGLIA = {};                                        // pt/g dell'ultimo titolare della lega per ruolo
 let SPINTA = { chiave: null, val: null };
 
+const MAXOFF0 = () => META.crediti - (RUOLI.reduce((a, r) => a + META.slot[r], 0) - 1);
+
 function statoSquadre() {
   const slot = META.slot;
   return S.asta.squadre.map((t, i) => {
@@ -993,7 +1004,7 @@ function renderAsta() {
     ${occ.length ? occ.slice(0, 6).map((o) => `<div class="occ">
         <span class="role ${o.g.r}">${o.g.r}</span>
         <span class="who"><b>${esc(o.g.nome)}</b><small>${esc(nomeSq(o.g.sq))}</small></span>
-        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br>${o.n ? `${o.n} rivali, al massimo ${o.maxRivali}` : "nessun rivale"}</span>
+        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br>${o.n ? `${o.n} rivali, al massimo ${cr(o.maxRivali, MAXOFF0())}` : "nessun rivale"}</span>
         <button class="btn small" data-occ="${o.g.id}">Chiama</button></div>`).join("")
       : `<p class="lbl">Nessuna per ora. Compaiono quando in un ruolo restano titolari buoni e gli avversari non hanno piu' slot o crediti per contenderteli: li vedrai qui con il prezzo realistico.</p>`}`;
 
@@ -1001,7 +1012,7 @@ function renderAsta() {
   $("#squadre").innerHTML = `<h2>Squadre</h2><div style="overflow-x:auto"><table class="sq">
     <thead><tr><th class="l">Squadra</th><th>Crediti</th><th title="Offerta massima possibile adesso">Max</th><th class="l" title="Slot liberi per ruolo">Liberi P·D·C·A</th><th></th></tr></thead>
     <tbody>${st.map((t) => `<tr class="${t.i === S.asta.io ? "io" : ""}">
-      <td class="l">${esc(t.nome)}</td><td>${t.crediti}</td><td><b>${t.maxOff}</b></td>
+      <td class="l">${esc(t.nome)}</td><td>${cr(t.crediti, META.crediti)}</td><td>${cr(t.maxOff, MAXOFF0())}</td>
       <td class="l lib">${RUOLI.map((r) => t.liberi[r]).join(" · ")}</td>
       <td><button class="btn small" data-vedi="${t.i}">${S.asta.aperta === t.i ? "Chiudi" : "Rosa"}</button></td></tr>
       ${S.asta.aperta === t.i ? `<tr><td colspan="5" class="l" style="white-space:normal">${RUOLI.map((r) => {
@@ -1075,13 +1086,13 @@ function renderChiamato() {
       <div><b>${fmt(g.pg, 2)}</b><small>punti a giornata</small></div>
       <div><b>${fmt(g.val, 0)}</b><small>valore</small></div>
       <div><b>${pa}</b><small>prezzo atteso ora</small></div>
-      <div><b>${me.maxOff}</b><small>la tua offerta massima</small></div>
+      <div><b>${cr(me.maxOff, MAXOFF0())}</b><small>la tua offerta massima</small></div>
     </div>
     <div class="spinta" id="spinta">${SPINTA.chiave === chiave
       ? `<span>Spingiti fino a</span><b>${SPINTA.val.max}</b><span>crediti</span><span class="lbl">${SPINTA.val.motivo}</span>`
       : `<span class="lbl">Calcolo fin dove spingerti…</span>`}</div>
     <div><div class="lbl" style="margin-bottom:6px">Chi puo' ancora prenderlo, e al massimo a quanto</div>
-      <div class="conc">${rivali.map(({ t, ok }) => `<span class="${ok ? "" : "no"}" title="${ok ? "" : t.liberi[g.r] <= 0 ? "ruolo pieno" : "crediti finiti"}">${esc(t.nome)} ${ok ? t.maxOff : "–"}</span>`).join("")}</div></div>
+      <div class="conc">${rivali.map(({ t, ok }) => `<span class="${ok ? "" : "no"}" title="${ok ? "" : t.liberi[g.r] <= 0 ? "ruolo pieno" : "crediti finiti"}">${esc(t.nome)} ${ok ? cr(t.maxOff, MAXOFF0()) : "–"}</span>`).join("")}</div></div>
     <div><div class="lbl" style="margin-bottom:6px">Chi l'ha preso</div>
       <div class="chi">${st.map((t) => `<button data-squadra="${t.i}" aria-pressed="${scelta === t.i}" ${t.liberi[g.r] <= 0 ? "disabled" : ""}>${esc(t.nome)}</button>`).join("")}</div></div>
     <form class="registra" id="fasta">
