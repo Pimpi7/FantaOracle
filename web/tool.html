@@ -130,6 +130,20 @@ input[type="checkbox"] { accent-color: var(--brand); width: 15px; height: 15px; 
 .seg.mini button { padding: 3px 10px; font-size: 12px; font-weight: 600; }
 .seg.mini button[aria-pressed="false"] { color: var(--ink-2); }
 .check { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: 13px; }
+/* interruttore a pillola, alto come gli altri filtri del listone */
+.toggle { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--sheet); color: var(--ink-2); font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; }
+.toggle input { appearance: none; -webkit-appearance: none; position: relative; flex: none; width: 30px; height: 18px; margin: 0; border-radius: 999px;
+  background: var(--rule); cursor: pointer; transition: background-color 0.15s; }
+.toggle input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #ffffff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); transition: transform 0.15s; }
+.toggle input:checked { background: var(--brand); }
+.toggle input:checked::after { transform: translateX(12px); }
+.toggle:has(input:checked) { color: var(--ink); border-color: var(--brand); }
+.toggle:hover { border-color: var(--ink-2); }
+/* impostazioni della rosa: la selezione resta nera (inchiostro), non verde, anche in asta */
+#rosa > .card:first-child .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+#rosa > .card:first-child input[type="checkbox"] { accent-color: var(--ink); }
 .count { color: var(--ink-2); font-size: 12.5px; margin-left: auto; }
 
 /* --- listone --- */
@@ -419,7 +433,7 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
         </div>
         <select id="sq" aria-label="Squadra"><option value="">Tutte le squadre</option></select>
         <input id="pmax" type="number" min="1" placeholder="Prezzo max" aria-label="Prezzo atteso massimo">
-        <label class="check"><input id="hide" type="checkbox"> Nascondi gli esclusi</label>
+        <label class="toggle"><input id="hide" type="checkbox"><span id="hide-lbl">Nascondi gli esclusi</span></label>
         <span class="count" id="count"></span>
       </div>
       <div class="table-wrap">
@@ -756,6 +770,8 @@ function renderListone() {
   const { pos, tot } = posizioni();
   const m = mia();
   $("#count").textContent = `${l.length} giocatori`;
+  const nEscl = Object.keys(S.presi).length;
+  $("#hide-lbl").textContent = inAsta() ? `Nascondi i presi (${nEscl})` : nEscl ? `Nascondi gli esclusi (${nEscl})` : "Nascondi gli esclusi";
   const out = [];
   for (const g of l) {
     const cls = m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : SUGG.ids.has(g.id) ? "sugg" : "";
