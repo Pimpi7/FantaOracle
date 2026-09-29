@@ -58,6 +58,16 @@ class Parametri:
     # ~0.9 punti per la derivata della tabella intorno a 6.2, per 0.8 di
     # probabilita' di schierare la difesa a 4 o 5.
     pendenza_modificatore: float = 0.72
+    # Calibrazione sul backtest (2024-25 e 2025-26 congelate alla 5a giornata,
+    # primi giocatori per ruolo quanti se ne comprano in lega).
+    # Disponibilita': le presenze arrivate diviso quelle previste. Le prime
+    # giornate mostrano chi e' titolare, non gli infortuni, le rotazioni e le
+    # cessioni che arrivano dopo: senza questo fattore le presenze risultavano
+    # sovrastimate del 10-14%.
+    disponibilita: dict = field(default_factory=lambda: {"P": 0.89, "D": 0.90, "C": 0.88, "A": 0.88})
+    # Scarto medio fra fantavoto reale e previsto quando il giocatore gioca.
+    # Quasi nullo per D e C; per i portieri il voto previsto era alto.
+    correzione_fm: dict = field(default_factory=lambda: {"P": -0.30, "D": -0.04, "C": -0.07, "A": -0.15})
 
 
 def _stagioni_indietro(stagione: str, corrente: str) -> int:
@@ -304,6 +314,8 @@ def proietta(voti: pd.DataFrame, stat: pd.DataFrame, partite: pd.DataFrame,
                                      + 0.5 * base.loc[por, "amm_attese"])
 
     base["fm_attesa"] = base["voto_atteso"] + base["bonus_attesi"] - base["malus_attesi"]
+    base["fm_attesa"] += base["ruolo"].map(p.correzione_fm).fillna(0)
+    base["p_voto"] = base["p_voto"] * base["ruolo"].map(p.disponibilita).fillna(0.88)
     difesa = base["ruolo"].isin(["P", "D"])
     base["quota_modificatore"] = np.where(
         difesa, p.pendenza_modificatore * (base["voto_atteso"] - 6.0), 0.0)

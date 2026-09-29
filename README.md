@@ -172,6 +172,14 @@ punti a giornata = probabilità di voto × fantavoto atteso quando gioca
 | Portieri | Gol subiti e imbattibilità dal rating difensivo della squadra sulle 33 partite residue (rating da xG e gol, pesati per recenza; neopromosse con prior pessimista). |
 | Modificatore | Per portieri e difensori, 0,72 punti per ogni punto di voto sopra il 6: pendenza della tabella a fasce intorno a 6,2 per la probabilità di schierare la difesa a 4. |
 
+**Calibrazione.** Sul backtest le presenze arrivate erano l'88–90% di quelle
+previste, in tutti i ruoli: le prime giornate mostrano chi è titolare, non gli
+infortuni, le rotazioni e le cessioni che arrivano dopo. Il fantavoto quando gioca
+era invece preciso per difensori e centrocampisti, un po' alto per attaccanti e
+portieri. Due correzioni per ruolo (fattore di disponibilità e scarto sul
+fantavoto) riportano il rapporto fra punti reali e previsti a 1,00 per difensori,
+centrocampisti e attaccanti. Non cambiano l'ordinamento dentro il ruolo.
+
 La funzione è point in time: riceve i dati fino a una giornata e guarda solo
 quelli. Lo stesso codice fa la proiezione vera e il backtest.
 
