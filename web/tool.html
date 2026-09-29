@@ -85,6 +85,9 @@ button { cursor: pointer; }
 .seg button { border: 0; background: none; padding: 7px 11px; font-weight: 600; border-right: 1px solid var(--rule); }
 .seg button:last-child { border-right: 0; }
 .seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-fg); }
+.seg.mini { border-radius: 999px; }
+.seg.mini button { padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.seg.mini button[aria-pressed="false"] { color: var(--ink-2); }
 .check { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: 13px; }
 .count { color: var(--ink-2); font-size: 12.5px; margin-left: auto; }
 
@@ -589,9 +592,9 @@ function renderRosa() {
     ${SUGG.errore ? `<p class="alert">${esc(SUGG.errore)}</p>` : ""}
     <div class="row" style="margin-top:10px">
       <span class="lbl">Strategia</span>
-      <div class="seg" id="modo" role="group" aria-label="Strategia">
+      <div class="seg mini" id="modo" role="group" aria-label="Strategia">
         <button data-modo="omogenea" aria-pressed="${S.modo !== "top"}" title="Budget distribuito dove rende di piu', su tutta la rosa">Omogenea</button>
-        <button data-modo="top" aria-pressed="${S.modo === "top"}" title="Ultimi slot a 1 credito (1 P, 3 D, 3 C, 2 A) e il resto sui migliori">Top + 1 credito</button>
+        <button data-modo="top" aria-pressed="${S.modo === "top"}" title="Ultimi slot a 1 credito (1 P, 3 D, 3 C, 2 A) e il resto sui migliori">Top + 1 cr</button>
       </div>
     </div>
     <div class="row" style="margin-top:10px">
