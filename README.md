@@ -323,7 +323,10 @@ funzioni a gradini la media non basta).
 1. Modalità asta: stato dell'asta in tempo reale, crediti e rose degli
    avversari, offerta massima consigliata sul giocatore chiamato. In cima, le
    **occasioni di fine ruolo**: giocatori buoni rimasti liberi quando un ruolo
-   sta per chiudersi, che si possono prendere a pochissimo. Per stimarle servono
+   sta per chiudersi, che si possono prendere a pochissimo. Si avvia con un
+   pulsante rosso lampeggiante **Modalità asta** in testata, con un passaggio di
+   conferma e la scelta del piano da cui partire; ad asta avviata il pulsante
+   smette di lampeggiare e resta visibile lo stato "In asta". Per stimarle servono
    i crediti e gli slot rimasti a ciascun avversario: chi ha pochi crediti o il
    ruolo già pieno non rilancia.
 2. Indisponibili con data di rientro nella probabilità di voto.
