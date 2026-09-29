@@ -81,7 +81,10 @@ Durante l'asta "La mia rosa" è la rosa reale: i tuoi acquisti al prezzo pagato,
 gli acquisti degli altri esclusi dai suggerimenti. I prezzi attesi dei giocatori
 rimasti seguono il mercato: si riscalano sui crediti che restano davvero rispetto
 a quelli che il mercato avrebbe chiesto per riempire le rose. Lo stato è salvato
-nel browser a ogni acquisto ed è esportabile. Da definire: tipo di asta e ordine
+nel browser a ogni acquisto ed è esportabile. Per uscire: **Sospendi** lascia tutto
+com'è e il pulsante diventa "Riprendi l'asta"; **Chiudi** archivia le rose finali
+nel browser (base del tool formazione), mostra subito il testo da copiare come
+copia di sicurezza e riporta il pulsante a "Modalità asta". Da definire: tipo di asta e ordine
 dei ruoli (per ora ogni ruolo si può chiamare in qualsiasi momento).
 
 ---

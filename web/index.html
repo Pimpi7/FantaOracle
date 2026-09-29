@@ -237,6 +237,8 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
   @keyframes accende { from { transform: scaleX(0); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
 }
 .p-asta { display: none; }
+.solo-mob { display: none; }
+@media (max-width: 900px) { .solo-mob { display: inline; } button.solo-mob { display: block; } .solo-desk { display: none; } }
 .main[data-view="asta"] { grid-template-columns: minmax(0, 1fr); }
 .main[data-view="asta"] .p-asta { display: flex; }
 .main[data-view="asta"] .p-listone, .main[data-view="asta"] .p-rosa { display: none; }
@@ -310,8 +312,8 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
   </header>
   <nav class="tabs" role="tablist">
     <button id="tab-asta" role="tab" aria-selected="false" data-view="asta" hidden>Asta</button>
-    <button id="tab-listone" role="tab" aria-selected="true" data-view="listone">Listone</button>
-    <button id="tab-rosa" role="tab" aria-selected="false" data-view="rosa">La mia rosa</button>
+    <button id="tab-listone" role="tab" aria-selected="true" data-view="listone"><span class="solo-desk">Listone e rosa</span><span class="solo-mob">Listone</span></button>
+    <button id="tab-rosa" class="solo-mob" role="tab" aria-selected="false" data-view="rosa">La mia rosa</button>
   </nav>
 
   <main class="main" id="main" data-view="listone">
@@ -401,19 +403,20 @@ const S = {
   f: { q: "", r: "", sq: "", pmax: null, hide: false },
   sort: { k: "pg", dir: -1 },
   aperte: {},                        // alternative aperte per slot suggerito
-  asta: null,                        // stato dell'asta live (vedi avviaAsta)
+  asta: null,                        // asta in corso o sospesa
+  archivio: [],                      // aste concluse, con le rose finali
 };
 let SUGG = { ids: new Set(), lista: [], forza: 0, costo: 0, errore: null, alt: {} };
 
 function salva() {
   try { localStorage.setItem(KEY, JSON.stringify({ piano: S.piano, piani: S.piani, presi: S.presi,
-    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, asta: S.asta })); } catch (e) { /* storage non disponibile */ }
+    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, asta: S.asta, archivio: S.archivio })); } catch (e) { /* storage non disponibile */ }
 }
 function carica() {
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || "null");
     if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
-      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, asta: x.asta || null });
+      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, asta: x.asta || null, archivio: x.archivio || [] });
   } catch (e) { /* storage non disponibile */ }
 }
 // In asta "la mia rosa" e' la rosa reale, non piu' un piano.
@@ -955,7 +958,9 @@ function sincronizzaAsta() {
 
 function vista(v) {
   $("#main").dataset.view = v;
-  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.view === v));
+  // Su computer "Listone e rosa" copre entrambe le viste.
+  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected",
+    b.dataset.view === v || (v === "rosa" && b.dataset.view === "listone" && innerWidth > 900)));
 }
 
 function renderControlloAsta() {
@@ -964,7 +969,7 @@ function renderControlloAsta() {
     root.setAttribute("data-asta", "on");
     $("#tab-asta").hidden = false;
     $("#asta-ctl").innerHTML = `<span class="live"><span class="dot"></span>In asta
-      <button id="asta-chiudi" title="Chiudi l'asta">Chiudi</button></span>`;
+      <button id="asta-chiudi" title="Sospendi o chiudi l'asta">Esci</button></span>`;
   } else {
     root.removeAttribute("data-asta");
     $("#tab-asta").hidden = true;
@@ -1175,14 +1180,33 @@ function dialogoAvvio() {
 }
 
 function dialogoChiusura() {
-  apri(`<h3>Chiudere l'asta?</h3>
-    <p class="lbl">Gli acquisti restano salvati: puoi riprendere l'asta quando vuoi dal pulsante in alto. Il tool torna ai piani A, B e C.</p>
-    <div class="actions"><button class="btn" data-close>Resta in asta</button><button class="btn primary" id="asta-stop">Chiudi l'asta</button></div>`);
+  const n = S.asta.log.length;
+  apri(`<h3>Uscire dall'asta?</h3>
+    <p class="lbl"><b>Sospendi</b> se l'asta continua piu' tardi: tutto resta com'e' e dal pulsante in alto la riprendi da dove eri.</p>
+    <p class="lbl"><b>Chiudi</b> se l'asta e' finita: le rose finali (${n} acquisti) vengono archiviate in questo browser e saranno la base del tool formazione. Il pulsante torna a "Modalita' asta" per una nuova asta.</p>
+    <div class="actions">
+      <button class="btn" data-close>Resta in asta</button>
+      <button class="btn" id="asta-sospendi">Sospendi</button>
+      <button class="btn primary" id="asta-stop">Chiudi l'asta</button>
+    </div>`);
+  const esci = () => { S.presi = S.asta.presiPiano || {}; OWNER = new Map(); };
+  $("#asta-sospendi").onclick = () => { S.asta.attiva = false; esci(); chiudi(); aggiorna(); };
   $("#asta-stop").onclick = () => {
-    S.asta.attiva = false;
-    S.presi = S.asta.presiPiano || {};
-    OWNER = new Map();
-    chiudi(); aggiorna();
+    const chiusa = { ...S.asta, attiva: false, conclusa: new Date().toISOString() };
+    S.archivio = [...(S.archivio || []), chiusa];
+    esci();
+    S.asta = null;
+    aggiorna();
+    // Subito il testo da conservare: il browser e' l'unico posto dove vive.
+    const txt = JSON.stringify({ asta: chiusa });
+    apri(`<h3>Asta chiusa</h3>
+      <p class="lbl">Le rose finali sono archiviate in questo browser. Copia il testo qui sotto e conservalo: e' la copia di sicurezza, e con Importa la ricarichi su un altro dispositivo.</p>
+      <textarea id="txt" readonly>${esc(txt)}</textarea>
+      <div class="actions"><button class="btn" data-close>Fatto</button><button class="btn primary" id="copia">Copia</button></div>`);
+    $("#copia").onclick = async () => {
+      try { await navigator.clipboard.writeText(txt); $("#copia").textContent = "Copiato"; }
+      catch (e) { $("#txt").select(); $("#copia").textContent = "Selezionato: premi Ctrl+C"; }
+    };
   };
 }
 
