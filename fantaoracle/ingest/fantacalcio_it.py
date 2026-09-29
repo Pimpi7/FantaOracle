@@ -149,6 +149,29 @@ def ingest_voti(stagioni: dict[str, int], thread: int = 4) -> pd.DataFrame:
     return df
 
 
+def aggiorna_voti_correnti(stagione: str, giornate: int) -> pd.DataFrame:
+    """Riscarica solo la stagione in corso e la unisce allo storico gia' salvato.
+
+    Le stagioni concluse non cambiano: non serve riscaricarle a ogni
+    aggiornamento (sono 114 pagine). Se non esiste ancora uno snapshot, scarica
+    tutto.
+    """
+    from ..store import read_snapshot
+
+    try:
+        storico = read_snapshot("fantacalcio_it", "voti")
+    except FileNotFoundError:
+        raise RuntimeError("Nessuno storico voti: lanciare prima ingest_voti completo.")
+
+    storico = storico[storico["stagione"] != stagione]
+    frames = [scarica_giornata(stagione, g) for g in range(1, giornate + 1)]
+    df = pd.concat([storico] + frames, ignore_index=True)
+    write_snapshot(df, "fantacalcio_it", "voti", overwrite=True,
+                   meta={"aggiornamento": stagione, "giornate": giornate})
+    print(f"  voti: {len(df)} righe, stagione {stagione} aggiornata fino alla {giornate}a")
+    return df
+
+
 # --- listone -----------------------------------------------------------------
 
 def parse_listone(html: bytes | str) -> pd.DataFrame:

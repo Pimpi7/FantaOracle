@@ -63,9 +63,12 @@ def cmd_ingest(args) -> int:
             elif f == "listone":
                 fantacalcio_it.ingest_listone()
             elif f == "voti":
-                stagioni = dict(STAGIONI_STORICHE)
-                stagioni[STAGIONE_CORRENTE] = giornate_giocate()
-                fantacalcio_it.ingest_voti(stagioni)
+                if list_snapshots("fantacalcio_it", "voti") and not args.completo:
+                    fantacalcio_it.aggiorna_voti_correnti(STAGIONE_CORRENTE, giornate_giocate())
+                else:
+                    stagioni = dict(STAGIONI_STORICHE)
+                    stagioni[STAGIONE_CORRENTE] = giornate_giocate()
+                    fantacalcio_it.ingest_voti(stagioni)
         except Exception as e:                                  # noqa: BLE001
             print(f"  fallito: {type(e).__name__}: {e}")
             errori += 1
@@ -92,6 +95,7 @@ def cmd_export(_args) -> int:
 
 def cmd_all(args) -> int:
     args.fonte = "all"
+    args.completo = False
     for passo in (cmd_ingest, cmd_db, cmd_model, cmd_export):
         if passo(args):
             print(f"Pipeline interrotta a {passo.__name__}.")
@@ -106,6 +110,8 @@ def main(argv=None) -> int:
     s = sub.add_parser("ingest")
     s.add_argument("--fonte", default="all",
                    choices=["all", "understat", "footballdata", "listone", "voti"])
+    s.add_argument("--completo", action="store_true",
+                   help="riscarica anche le stagioni concluse")
     s.set_defaults(func=cmd_ingest)
     sub.add_parser("db").set_defaults(func=cmd_db)
     sub.add_parser("model").set_defaults(func=cmd_model)

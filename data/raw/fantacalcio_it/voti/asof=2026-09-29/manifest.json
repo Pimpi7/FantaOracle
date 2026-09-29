@@ -2,7 +2,7 @@
   "fonte": "fantacalcio_it",
   "dataset": "voti",
   "asof": "2026-09-29",
-  "scaricato_il": "2026-09-29T21:33:55",
+  "scaricato_il": "2026-09-29T21:55:02",
   "righe": 37304,
   "colonne": [
     "fc_id",
@@ -29,11 +29,6 @@
     "squadra",
     "fonte_voti"
   ],
-  "stagioni": {
-    "2023-24": 38,
-    "2024-25": 38,
-    "2025-26": 38,
-    "2026-27": 5
-  },
-  "errori": []
+  "aggiornamento": "2026-27",
+  "giornate": 5
 }
