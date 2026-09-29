@@ -38,7 +38,7 @@ Le etichette **RIG** segnalano i rigoristi, **TIFO** i giocatori che in lega cos
 
 ### 2. Apri la scheda di un giocatore
 
-Un clic sul nome e vedi da dove nasce il suo punteggio: voto atteso, gol, assist, rigori, cartellini, minuti, i fantavoti di quest'anno e lo storico delle ultime stagioni. Da lì lo metti in rosa o lo segni come preso da un altro.
+Un clic sul nome e vedi da dove nasce il suo punteggio: voto atteso, gol, assist, rigori, cartellini, minuti, i fantavoti di quest'anno e lo storico delle ultime stagioni. Da lì lo metti in rosa o lo escludi dai suggerimenti (se non lo vuoi, o per vedere come cambia il piano se te lo soffiano).
 
 ![Scheda giocatore](docs/img/scheda.png)
 
@@ -58,9 +58,9 @@ Le impostazioni che puoi cambiare:
 - **Max per squadra** e **blocco portieri**: quanti giocatori della stessa squadra reale accettare, con i portieri che possono fare eccezione.
 - **Piani A, B, C**: tre rose alternative salvate nel browser, esportabili come testo per passarle da un dispositivo all'altro.
 
-### 4. Il giorno dell'asta: premi il bottone rosso
+### 4. Il giorno dell'asta: calcio d'inizio
 
-**Modalità asta** trasforma il tool nel tuo assistente live. Dai un nome alle 8 squadre, scegli quale piano usare come lista obiettivi, e parti.
+Premi il bottone col pallone in testata: il pallone rotola, ti viene incontro e apre il setup. **Modalità asta** trasforma il tool nel tuo assistente live. Dai un nome alle 8 squadre, scegli quale piano usare come lista obiettivi, e parti.
 
 ![Modalità asta](docs/img/asta.png)
 

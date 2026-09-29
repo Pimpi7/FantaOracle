@@ -39,7 +39,7 @@ cosa nasce il punteggio, fantavoti di questa stagione, storico delle ultime tre.
 completa gli slot rimanenti con la combinazione più forte che sta nel budget
 restante e la evidenzia in giallo, anche nel listone. Ogni volta che cambi
 qualcosa ricalcola. Per ogni suggerito propone le alternative che rientrano nel
-budget. I giocatori segnati come presi da altri escono dai suggerimenti.
+budget. I giocatori esclusi (✕) escono dai suggerimenti.
 
 Vincoli rispettati: rosa 3-8-8-6, 500 crediti, almeno 1 credito per ogni slot
 ancora vuoto, al massimo 3 giocatori della stessa squadra reale (il blocco
@@ -61,7 +61,7 @@ residuo per ruolo resta visibile.
 
 Tre piani (A, B, C) salvati nel browser, esportabili e reimportabili come testo.
 
-**Modalità asta.** Il pulsante rosso in testata avvia l'asta live. Si danno i nomi
+**Modalità asta.** Il bottone col pallone in testata avvia l'asta live (il pallone rotola sul bottone e apre il setup). Si danno i nomi
 alle 8 squadre e si sceglie da quale piano prendere gli obiettivi (restano segnati
 nel listone, le rose partono vuote). Da lì la testata diventa la fascia scura
 "In asta" e compare la sezione **Asta**:
@@ -356,7 +356,7 @@ funzioni a gradini la media non basta).
    fra computer e telefono. (La prima versione è nel tool: vedi sopra. Nota
    originale sulle **occasioni di fine ruolo**: giocatori buoni rimasti liberi quando un ruolo
    sta per chiudersi, che si possono prendere a pochissimo. Si avvia con un
-   pulsante rosso lampeggiante **Modalità asta** in testata, con un passaggio di
+   bottone **Modalità asta** col pallone in testata, con un passaggio di
    conferma e la scelta del piano da cui partire; ad asta avviata il pulsante
    smette di lampeggiare e resta visibile lo stato "In asta". Per stimarle servono
    i crediti e gli slot rimasti a ciascun avversario: chi ha pochi crediti o il
