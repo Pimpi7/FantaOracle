@@ -237,16 +237,19 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .loading { padding: 40px 0; color: var(--ink-2); }
 
 /* --- modalita' asta --- */
-/* il bottone e' un pallone: pill bianca con le cuciture, e un pallone vero appoggiato a sinistra */
-.asta-btn { position: relative; margin-left: 20px; border: 2px solid #16201a; border-radius: 999px; padding: 9px 18px 9px 30px;
+/* il bottone e' un pallone: pill bianca con le cuciture, e un pallone vero appoggiato a destra */
+.asta-btn { position: relative; margin-right: 22px; border: 2px solid #16201a; border-radius: 999px; padding: 9px 32px 9px 18px;
   color: #16201a; font: 700 15px/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
   background:
     radial-gradient(circle at 0 50%, transparent 0 13px, rgb(22 32 26 / 0.07) 13px 14px, transparent 14px) 0 0 / 28px 100% repeat-x,
     linear-gradient(180deg, #ffffff 0%, #f1f3f0 70%, #dfe4df 100%);
   box-shadow: 0 2px 0 rgb(0 0 0 / 0.25); }
 .asta-btn:hover { background-color: #ffffff; transform: translateY(-1px); }
-.asta-btn .pallone { position: absolute; left: -22px; top: 50%; width: 42px; height: 42px; margin-top: -21px;
-  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 0.35)); pointer-events: none; }
+.asta-btn .pallone { position: absolute; right: -22px; top: 50%; width: 42px; height: 42px; margin-top: -21px;
+  transform-origin: 50% 100%; pointer-events: none; }
+/* ombra a terra sotto il pallone: si stringe e schiarisce quando sale */
+.asta-btn .ombra { position: absolute; right: -16px; top: 50%; width: 30px; height: 7px; margin-top: 18px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.45), transparent); pointer-events: none; }
 .asta-btn .pallone svg, .pallone-volo svg { display: block; width: 100%; height: 100%; }
 .pallone-volo { position: fixed; z-index: 60; pointer-events: none; filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.35)); }
 .live { display: inline-flex; align-items: center; gap: 8px; font: 700 15px/1 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--live); }
@@ -262,9 +265,24 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 @media (prefers-reduced-motion: no-preference) {
   .asta-btn.pulse { animation: pulsa 2s ease-in-out infinite; }
   @keyframes pulsa { 0%, 100% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 0 rgb(255 255 255 / 0.6); } 60% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 11px rgb(255 255 255 / 0); } }
-  /* il pallone palleggia piano sul posto */
-  .asta-btn.pulse .pallone { animation: palleggio 2s ease-in-out infinite; }
-  @keyframes palleggio { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-12deg); } }
+  /* palleggio: sale frenando, scende accelerando, si schiaccia a terra e rimbalza; poi una pausa */
+  .asta-btn.pulse .pallone { animation: palleggio 1.6s infinite; }
+  .asta-btn.pulse .ombra { animation: ombra 1.6s infinite; }
+  @keyframes palleggio {
+    0%   { transform: translateY(0) scale(1.12, 0.86); animation-timing-function: ease-out; }
+    8%   { transform: translateY(0) scale(0.95, 1.06); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+    36%  { transform: translateY(-13px) scale(1, 1); animation-timing-function: cubic-bezier(.6,0,.8,.4); }
+    62%  { transform: translateY(0) scale(0.97, 1.04); animation-timing-function: ease-out; }
+    67%  { transform: translateY(0) scale(1.1, 0.88); animation-timing-function: ease-out; }
+    75%  { transform: translateY(-3px) scale(1, 1); animation-timing-function: ease-in; }
+    83%, 100% { transform: translateY(0) scale(1.12, 0.86); }
+  }
+  @keyframes ombra {
+    0%, 62%, 67%, 83%, 100% { transform: scale(1); opacity: 1; }
+    8% { transform: scale(0.95); opacity: 0.9; }
+    36% { transform: scale(0.55); opacity: 0.4; }
+    75% { transform: scale(0.85); opacity: 0.8; }
+  }
   .live .dot { animation: batte 1.2s ease-in-out infinite; }
   @keyframes batte { 50% { opacity: 0.25; } }
   :root[data-asta] .top.entra::after { content: ""; position: absolute; left: 0; bottom: -3px; height: 3px; width: 100%; background: var(--stage-fg); transform-origin: left; animation: accende 0.9s ease-out forwards; }
@@ -1079,7 +1097,7 @@ function renderControlloAsta() {
     root.removeAttribute("data-asta");
     $("#tab-asta").hidden = true;
     if ($("#main").dataset.view === "asta") vista("listone");
-    $("#asta-ctl").innerHTML = `<button class="asta-btn pulse" id="asta-avvia"><span class="pallone">${PALLONE}</span>${S.asta ? "Riprendi l'asta" : "Modalità asta"}</button>`;
+    $("#asta-ctl").innerHTML = `<button class="asta-btn pulse" id="asta-avvia">${S.asta ? "Riprendi l'asta" : "Modalità asta"}<span class="ombra"></span><span class="pallone">${PALLONE}</span></button>`;
   }
 }
 
@@ -1251,6 +1269,7 @@ function calcioDInizio(btn) {
   if (inVolo) return;
   if (!orig || !window.matchMedia("(prefers-reduced-motion: no-preference)").matches || !Element.prototype.animate) return dialogoAvvio();
   inVolo = true;
+  btn.classList.remove("pulse");                                 // misura il pallone fermo, non a meta' palleggio
   const b = orig.getBoundingClientRect(), k = btn.getBoundingClientRect();
   const volo = document.createElement("div");
   volo.className = "pallone-volo";
@@ -1258,28 +1277,29 @@ function calcioDInizio(btn) {
   Object.assign(volo.style, { left: b.left + "px", top: b.top + "px", width: b.width + "px", height: b.height + "px" });
   document.body.appendChild(volo);
   orig.style.opacity = "0";           // non visibility: il clipPath del pallone deve restare attivo
-  btn.classList.remove("pulse");
+  btn.querySelector(".ombra").style.opacity = "0";
 
   const d = b.width;
   // rotola sopra il bottone, a meta' fra il bordo alto e il testo, senza uscire dallo schermo
   const sopra = Math.max(k.top - b.top - d * 0.3, 2 - b.top);
-  const corsa = k.right - b.left - d * 0.85;                     // fino alla fine del bottone
-  const giri = (corsa / (Math.PI * d)) * 360;                    // rotola senza strisciare
+  const corsa = k.left - b.left + d * 0.1;                       // verso sinistra, fino all'inizio del bottone (negativa)
+  const giri = (corsa / (Math.PI * d)) * 360;                    // rotola senza strisciare: verso sinistra gira in senso antiorario
   const cx = innerWidth / 2 - (b.left + d / 2), cy = innerHeight / 2 - (b.top + d / 2);
   const zoom = Math.max(innerWidth, innerHeight) / d * 1.4;
   const anim = volo.animate([
     { transform: "translate(0,0) rotate(0deg) scale(1)", offset: 0, easing: "cubic-bezier(.3,0,.6,1)" },
-    { transform: `translate(${d * 0.35}px,${sopra}px) rotate(${giri * 0.12}deg) scale(1)`, offset: 0.16, easing: "linear" },
+    { transform: `translate(${-d * 0.35}px,${sopra}px) rotate(${giri * 0.12}deg) scale(1)`, offset: 0.16, easing: "linear" },
     { transform: `translate(${corsa}px,${sopra}px) rotate(${giri}deg) scale(1)`, offset: 0.55, easing: "cubic-bezier(.2,0,.9,.6)" },
-    { transform: `translate(${corsa + 10}px,${sopra + 16}px) rotate(${giri + 40}deg) scale(1.3)`, offset: 0.64, easing: "cubic-bezier(.5,0,1,1)" },
-    { transform: `translate(${cx * 0.9}px,${cy * 0.9}px) rotate(${giri + 250}deg) scale(${zoom * 0.45})`, offset: 0.88, opacity: 1 },
-    { transform: `translate(${cx}px,${cy}px) rotate(${giri + 300}deg) scale(${zoom})`, offset: 1, opacity: 0 },
+    { transform: `translate(${corsa - 10}px,${sopra + 16}px) rotate(${giri - 40}deg) scale(1.3)`, offset: 0.64, easing: "cubic-bezier(.5,0,1,1)" },
+    { transform: `translate(${cx * 0.9}px,${cy * 0.9}px) rotate(${giri - 250}deg) scale(${zoom * 0.45})`, offset: 0.88, opacity: 1 },
+    { transform: `translate(${cx}px,${cy}px) rotate(${giri - 300}deg) scale(${zoom})`, offset: 1, opacity: 0 },
   ], { duration: 1500, fill: "forwards" });
   // il setup si apre mentre il pallone arriva addosso, prima che sparisca del tutto
   setTimeout(() => dialogoAvvio(), 1250);
   anim.finished.finally(() => {
     volo.remove();
     orig.style.opacity = "";
+    btn.querySelector(".ombra").style.opacity = "";
     btn.classList.add("pulse");
     inVolo = false;
   });
@@ -1396,6 +1416,21 @@ function risultatiRicerca() {
 }
 
 // --- eventi -----------------------------------------------------------------------------
+// apertura e chiusura della formazione tipo con una tendina animata sull'altezza del campo
+document.addEventListener("click", (e) => {
+  const s = e.target.closest("#campo > summary");
+  if (!s || !Element.prototype.animate || !matchMedia("(prefers-reduced-motion: no-preference)").matches) return;
+  const det = s.parentElement, campo = det.querySelector(".campo");
+  if (det.dataset.anim) { e.preventDefault(); return; }
+  e.preventDefault();
+  det.dataset.anim = "1";
+  const apri = !det.open;
+  if (apri) det.open = true;
+  const h = campo.getBoundingClientRect().height;
+  const fotogrammi = [{ height: "0px", opacity: 0, transform: "translateY(-8px)" }, { height: h + "px", opacity: 1, transform: "none" }];
+  const a = campo.animate(apri ? fotogrammi : fotogrammi.slice().reverse(), { duration: 260, easing: "cubic-bezier(.3,.7,.3,1)" });
+  a.finished.then(() => { if (!apri) det.open = false; delete det.dataset.anim; });
+});
 // formazione tipo aperta o chiusa: la scelta resta fra un ricalcolo e l'altro
 document.addEventListener("toggle", (e) => {
   if (e.target.id === "campo") { S.campoChiuso = !e.target.open; salva(); }
