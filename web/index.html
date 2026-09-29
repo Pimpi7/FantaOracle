@@ -93,6 +93,9 @@ button { cursor: pointer; }
 .seg button:last-child { border-right: 0; }
 .seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-fg); }
 .seg.mini { border-radius: 999px; }
+.bud { display: inline-flex; align-items: center; gap: 4px; }
+.bud input { width: 64px; padding: 4px 6px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); }
+.chip small { opacity: 0.7; }
 .seg.mini button { padding: 3px 10px; font-size: 12px; font-weight: 600; }
 .seg.mini button[aria-pressed="false"] { color: var(--ink-2); }
 .check { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: 13px; }
@@ -286,6 +289,7 @@ const S = {
   piani: { A: {}, B: {}, C: {} },   // id -> prezzo, per piano
   presi: {},                         // id -> true: comprati da altri
   margine: 0.10, esenzioneP: true, tetto: 3, modo: "omogenea",
+  budgetRuolo: null,                 // null = automatico, altrimenti {P, D, C, A}
   f: { q: "", r: "", sq: "", pmax: null, hide: false },
   sort: { k: "pg", dir: -1 },
   aperte: {},                        // alternative aperte per slot suggerito
@@ -294,13 +298,13 @@ let SUGG = { ids: new Set(), lista: [], forza: 0, costo: 0, errore: null, alt: {
 
 function salva() {
   try { localStorage.setItem(KEY, JSON.stringify({ piano: S.piano, piani: S.piani, presi: S.presi,
-    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo })); } catch (e) { /* storage non disponibile */ }
+    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo })); } catch (e) { /* storage non disponibile */ }
 }
 function carica() {
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || "null");
     if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
-      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea" });
+      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null });
   } catch (e) { /* storage non disponibile */ }
 }
 const mia = () => S.piani[S.piano];
@@ -348,11 +352,21 @@ function ottimizzaCon(extra) {
   const esclusi = new Set([...Object.keys(F).map(Number), ...Object.keys(S.presi).map(Number)]);
   const cand = DATA.giocatori.filter((g) => !esclusi.has(g.id)).map((g) => ({ g, p: prezzoAtteso(g) }));
   const sq0 = contaSquadre(Object.keys(F));
+  // Budget per ruolo (modalita' manuale): tetto di spesa per ciascun ruolo,
+  // compresi i giocatori gia' scelti.
+  const limR = {};
+  for (const r of RUOLI) {
+    const spesi = Object.entries(F).filter(([id]) => BY_ID.get(+id)?.r === r).reduce((a, [, pz]) => a + +pz, 0);
+    limR[r] = S.budgetRuolo ? (+S.budgetRuolo[r] || 0) - spesi : Infinity;
+  }
   const ok = (sq, g) => (S.esenzioneP && g.r === "P") || (sq[g.sq] || 0) < S.tetto;
 
   const errore = RUOLI.filter((r) => liberi[r] < 0).map((r) => `troppi ${NOMI_RUOLO[r].toLowerCase()} (${base[r].length}/${slot[r]})`);
   if (errore.length) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: "Rosa non valida: " + errore.join(", "), alt: {} };
   if (B < nLiberi) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: `Budget insufficiente: restano ${B} crediti per ${nLiberi} slot.`, alt: {} };
+  const corti = RUOLI.filter((r) => liberi[r] > 0 && limR[r] < liberi[r]);
+  if (corti.length) return { ids: new Set(), lista: [], forza: 0, costo: 0, alt: {},
+    errore: "Budget per ruolo insufficiente: " + corti.map((r) => `${NOMI_RUOLO[r].toLowerCase()} ha ${Math.max(0, limR[r])} crediti per ${liberi[r]} slot`).join(", ") + "." };
 
   const forzaTot = (pts) => RUOLI.reduce((a, r) => a + forzaRuolo(pts[r], r), 0);
 
@@ -360,6 +374,7 @@ function ottimizzaCon(extra) {
     const pts = {}; for (const r of RUOLI) pts[r] = base[r].slice();
     const f = {}; for (const r of RUOLI) f[r] = forzaRuolo(pts[r], r);
     const lib = { ...liberi }, sq = { ...sq0 }, usati = new Set(), lista = [];
+    const costoR = { P: 0, D: 0, C: 0, A: 0 };
     let costo = 0;
     for (let k = 0; k < nLiberi; k++) {
       const disp = B - costo - (nLiberi - k - 1);
@@ -367,6 +382,7 @@ function ottimizzaCon(extra) {
       for (const c of cand) {
         const g = c.g;
         if (lib[g.r] <= 0 || usati.has(g.id) || c.p > disp || !ok(sq, g)) continue;
+        if (c.p > limR[g.r] - costoR[g.r] - (lib[g.r] - 1)) continue;
         pts[g.r].push(g.pg);
         const gain = forzaRuolo(pts[g.r], g.r) - f[g.r];
         pts[g.r].pop();
@@ -376,10 +392,10 @@ function ottimizzaCon(extra) {
       if (!best) return null;
       const g = best.g;
       usati.add(g.id); lista.push(best); pts[g.r].push(g.pg); f[g.r] += bestGain;
-      lib[g.r]--; costo += best.p;
+      lib[g.r]--; costo += best.p; costoR[g.r] += best.p;
       if (!(S.esenzioneP && g.r === "P")) sq[g.sq] = (sq[g.sq] || 0) + 1;
     }
-    return { lista, costo, pts, forza: forzaTot(pts) };
+    return { lista, costo, costoR, pts, forza: forzaTot(pts) };
   }
 
   let best = null;
@@ -400,7 +416,7 @@ function ottimizzaCon(extra) {
       const f0 = forzaRuolo(best.pts[r], r);
       for (const c of cand) {
         if (c.g.r !== r || inRosa.has(c.g.id)) continue;
-        if (best.costo - s.p + c.p > B) continue;
+        if (best.costo - s.p + c.p > B || best.costoR[r] - s.p + c.p > limR[r]) continue;
         if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sq[c.g.sq] || 0) >= S.tetto) continue;
         senza.push(c.g.pg);
         const d = forzaRuolo(senza, r) - f0;
@@ -412,7 +428,7 @@ function ottimizzaCon(extra) {
     const s = best.lista[mig.i], r = s.g.r;
     best.pts[r].splice(best.pts[r].indexOf(s.g.pg), 1); best.pts[r].push(mig.c.g.pg);
     inRosa.delete(s.g.id); inRosa.add(mig.c.g.id);
-    best.costo += mig.c.p - s.p; best.lista[mig.i] = mig.c; best.forza += migD;
+    best.costo += mig.c.p - s.p; best.costoR[r] += mig.c.p - s.p; best.lista[mig.i] = mig.c; best.forza += migD;
   }
 
   // Alternative per ogni suggerito: scambi possibili ordinati per forza risultante.
@@ -425,7 +441,7 @@ function ottimizzaCon(extra) {
     const opz = [];
     for (const c of cand) {
       if (c.g.r !== r || inRosa.has(c.g.id)) continue;
-      if (best.costo - s.p + c.p > B) continue;
+      if (best.costo - s.p + c.p > B || best.costoR[r] - s.p + c.p > limR[r]) continue;
       if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sqTot[c.g.sq] || 0) >= S.tetto) continue;
       senza.push(c.g.pg);
       opz.push({ c, d: forzaRuolo(senza, r) - f0 });
@@ -582,9 +598,15 @@ function renderRosa() {
   }
   const spesaR = (r) => tutti.filter((x) => x.g.r === r).reduce((s, x) => s + x.p, 0);
   const tot = speso + SUGG.costo;
+  // L'etichetta mostra tutti i giocatori della squadra; il colore segue il
+  // conteggio che vale per il tetto (senza portieri se il blocco e' libero).
+  const nTot = {};
+  for (const x of tutti) nTot[x.g.sq] = (nTot[x.g.sq] || 0) + 1;
   const sq = contaSquadre(tutti.map((x) => x.g.id));
-  const chips = Object.entries(sq).sort((a, b) => b[1] - a[1]).map(([s, n]) =>
-    `<span class="chip ${n > S.tetto ? "over" : n === S.tetto ? "full" : ""}">${esc(nomeSq(s))} ${n}</span>`).join("");
+  const chips = Object.entries(nTot).sort((a, b) => b[1] - a[1]).map(([s, n]) => {
+    const c = sq[s] || 0, np = n - c;
+    return `<span class="chip ${c > S.tetto ? "over" : c === S.tetto ? "full" : ""}" title="${np ? `${np} portier${np > 1 ? "i" : "e"}, fuori dal tetto` : ""}">${esc(nomeSq(s))} ${n}${np && S.esenzioneP ? ` <small>(${np}P)</small>` : ""}</span>`;
+  }).join("");
 
   let h = `<div class="card">
     <div class="row" style="justify-content:space-between">
@@ -593,7 +615,7 @@ function renderRosa() {
         `<button data-piano="${p}" aria-pressed="${S.piano === p}">Piano ${p}</button>`).join("")}</div>
     </div>
     <div class="row" style="margin-top:10px"><div class="bar" style="flex:1">${segs.join("")}</div></div>
-    <div class="legend">${RUOLI.map((r) => `<span>${NOMI_RUOLO[r]} <b>${spesaR(r)}</b></span>`).join("")}
+    <div class="legend">${RUOLI.map((r) => `<span>${NOMI_RUOLO[r]} <b>${spesaR(r)}</b>${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""}</span>`).join("")}
       <span>Totale <b>${tot}</b> / ${META.crediti}</span>
       <span>Forza attesa <b>${fmt(SUGG.forza + 0, 1)}</b> pt/g</span></div>
     ${SUGG.errore ? `<p class="alert">${esc(SUGG.errore)}</p>` : ""}
@@ -604,6 +626,16 @@ function renderRosa() {
         <button data-modo="top" aria-pressed="${S.modo === "top"}" title="Ultimi slot a 1 credito (1 P, 3 D, 3 C, 2 A) e il resto sui migliori">Top + 1 cr</button>
       </div>
     </div>
+    <div class="row" style="margin-top:10px">
+      <span class="lbl">Budget per ruolo</span>
+      <div class="seg mini" role="group" aria-label="Budget per ruolo">
+        <button data-bud="auto" aria-pressed="${!S.budgetRuolo}" title="L'algoritmo divide i crediti fra i ruoli">Automatico</button>
+        <button data-bud="man" aria-pressed="${!!S.budgetRuolo}" title="Decidi tu quanti crediti per ruolo">Manuale</button>
+      </div>
+    </div>
+    ${S.budgetRuolo ? `<div class="row budgets" style="margin-top:8px">${RUOLI.map((r) => `
+      <label class="bud"><span class="role ${r}">${r}</span><input id="bud-${r}" type="number" min="0" max="${META.crediti}" value="${S.budgetRuolo[r]}" aria-label="Crediti ${NOMI_RUOLO[r].toLowerCase()}"></label>`).join("")}
+      <span class="lbl ${RUOLI.reduce((a, r) => a + (+S.budgetRuolo[r] || 0), 0) > META.crediti ? "alert" : ""}">Somma ${RUOLI.reduce((a, r) => a + (+S.budgetRuolo[r] || 0), 0)} / ${META.crediti}</span></div>` : ""}
     <div class="row" style="margin-top:10px">
       <label class="lbl" for="margine">Margine sui prezzi</label>
       <select id="margine">${[0, 0.1, 0.2, 0.3].map((x) => `<option value="${x}" ${x === S.margine ? "selected" : ""}>+${x * 100}%</option>`).join("")}</select>
@@ -624,7 +656,7 @@ function renderRosa() {
     const sug = SUGG.lista.filter((c) => c.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
     const vuoti = Math.max(0, META.slot[r] - miei.length - sug.length);
     h += `<div class="card"><div class="ruolo-h"><span class="role ${r}">${r}</span><h3>${NOMI_RUOLO[r]}</h3>
-      <span class="lbl">${miei.length} scelti · ${sug.length} suggeriti · ${spesaR(r)} crediti</span></div>`;
+      <span class="lbl">${miei.length} scelti · ${sug.length} suggeriti · ${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></div>`;
     for (const x of miei) {
       h += `<div class="slot"><span class="role ${r}">${r}</span>
         <span class="who"><b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
@@ -657,6 +689,7 @@ function renderRosa() {
     <p><b>Valore</b> e' quanto vale il giocatore per noi in crediti, rispetto a chi potresti prendere al suo posto. <b>Prezzo</b> e' quanto costera' presumibilmente nella nostra asta, tarato sui ${META.crediti * META.n_squadre} crediti della lega e maggiorato per Roma e Lazio. <b>Affare</b> e' la differenza.</p>
     <p>I suggerimenti evidenziati completano la rosa massimizzando la forza dell'undici schierabile: i titolari pesano pieno, le riserve in base a quanto giocheranno. Usano il prezzo atteso piu' il margine scelto, e rispettano il tetto per squadra.</p>
     <p><b>Strategia.</b> Omogenea distribuisce i crediti dove rendono di piu' su tutta la rosa. Top + 1 credito riserva gli ultimi slot a giocatori da 1 credito (terzo portiere, ultimi tre difensori, ultimi tre centrocampisti, ultimi due attaccanti), scegliendo i migliori fra quelli che dovrebbero costare il minimo, e concentra il resto del budget sui titolari piu' forti.</p>
+    <p><b>Budget per ruolo.</b> In automatico l'algoritmo divide i crediti fra i ruoli. In manuale fissi tu quanti crediti dare a portieri, difensori, centrocampisti e attaccanti (giocatori gia' scelti compresi) e il tool trova la rosa migliore dentro quei limiti.</p>
     <p>Sulle due stagioni passate il punteggio ordina i giocatori meglio della fantamedia e dei punti delle prime giornate, ma di poco. Le stelle offensive costano molto piu' di quanto il modello le valuta: e' un'indicazione, non una regola. Se vuoi una stella, sceglila e lascia che il tool ricostruisca il resto.</p>
   </details></div>`;
   $("#rosa").innerHTML = h;
@@ -779,6 +812,17 @@ document.addEventListener("click", (e) => {
   if (d.alt) { const id = +d.alt; S.aperte[id] = !S.aperte[id]; return renderRosa(); }
   if (d.piano) { S.piano = d.piano; S.aperte = {}; return aggiorna(); }
   if (d.modo) { S.modo = d.modo; S.aperte = {}; return aggiorna(); }
+  if (d.bud) {
+    if (d.bud === "auto") S.budgetRuolo = null;
+    else if (!S.budgetRuolo) {
+      // Si parte dalla divisione attuale: scelti + suggeriti per ruolo.
+      const b = { P: 0, D: 0, C: 0, A: 0 };
+      for (const [id, pz] of Object.entries(mia())) { const g = BY_ID.get(+id); if (g) b[g.r] += +pz; }
+      for (const c of SUGG.lista) b[c.g.r] += c.p;
+      S.budgetRuolo = b;
+    }
+    S.aperte = {}; return aggiorna();
+  }
   if (d.r !== undefined && t.parentElement.id === "ruoli") {
     S.f.r = d.r; document.querySelectorAll("#ruoli button").forEach((b) => b.setAttribute("aria-pressed", b === t));
     return renderListone();
@@ -796,6 +840,7 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#ove
 document.addEventListener("change", (e) => {
   const id = e.target.id;
   if (id === "margine") { S.margine = +e.target.value; aggiorna(); }
+  if (id.startsWith("bud-") && S.budgetRuolo) { S.budgetRuolo[id.slice(4)] = Math.max(0, Math.round(+e.target.value || 0)); S.aperte = {}; aggiorna(); }
   if (id === "tetto") { S.tetto = +e.target.value; aggiorna(); }
   if (id === "esenzione") { S.esenzioneP = e.target.checked; aggiorna(); }
   if (id === "sq") { S.f.sq = e.target.value; renderListone(); }

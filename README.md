@@ -50,6 +50,12 @@ Due strategie:
   del budget si concentra sui titolari più forti. I giocatori che hai già preso
   a 1 credito contano nella quota del loro ruolo.
 
+**Budget per ruolo.** In automatico l'algoritmo divide i crediti fra i ruoli; in
+manuale fissi tu i crediti di portieri, difensori, centrocampisti e attaccanti
+(giocatori già scelti compresi) e il tool trova la rosa più forte dentro quei
+limiti. Non spende un credito se non c'è un giocatore che valga di più: il
+residuo per ruolo resta visibile.
+
 Tre piani (A, B, C) salvati nel browser, esportabili e reimportabili come testo.
 
 ---
