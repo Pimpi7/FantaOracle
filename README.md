@@ -42,6 +42,14 @@ Vincoli rispettati: rosa 3-8-8-6, 500 crediti, almeno 1 credito per ogni slot
 ancora vuoto, al massimo 3 giocatori della stessa squadra reale (il blocco
 portieri può essere escluso), margine di prudenza sui prezzi (0–30%).
 
+Due strategie:
+- **Omogenea**: i crediti vanno dove rendono di più, su tutta la rosa.
+- **Top + 1 credito**: gli ultimi slot vanno a giocatori da 1 credito (terzo
+  portiere, ultimi tre difensori, ultimi tre centrocampisti, ultimi due
+  attaccanti), scelti fra i migliori che dovrebbero costare il minimo; il resto
+  del budget si concentra sui titolari più forti. I giocatori che hai già preso
+  a 1 credito contano nella quota del loro ruolo.
+
 Tre piani (A, B, C) salvati nel browser, esportabili e reimportabili come testo.
 
 ---
@@ -299,7 +307,11 @@ funzioni a gradini la media non basta).
 ## Prossimi passi
 
 1. Modalità asta: stato dell'asta in tempo reale, crediti e rose degli
-   avversari, offerta massima consigliata sul giocatore chiamato.
+   avversari, offerta massima consigliata sul giocatore chiamato. In cima, le
+   **occasioni di fine ruolo**: giocatori buoni rimasti liberi quando un ruolo
+   sta per chiudersi, che si possono prendere a pochissimo. Per stimarle servono
+   i crediti e gli slot rimasti a ciascun avversario: chi ha pochi crediti o il
+   ruolo già pieno non rilancia.
 2. Indisponibili con data di rientro nella probabilità di voto.
 3. Tool formazione: probabili formazioni da più fonti, simulazione della
    giornata con modificatore, switch e confronto h2h con l'avversario.
