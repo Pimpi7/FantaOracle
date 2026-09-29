@@ -262,17 +262,20 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 
 /* --- modalita' asta --- */
 /* il bottone e' un pallone: pill bianca con le cuciture, e un pallone vero appoggiato a destra */
-.asta-btn { position: relative; margin-right: 0; border: 2px solid #16201a; border-radius: 999px; padding: 9px 42px 9px 18px;
+/* Il pallone sta nella curva destra del bottone: altezza interna del bottone (40 - 2x2 di bordo = 36 px)
+   uguale al diametro visibile del pallone e centri coincidenti, cosi' il bordo curvo lo abbraccia. */
+.asta-btn { position: relative; margin-right: 0; border: 2px solid #16201a; border-radius: 999px; height: 40px; padding: 0 42px 0 18px;
+  display: inline-flex; align-items: center;
   color: #16201a; font: 700 15px/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
   background:
     radial-gradient(circle at 0 50%, transparent 0 13px, rgb(22 32 26 / 0.07) 13px 14px, transparent 14px) 0 0 / 28px 100% repeat-x,
     linear-gradient(180deg, #ffffff 0%, #f1f3f0 70%, #dfe4df 100%);
   box-shadow: 0 2px 0 rgb(0 0 0 / 0.25); }
 .asta-btn:hover { background-color: #ffffff; transform: translateY(-1px); }
-.asta-btn .pallone { position: absolute; right: -6px; top: 50%; width: 42px; height: 42px; margin-top: -21px;
+.asta-btn .pallone { position: absolute; right: -1px; top: 50%; width: 38px; height: 38px; margin-top: -19px;
   transform-origin: 50% 100%; pointer-events: none; }
 /* ombra a terra sotto il pallone: si stringe e schiarisce quando sale */
-.asta-btn .ombra { position: absolute; right: 0; top: 50%; width: 30px; height: 7px; margin-top: 18px; border-radius: 50%;
+.asta-btn .ombra { position: absolute; right: 3px; top: 50%; width: 30px; height: 7px; margin-top: 14px; border-radius: 50%;
   background: radial-gradient(closest-side, rgb(0 0 0 / 0.45), transparent); pointer-events: none; }
 .asta-btn .pallone svg, .pallone-volo svg { display: block; width: 100%; height: 100%; }
 .pallone-volo { position: fixed; z-index: 60; pointer-events: none; filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.35)); }
@@ -314,23 +317,25 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 @media (prefers-reduced-motion: no-preference) {
   .asta-btn.pulse { animation: pulsa 2s ease-in-out infinite; }
   @keyframes pulsa { 0%, 100% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 0 rgb(255 255 255 / 0.6); } 60% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 11px rgb(255 255 255 / 0); } }
-  /* palleggio: sale frenando, scende accelerando, si schiaccia a terra e rimbalza; poi una pausa */
-  .asta-btn.pulse .pallone { animation: palleggio 1.6s infinite; }
-  .asta-btn.pulse .ombra { animation: ombra 1.6s infinite; }
+  /* palleggio ogni 3 s: a riposo il pallone e' tondo e combacia con la curva del bottone; poi si carica,
+     sale frenando, scende accelerando, si schiaccia a terra, fa un rimbalzino e torna al suo posto */
+  .asta-btn.pulse .pallone { animation: palleggio 3s infinite; }
+  .asta-btn.pulse .ombra { animation: ombra 3s infinite; }
   @keyframes palleggio {
-    0%   { transform: translateY(0) scale(1.12, 0.86); animation-timing-function: ease-out; }
-    8%   { transform: translateY(0) scale(0.95, 1.06); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
-    36%  { transform: translateY(-13px) scale(1, 1); animation-timing-function: cubic-bezier(.6,0,.8,.4); }
-    62%  { transform: translateY(0) scale(0.97, 1.04); animation-timing-function: ease-out; }
-    67%  { transform: translateY(0) scale(1.1, 0.88); animation-timing-function: ease-out; }
-    75%  { transform: translateY(-3px) scale(1, 1); animation-timing-function: ease-in; }
-    83%, 100% { transform: translateY(0) scale(1.12, 0.86); }
+    0%, 40% { transform: translateY(0) scale(1, 1); animation-timing-function: ease-in-out; }
+    44%  { transform: translateY(0) scale(1.08, 0.9); animation-timing-function: ease-out; }
+    48%  { transform: translateY(-2px) scale(0.95, 1.06); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+    63%  { transform: translateY(-13px) scale(1, 1); animation-timing-function: cubic-bezier(.6,0,.8,.4); }
+    77%  { transform: translateY(0) scale(0.97, 1.04); animation-timing-function: ease-out; }
+    80%  { transform: translateY(0) scale(1.1, 0.88); animation-timing-function: ease-out; }
+    86%  { transform: translateY(-3px) scale(1, 1); animation-timing-function: ease-in; }
+    91%  { transform: translateY(0) scale(1.05, 0.94); animation-timing-function: ease-out; }
+    96%, 100% { transform: translateY(0) scale(1, 1); }
   }
   @keyframes ombra {
-    0%, 62%, 67%, 83%, 100% { transform: scale(1); opacity: 1; }
-    8% { transform: scale(0.95); opacity: 0.9; }
-    36% { transform: scale(0.55); opacity: 0.4; }
-    75% { transform: scale(0.85); opacity: 0.8; }
+    0%, 44%, 77%, 80%, 91%, 100% { transform: scale(1); opacity: 1; }
+    63% { transform: scale(0.55); opacity: 0.4; }
+    86% { transform: scale(0.85); opacity: 0.8; }
   }
   .live .dot { animation: batte 1.2s ease-in-out infinite; }
   @keyframes batte { 50% { opacity: 0.25; } }
