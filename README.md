@@ -14,7 +14,7 @@ però comunque non riesci a smettere di vedere le partite della Maggica perchè 
 
 ⏳**COMING SOON**: pensi che dopo averti aiutato a fare la miglior squadra possibile sarai abbandonato a te stesso, senza saper gestire una formazione così competitiva? Sta arrivando anche la **Modalità Formazione**, che combina tutti i migliori dati a disposizione per fornirti suggerimenti *ad hoc* per massimizzare il punteggio atteso di ogni giornata! 
 
-### 👉 [Apri il tool](https://pimpi7.github.io/FantaOrb/)
+### 👉 [Apri il tool](https://pimpi7.github.io/fantaOracle/)
 
 Funziona nel browser, da computer e da telefono, senza installare nulla. I dati si aggiornano da soli ogni martedì e venerdì.
 
