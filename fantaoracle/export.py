@@ -36,6 +36,8 @@ def pagina() -> None:
     aggiunge da se' doctype e head. Per GitHub Pages serve il documento intero;
     ai riferimenti a tool.css e tool.js si aggiunge un'impronta del contenuto,
     cosi' dopo un aggiornamento il browser non tiene in cache la versione vecchia.
+    Scrive anche web/artefatto.html (non in git): il frammento con le impronte, da
+    pubblicare come artifact al posto di tool.html.
     """
     import hashlib
 
@@ -43,6 +45,9 @@ def pagina() -> None:
     for nome, attr in (("tool.css", "href"), ("tool.js", "src")):
         impronta = hashlib.sha256((WEB / nome).read_bytes()).hexdigest()[:10]
         corpo = corpo.replace(f'{attr}="{nome}"', f'{attr}="{nome}?v={impronta}"')
+    # Stesso frammento, con le impronte, per l'artifact su claude.ai: senza, chi l'ha gia'
+    # aperto continua a vedere il tool.css e il tool.js vecchi dalla cache del browser.
+    (WEB / "artefatto.html").write_text(corpo, encoding="utf-8")
     (WEB / "index.html").write_text(
         "<!doctype html>\n<html lang=\"it\">\n<head>\n<meta charset=\"utf-8\">\n"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"

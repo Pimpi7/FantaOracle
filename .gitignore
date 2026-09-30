@@ -18,3 +18,4 @@ data/*.duckdb.wal
 
 data/proc/*
 !data/proc/.gitkeep
+web/artefatto.html
