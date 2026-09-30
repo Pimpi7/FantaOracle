@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="docs/img/logo.png" alt="FantaOracle: la sfera di cristallo del fantacalcio" width="260">
-</p>
-
-<h1 align="center">FantaOracle</h1>
+<h1 align="center">
+  <img src="docs/img/titolo.png" alt="FantaOracle" width="760">
+</h1>
 
 ⚽ Vuoi fare il fantacalcio con gli amici ma non hai tempo di studiarti tutto il listone, e magari non segui neanche così tanto il calcio perchè:
 
