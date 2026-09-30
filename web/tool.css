@@ -91,7 +91,7 @@ button { cursor: pointer; }
 :root[data-asta] .marca .logo { display: none; }
 :root[data-asta] .marca .logo-asta { display: block; }
 .marca-txt { display: grid; gap: 8px; min-width: 0; }
-.brand span { background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 92%, transparent 92%); padding-inline: 2px; }
+.brand span { background: var(--mark); padding: 2px 5px 1px; margin-right: 3px; border-radius: 4px; }
 .meta { color: var(--ink-2); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 5px 6px; }
 .meta span { white-space: nowrap; }
 .top .meta span { background: rgb(0 0 0 / 0.24); color: #ffffff; padding: 3px 9px 2px; border-radius: 999px; font-size: 12px; letter-spacing: 0.01em; }
