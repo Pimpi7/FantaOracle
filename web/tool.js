@@ -1182,7 +1182,8 @@ fetch("data.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status);
     SOGLIA[r] = l[Math.min(TITOLARI_LEGA[r], l.length) - 1] ?? 0;
   }
   if (inAsta()) vista("asta");
-  $("#meta").textContent = `Serie A ${META.stagione} · dati alla ${META.giornata}ª giornata · ${META.giornate_residue} giornate da comprare · ${META.n_squadre} squadre, ${META.crediti} crediti`;
+  $("#meta").innerHTML = [`Serie A ${META.stagione}`, `dati alla ${META.giornata}ª giornata`, `${META.giornate_residue} giornate da comprare`,
+    `${META.n_squadre} squadre · ${META.crediti} crediti`].map((t) => `<span>${t}</span>`).join("");
   $("#sq").innerHTML += d.squadre.map((s) => `<option value="${s.slug}">${esc(s.nome)}</option>`).join("");
   aggiorna();
 }).catch((err) => {

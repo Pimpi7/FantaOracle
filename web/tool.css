@@ -85,9 +85,13 @@ button { cursor: pointer; }
 .top .brand { color: #ffffff; }
 .top .brand span { color: #1b1606; }
 .brand { font: 700 30px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
-.brand .logo { height: 68px; width: auto; margin-right: 8px; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+.marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.marca .logo { height: 68px; width: auto; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+.marca-txt { display: grid; gap: 8px; min-width: 0; }
 .brand span { background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 92%, transparent 92%); padding-inline: 2px; }
-.meta { color: var(--ink-2); font-size: 12.5px; }
+.meta { color: var(--ink-2); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 5px 6px; }
+.meta span { white-space: nowrap; }
+.top .meta span { background: rgb(0 0 0 / 0.24); color: #ffffff; padding: 3px 9px 2px; border-radius: 999px; font-size: 12px; letter-spacing: 0.01em; }
 .budget { margin-left: auto; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
 .stat { display: grid; }
 .stat b { font: 700 24px/1 var(--font-display); }
@@ -397,7 +401,7 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
 
 @media (max-width: 900px) {
   .tabs { display: flex; }
-  :root[data-asta] .brand { order: 0; }
+  :root[data-asta] .marca { order: 0; }
   :root[data-asta] #asta-ctl { order: 1; margin-left: auto; }
   :root[data-asta] .tabellone { order: 2; flex-basis: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
   :root[data-asta] .budget { order: 3; flex-basis: 100%; padding: 12px 0 0; border-left: 0; border-top: 1px solid rgb(255 255 255 / 0.14);
@@ -412,6 +416,9 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
   .kv { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 520px) {
+  .marca { gap: 8px; }
+  .marca .logo { height: 54px; }
+  .top .meta span { font-size: 11px; padding: 2px 7px 1px; }
   .slot.sugg { grid-template-columns: 22px minmax(0, 1fr) auto auto; }
   .slot.sugg > .row { grid-column: 2 / -1; justify-content: flex-end; }
   .tools input[type="search"] { flex-basis: 100%; }
