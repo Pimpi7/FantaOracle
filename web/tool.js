@@ -397,7 +397,7 @@ function renderRosa() {
       <select id="tetto" class="pill">${[2, 3, 4, 5].map((x) => `<option ${x === S.tetto ? "selected" : ""}>${x}</option>`).join("")}</select>
       <label class="check"><input id="esenzione" type="checkbox" ${S.esenzioneP ? "checked" : ""}> Blocco portieri libero</label>
     </div>
-    ${chips ? `<div class="squadre" style="margin-top:10px">${chips}</div>` : ""}
+    ${chips ? `<div class="squadre-box"><span class="lbl">Giocatori per squadra</span><div class="squadre">${chips}</div></div>` : ""}
     <div class="row" style="margin-top:10px">
       ${inAsta() ? "" : `<button class="btn small" id="svuota">Svuota il piano</button>
       <button class="btn small" id="esporta">Esporta</button>

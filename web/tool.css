@@ -226,6 +226,9 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .alts div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; font-size: 12.5px; }
 .alts span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .squadre { display: flex; flex-wrap: wrap; gap: 6px; }
+/* riepilogo per squadra reale: fascia a parte fra le impostazioni e i comandi */
+.squadre-box { margin: 14px -12px 0; padding: 10px 12px 12px; background: var(--tint); border-block: 1px solid var(--rule); display: grid; gap: 7px; }
+.squadre-box .chip { background: var(--sheet); }
 .campo-card { padding: 0; }
 .campo-card .ruolo-h { padding: 12px; margin: 0; border: 0; cursor: pointer; list-style: none; }
 .campo-card .ruolo-h::-webkit-details-marker { display: none; }
