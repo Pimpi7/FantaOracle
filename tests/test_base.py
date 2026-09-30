@@ -9,9 +9,9 @@ import datetime as dt
 import pandas as pd
 import pytest
 
-from fantaoracle.config import LeagueConfig, RegolaMancante, pending_fields
-from fantaoracle.resolve.match import match_players
-from fantaoracle.resolve.normalize import (
+from fantaorb.config import LeagueConfig, RegolaMancante, pending_fields
+from fantaorb.resolve.match import match_players
+from fantaorb.resolve.normalize import (
     compact_key,
     nomi_compatibili,
     normalize_team,
@@ -131,7 +131,7 @@ class TestConfig:
 class TestStore:
     def test_snapshot_e_lettura_al_passato(self, tmp_path, monkeypatch):
         """Il backtest deve poter leggere solo cio' che esisteva a una data."""
-        import fantaoracle.store as store
+        import fantaorb.store as store
 
         monkeypatch.setattr(store, "RAW", tmp_path)
 
@@ -146,7 +146,7 @@ class TestStore:
         assert len(store.list_snapshots("f", "d")) == 2
 
     def test_non_sovrascrive(self, tmp_path, monkeypatch):
-        import fantaoracle.store as store
+        import fantaorb.store as store
 
         monkeypatch.setattr(store, "RAW", tmp_path)
         oggi = dt.date(2026, 10, 1)

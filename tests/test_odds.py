@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fantaoracle.model.odds import (
+from fantaorb.model.odds import (
     _esiti,
     _multiplicativo,
     _shin,

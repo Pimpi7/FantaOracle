@@ -1,7 +1,7 @@
 > Piano originale del 29 settembre 2026, scritto quando l'asta era prevista dopo il 20 ottobre.
 > L'asta è stata poi fissata al 2 ottobre: il piano è stato compresso e lo stato aggiornato è in [specifiche.md](../specifiche.md).
 
-# fantaoracle — Roadmap v1 (costruttore di rosa)
+# fantaorb — Roadmap v1 (costruttore di rosa)
 
 Stato al 29 settembre 2026. Da approvare prima dello sviluppo.
 
@@ -42,7 +42,7 @@ Limite noto: Understat copre i 5 grandi campionati. Per chi arriva da Eredivisie
 
 ```
 snapshot grezzi (Parquet datati, mai sovrascritti)
-   -> fantaoracle.duckdb   (tabelle pulite, ID canonici, controlli)
+   -> fantaorb.duckdb   (tabelle pulite, ID canonici, controlli)
    -> modello            (proiezioni, valore, prezzo atteso)
    -> export JSON
    -> pagina web         (listone + costruttore, anche da telefono)
@@ -78,7 +78,7 @@ snapshot grezzi (Parquet datati, mai sovrascritti)
 
 | Fase | Cosa | Quando | Consegna |
 |---|---|---|---|
-| 1 | Base dati: raccolta, database, ID, controlli | 30 set – 4 ott | `fantaoracle.duckdb` + report di copertura |
+| 1 | Base dati: raccolta, database, ID, controlli | 30 set – 4 ott | `fantaorb.duckdb` + report di copertura |
 | 2 | Punteggio, valore, prezzo atteso, backtest | 5 – 10 ott | proiezioni validate + numeri del backtest |
 | 3 | Tool: listone e costruttore guidato | 11 – 15 ott | pagina web da provare |
 | 4 | Prova insieme, dati aggiornati alla g.8, correzioni | 16 – 19 ott | versione pre-asta |

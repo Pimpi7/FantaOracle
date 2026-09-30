@@ -1,4 +1,4 @@
-# fantaOracle · specifiche tecniche
+# FantaOrb · specifiche tecniche
 
 Documento tecnico completo: dati, database, modello, backtest, ottimizzatore e automazione.
 Per una presentazione del tool e di come usarlo vedi il [README](README.md).
@@ -97,7 +97,7 @@ dei ruoli (per ora ogni ruolo si può chiamare in qualsiasi momento).
 
 ```bash
 pip install -e ".[dev]"
-python -m fantaoracle all          # raccolta -> database -> modello -> export
+python -m fantaorb all          # raccolta -> database -> modello -> export
 cd web && python -m http.server    # poi apri http://localhost:8000
 ```
 
@@ -108,11 +108,11 @@ Comandi singoli:
 
 | Comando | Cosa fa |
 |---|---|
-| `python -m fantaoracle status` | regole da confermare, snapshot raccolti, stato del database |
-| `python -m fantaoracle ingest` | raccolta da tutte le fonti (`--fonte voti`, `--completo`) |
-| `python -m fantaoracle db` | ricostruisce `data/fantaoracle.duckdb` dagli snapshot |
-| `python -m fantaoracle model` | proiezioni e valutazioni, scritte nel database |
-| `python -m fantaoracle export` | `web/data.json` e `web/index.html` |
+| `python -m fantaorb status` | regole da confermare, snapshot raccolti, stato del database |
+| `python -m fantaorb ingest` | raccolta da tutte le fonti (`--fonte voti`, `--completo`) |
+| `python -m fantaorb db` | ricostruisce `data/fantaorb.duckdb` dagli snapshot |
+| `python -m fantaorb model` | proiezioni e valutazioni, scritte nel database |
+| `python -m fantaorb export` | `web/data.json` e `web/index.html` |
 | `make test` | test |
 
 ---
@@ -131,7 +131,7 @@ datata `data/raw/<fonte>/<dataset>/asof=AAAA-MM-GG/`. `read_snapshot(asof=...)`
 restituisce solo ciò che esisteva a quella data: è quello che permette backtest
 onesti, senza sbirciare il futuro.
 
-**Il database si ricostruisce.** `data/fantaoracle.duckdb` non è in git: si
+**Il database si ricostruisce.** `data/fantaorb.duckdb` non è in git: si
 rigenera dagli snapshot in pochi secondi. Tenerlo nella repo la farebbe crescere a
 ogni aggiornamento senza aggiungere nulla di non ricostruibile.
 
@@ -188,7 +188,7 @@ secondo candidato troppo vicino viene dichiarato ambiguo invece di essere scritt
 
 ## Il modello
 
-[`fantaoracle/model/projection.py`](fantaoracle/model/projection.py)
+[`fantaorb/model/projection.py`](fantaorb/model/projection.py)
 
 ```
 punti a giornata = probabilità di voto × fantavoto atteso quando gioca
@@ -218,7 +218,7 @@ quelli. Lo stesso codice fa la proiezione vera e il backtest.
 
 ### Backtest
 
-[`fantaoracle/model/backtest.py`](fantaoracle/model/backtest.py). Le stagioni
+[`fantaorb/model/backtest.py`](fantaorb/model/backtest.py). Le stagioni
 2024-25 e 2025-26 vengono congelate alla 5ª giornata (quella dell'asta),
 proiettate sulle restanti 33 e confrontate con i fantapunti realmente fatti. Gli
 xG della stagione congelata sono esclusi, perché sono aggregati di fine stagione:
@@ -226,7 +226,7 @@ il modello è quindi un po' svantaggiato rispetto all'uso reale.
 
 Correlazione di rango fra punti previsti e reali, media delle due stagioni:
 
-| Ruolo | fantaOracle | Punti prime 5 giornate | Fantamedia pesata × presenze | Punti anno scorso |
+| Ruolo | FantaOrb | Punti prime 5 giornate | Fantamedia pesata × presenze | Punti anno scorso |
 |---|---|---|---|---|
 | P | **0,606** | 0,553 | 0,594 | 0,487 |
 | D | 0,542 | **0,556** | 0,537 | 0,319 |
@@ -235,7 +235,7 @@ Correlazione di rango fra punti previsti e reali, media delle due stagioni:
 | **Media** | **0,566** | 0,548 | 0,544 | 0,348 |
 
 Punti reali medi dei primi giocatori indicati da ciascun metodo (primi 10 P, 30 D,
-30 C, 20 A): fantaOracle 153,7, prime 5 giornate 152,0, fantamedia 151,3, anno
+30 C, 20 A): FantaOrb 153,7, prime 5 giornate 152,0, fantamedia 151,3, anno
 scorso 144,4.
 
 Il modello è il migliore in media, ma il vantaggio è contenuto e non vale in ogni
@@ -247,7 +247,7 @@ prime giornate lo rivelano bene. I parametri sono calibrati su questo backtest.
 
 ## Valore e prezzo atteso
 
-[`fantaoracle/model/valuation.py`](fantaoracle/model/valuation.py)
+[`fantaorb/model/valuation.py`](fantaorb/model/valuation.py)
 
 **Valore.** VORP a due livelli. Si comprano 24 portieri ma ne giocano 8 a
 settimana: misurare il valore rispetto al 25° portiere gonfierebbe tutti i
@@ -313,7 +313,7 @@ Developer Pack).
 
 ```
 config/league.yaml          regole della lega, mercato, parametri del motore
-fantaoracle/
+fantaorb/
   ingest/                   raccolta: Fantacalcio.it, Understat, football-data
   resolve/                  allineamento dei nomi fra fonti
   model/

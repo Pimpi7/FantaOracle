@@ -1,11 +1,11 @@
 """Interfaccia a riga di comando.
 
-    python -m fantaoracle status     stato di config, snapshot e database
-    python -m fantaoracle ingest     raccolta dati da tutte le fonti
-    python -m fantaoracle db         ricostruisce il database dagli snapshot
-    python -m fantaoracle model      proiezioni e valutazioni
-    python -m fantaoracle export     dati per il tool web
-    python -m fantaoracle all        tutta la pipeline, nell'ordine
+    python -m fantaorb status     stato di config, snapshot e database
+    python -m fantaorb ingest     raccolta dati da tutte le fonti
+    python -m fantaorb db         ricostruisce il database dagli snapshot
+    python -m fantaorb model      proiezioni e valutazioni
+    python -m fantaorb export     dati per il tool web
+    python -m fantaorb all        tutta la pipeline, nell'ordine
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ STAGIONE_CORRENTE = "2026-27"
 
 
 def cmd_status(_args) -> int:
-    print(f"fantaoracle {__version__}\n")
+    print(f"fantaorb {__version__}\n")
     pend = pending_fields(load_league())
     print(f"Regole da confermare: {', '.join(pend) if pend else 'nessuna'}\n")
 
@@ -104,7 +104,7 @@ def cmd_all(args) -> int:
 
 
 def main(argv=None) -> int:
-    p = argparse.ArgumentParser(prog="fantaoracle")
+    p = argparse.ArgumentParser(prog="fantaorb")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status").set_defaults(func=cmd_status)
     s = sub.add_parser("ingest")

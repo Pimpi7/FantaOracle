@@ -12,7 +12,7 @@ però comunque non riesci a smettere di vedere le partite della Maggica perchè 
 
 ‼️ Tutte queste feature sono sempre dei **suggerimenti**, la scelta finale sarà sempre tua!
 
-### 👉 [Apri il tool](https://pimpi7.github.io/fantaOracle/)
+### 👉 [Apri il tool](https://pimpi7.github.io/FantaOrb/)
 
 Funziona nel browser, da computer e da telefono, senza installare nulla. I dati si aggiornano da soli ogni martedì e venerdì.
 
@@ -24,7 +24,7 @@ Funziona nel browser, da computer e da telefono, senza installare nulla. I dati 
 
 La fantamedia ti dice quanto ha preso un giocatore *quando ha giocato*. Ma chi gioca metà delle partite ti porta metà dei punti, un portiere da 5 e mezzo di media è un'altra cosa se la sua difesa ti regala il modificatore, e il nome in voga costa il doppio di quanto vale.
 
-fantaOracle mette insieme tre stagioni di voti Fantacalcio.it, le prime giornate di quest'anno, le statistiche avanzate e le quote dei bookmaker, e per ogni giocatore stima **quanti punti porterà a giornata da qui a fine campionato**. Poi traduce quei punti in crediti, tenendo conto delle regole della nostra lega: 8 squadre, 500 crediti, h2h, modificatore difesa.
+FantaOrb mette insieme tre stagioni di voti Fantacalcio.it, le prime giornate di quest'anno, le statistiche avanzate e le quote dei bookmaker, e per ogni giocatore stima **quanti punti porterà a giornata da qui a fine campionato**. Poi traduce quei punti in crediti, tenendo conto delle regole della nostra lega: 8 squadre, 500 crediti, h2h, modificatore difesa.
 
 ---
 
@@ -104,10 +104,10 @@ Tutti i dettagli su dati, modello, backtest e ottimizzatore sono in **[specifich
 Serve Python 3.11 o superiore.
 
 ```bash
-git clone https://github.com/Pimpi7/fantaOracle.git
-cd fantaOracle
+git clone https://github.com/Pimpi7/FantaOrb.git
+cd FantaOrb
 pip install -e ".[dev]"
-python -m fantaoracle all          # scarica i dati, costruisce il database, calcola il modello
+python -m fantaorb all          # scarica i dati, costruisce il database, calcola il modello
 cd web && python -m http.server    # poi apri http://localhost:8000
 ```
 

@@ -6,27 +6,27 @@ setup:
 	$(PY) -m pip install -e ".[dev]"
 
 status:
-	$(PY) -m fantaoracle status
+	$(PY) -m fantaorb status
 
 # Raccolta da tutte le fonti. Le pagine delle stagioni concluse restano in cache.
 ingest:
-	$(PY) -m fantaoracle ingest
+	$(PY) -m fantaorb ingest
 
-# Ricostruisce data/fantaoracle.duckdb dagli snapshot in data/raw.
+# Ricostruisce data/fantaorb.duckdb dagli snapshot in data/raw.
 db:
-	$(PY) -m fantaoracle db
+	$(PY) -m fantaorb db
 
 # Proiezioni, valore e prezzo atteso.
 model:
-	$(PY) -m fantaoracle model
+	$(PY) -m fantaorb model
 
 # Dati per il tool web in web/data.json.
 export:
-	$(PY) -m fantaoracle export
+	$(PY) -m fantaorb export
 
 # Tutta la pipeline: ingest -> db -> model -> export.
 all:
-	$(PY) -m fantaoracle all
+	$(PY) -m fantaorb all
 
 test:
 	$(PY) -m pytest tests -q
