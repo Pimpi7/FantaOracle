@@ -2,7 +2,7 @@
 
 ⚽ Vuoi fare il fantacalcio con gli amici ma non hai tempo di studiarti tutto il listone, e magari non segui neanche così tanto il calcio perchè:
 
-> "Non ci sono più i giocatori di una volta, questi pensano solo ai soldi☝🏻!"
+> "☝🏻Non ci sono più i giocatori di una volta, questi pensano solo ai soldi!"
 
 però comunque non riesci a smettere di vedere le partite della Maggica perchè Daje Roma Daje 🐺?
 
