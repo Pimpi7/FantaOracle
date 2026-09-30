@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/logo.png" alt="FantaOrb: la sfera di cristallo del fantacalcio" width="260">
+</p>
+
 # 🔮 FantaOrb
 
 ⚽ Vuoi fare il fantacalcio con gli amici ma non hai tempo di studiarti tutto il listone, e magari non segui neanche così tanto il calcio perchè:
