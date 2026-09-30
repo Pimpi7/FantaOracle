@@ -229,6 +229,8 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 /* riepilogo per squadra reale: fascia a parte fra le impostazioni e i comandi */
 .squadre-box { margin: 14px -12px 0; padding: 10px 12px 12px; background: var(--tint); border-block: 1px solid var(--rule); display: grid; gap: 7px; }
 .squadre-box .chip { background: var(--sheet); }
+.lega .bud input { width: 72px; font-size: 14px; }
+.lega .bud input:disabled { opacity: 0.55; }
 .row.azioni { justify-content: flex-end; margin-top: 12px; }
 .campo-card { padding: 0; }
 .campo-card .ruolo-h { padding: 12px; margin: 0; border: 0; cursor: pointer; list-style: none; }

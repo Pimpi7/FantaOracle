@@ -24,18 +24,19 @@ const S = {
   aperte: {},                        // alternative aperte per slot suggerito
   asta: null,                        // asta in corso o sospesa
   archivio: [],                      // aste concluse, con le rose finali
+  nSq: null, cred: null,             // lega personalizzata (null = quella dei dati)
 };
 let SUGG = { ids: new Set(), lista: [], forza: 0, costo: 0, errore: null, alt: {} };
 
 function salva() {
   try { localStorage.setItem(KEY, JSON.stringify({ piano: S.piano, piani: S.piani, presi: S.presi,
-    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, asta: S.asta, archivio: S.archivio, campoChiuso: !!S.campoChiuso })); } catch (e) { /* storage non disponibile */ }
+    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, nSq: S.nSq, cred: S.cred, asta: S.asta, archivio: S.archivio, campoChiuso: !!S.campoChiuso })); } catch (e) { /* storage non disponibile */ }
 }
 function carica() {
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || "null");
     if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
-      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, asta: x.asta || null, archivio: x.archivio || [], campoChiuso: !!x.campoChiuso });
+      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, nSq: x.nSq || null, cred: x.cred || null, asta: x.asta || null, archivio: x.archivio || [], campoChiuso: !!x.campoChiuso });
   } catch (e) { /* storage non disponibile */ }
 }
 // In asta "la mia rosa" e' la rosa reale, non piu' un piano.
@@ -373,6 +374,13 @@ function renderRosa() {
       <span>Totale <b>${tot}</b> / ${META.crediti}</span>
       <span>Forza attesa <b>${fmt(SUGG.forza + 0, 1)}</b> pt/g</span></div>
     ${SUGG.errore ? `<p class="alert">${esc(SUGG.errore)}</p>` : ""}
+    <div class="row lega" style="margin-top:10px">
+      <span class="lbl">Lega</span>
+      <label class="bud"><span class="lbl">Squadre</span><input id="nsq" type="number" min="${LEGA_LIM.n[0]}" max="${LEGA_LIM.n[1]}" value="${META.n_squadre}" ${inAsta() ? "disabled" : ""} aria-label="Numero di squadre"></label>
+      <label class="bud"><span class="lbl">Crediti</span><input id="cred" type="number" min="${LEGA_LIM.cr[0]}" max="${LEGA_LIM.cr[1]}" step="10" value="${META.crediti}" ${inAsta() ? "disabled" : ""} aria-label="Crediti a squadra"></label>
+      ${legaCambiata() && !inAsta() ? `<button class="btn small" id="lega-reset" title="Torna a ${LEGA0.n} squadre e ${LEGA0.cr} crediti">Ripristina</button>` : ""}
+    </div>
+    ${legaCambiata() ? `<p class="nota" style="margin-top:8px">Prezzi e valori sono riscalati sui crediti a squadra: i dati sono calibrati su ${LEGA0.n} squadre e ${LEGA0.cr} crediti, quindi con una lega diversa sono una stima.</p>` : ""}
     <div class="row" style="margin-top:10px">
       <span class="lbl">Strategia</span>
       <div class="seg mini" id="modo" role="group" aria-label="Strategia">
@@ -449,6 +457,41 @@ function renderRosa() {
     <p>Sulle due stagioni passate il punteggio ordina i giocatori meglio della fantamedia e dei punti delle prime giornate, ma di poco. Le stelle offensive costano molto piu' di quanto il modello le valuta: e' un'indicazione, non una regola. Se vuoi una stella, sceglila e lascia che il tool ricostruisca il resto.</p>
   </details></div>`;
   $("#rosa").innerHTML = h;
+}
+
+// --- lega personalizzata ----------------------------------------------------------------------
+// Prezzi e valori dei dati sono calibrati su LEGA0 (8 squadre, 500 crediti). Con una lega diversa
+// si riscalano sui crediti discrezionali a squadra (crediti meno un credito per slot); il numero
+// di squadre sposta la soglia dei titolari e i rivali dell'asta, non i prezzi: e' una stima.
+let LEGA0 = { n: 8, cr: 500 };
+const LEGA_LIM = { n: [4, 16], cr: [100, 2000] };
+const nSlot = () => RUOLI.reduce((a, r) => a + META.slot[r], 0);
+const legaCambiata = () => META.n_squadre !== LEGA0.n || META.crediti !== LEGA0.cr;
+function applicaLega() {
+  META.n_squadre = S.nSq ?? LEGA0.n;
+  META.crediti = S.cred ?? LEGA0.cr;
+  const k = (META.crediti - nSlot()) / (LEGA0.cr - nSlot());
+  for (const g of DATA.giocatori) {
+    g.pa = Math.max(1, Math.round(1 + (g.pa0 - 1) * k));
+    g.val = g.val0 == null ? g.val0 : g.val0 * k;
+    g.aff = g.aff0 == null ? g.aff0 : g.aff0 * k;
+  }
+  const T = TITOLARI_LEGA();
+  for (const r of RUOLI) {
+    const l = DATA.giocatori.filter((g) => g.r === r).map((g) => g.pg).sort((a, b) => b - a);
+    SOGLIA[r] = l[Math.min(T[r], l.length) - 1] ?? 0;
+  }
+  $("#meta").innerHTML = [`Serie A ${META.stagione}`, `dati alla ${META.giornata}ª giornata`, `${META.giornate_residue} giornate da comprare`,
+    `${META.n_squadre} squadre · ${META.crediti} crediti`].map((t) => `<span>${t}</span>`).join("");
+}
+function cambiaLega(chiave, v) {
+  const lim = LEGA_LIM[chiave === "nSq" ? "n" : "cr"];
+  const x = Math.min(lim[1], Math.max(lim[0], Math.round(+v) || lim[0]));
+  S[chiave] = x === (chiave === "nSq" ? LEGA0.n : LEGA0.cr) ? null : x;
+  if (chiave === "cred") S.budgetRuolo = null;          // il budget per ruolo era in altri crediti
+  S.aperte = {};
+  applicaLega();
+  aggiorna();
 }
 
 function aggiorna() {
@@ -610,8 +653,9 @@ function importa() {
 // --- asta live --------------------------------------------------------------------------
 // Segnaposto finche' non li conosciamo: nomi dei partecipanti e tipo di asta.
 // Oggi ogni ruolo si puo' chiamare in qualsiasi momento (chiamata libera).
-const NOMI_DEFAULT = ["La mia squadra", "Squadra 2", "Squadra 3", "Squadra 4", "Squadra 5", "Squadra 6", "Squadra 7", "Squadra 8"];
-const TITOLARI_LEGA = { P: 8, D: 32, C: 28, A: 20 };   // 8 squadre x titolari tipici del ruolo
+const NOMI_DEFAULT = ["La mia squadra", ...Array.from({ length: 19 }, (_, i) => `Squadra ${i + 2}`)];
+const TITOLARI_8 = { P: 8, D: 32, C: 28, A: 20 };      // titolari tipici del ruolo in una lega da 8 squadre
+const TITOLARI_LEGA = () => Object.fromEntries(RUOLI.map((r) => [r, Math.round(TITOLARI_8[r] * META.n_squadre / 8)]));
 let OWNER = new Map();                                  // id giocatore -> indice squadra
 let SOGLIA = {};                                        // pt/g dell'ultimo titolare della lega per ruolo
 let SPINTA = { chiave: null, val: null };
@@ -1145,6 +1189,7 @@ document.addEventListener("click", (e) => {
     return renderListone();
   }
   if (d.view) return vista(d.view);
+  if (t.id === "lega-reset") { S.nSq = S.cred = S.budgetRuolo = null; S.aperte = {}; applicaLega(); return aggiorna(); }
   if (t.id === "svuota") { S.piani[S.piano] = {}; return aggiorna(); }
   if (t.id === "esporta") return esporta();
   if (t.id === "importa") return importa();
@@ -1153,6 +1198,8 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#ove
 document.addEventListener("change", (e) => {
   const id = e.target.id;
   if (id === "margine") { S.margine = +e.target.value; aggiorna(); }
+  if (id === "nsq") cambiaLega("nSq", e.target.value);
+  if (id === "cred") cambiaLega("cred", e.target.value);
   if (id.startsWith("bud-") && S.budgetRuolo) { S.budgetRuolo[id.slice(4)] = Math.max(0, Math.round(+e.target.value || 0)); S.aperte = {}; aggiorna(); }
   if (id === "tetto") { S.tetto = +e.target.value; aggiorna(); }
   if (id === "esenzione") { S.esenzioneP = e.target.checked; aggiorna(); }
@@ -1177,13 +1224,10 @@ document.querySelector("thead").addEventListener("click", (e) => {
 fetch("data.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then((d) => {
   DATA = d; META = d.meta; BY_ID = new Map(d.giocatori.map((g) => [g.id, g]));
   carica();
-  for (const r of RUOLI) {
-    const l = d.giocatori.filter((g) => g.r === r).map((g) => g.pg).sort((a, b) => b - a);
-    SOGLIA[r] = l[Math.min(TITOLARI_LEGA[r], l.length) - 1] ?? 0;
-  }
+  for (const g of d.giocatori) { g.pa0 = g.pa; g.val0 = g.val; g.aff0 = g.aff; }
+  LEGA0 = { n: META.n_squadre, cr: META.crediti };
+  applicaLega();
   if (inAsta()) vista("asta");
-  $("#meta").innerHTML = [`Serie A ${META.stagione}`, `dati alla ${META.giornata}ª giornata`, `${META.giornate_residue} giornate da comprare`,
-    `${META.n_squadre} squadre · ${META.crediti} crediti`].map((t) => `<span>${t}</span>`).join("");
   $("#sq").innerHTML += d.squadre.map((s) => `<option value="${s.slug}">${esc(s.nome)}</option>`).join("");
   aggiorna();
 }).catch((err) => {
