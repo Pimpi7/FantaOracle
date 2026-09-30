@@ -316,6 +316,17 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 :root[data-asta] .top .meta { display: none; }
 :root[data-asta] .tabellone { display: flex; gap: 12px 28px; align-items: center; flex-wrap: wrap; min-width: 0; }
 :root[data-asta] .budget { align-items: center; padding-left: 28px; border-left: 1px solid rgb(255 255 255 / 0.14); }
+/* testata dell'asta a griglia: titolo con Live/Esci sotto, a destra tabellone e crediti */
+:root[data-asta] .top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "marca tab bud" "ctl tab bud"; row-gap: 6px; }
+:root[data-asta] .marca { grid-area: marca; }
+:root[data-asta] #asta-ctl { grid-area: ctl; justify-self: start; }
+:root[data-asta] .tabellone { grid-area: tab; }
+:root[data-asta] .budget { grid-area: bud; }
+@media (max-width: 1380px) {
+  :root[data-asta] .top { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "marca tab" "ctl bud"; row-gap: 10px; }
+  :root[data-asta] .budget { margin-left: 0; justify-self: start; }
+}
 .tb, :root[data-asta] .stat { display: grid; grid-template-rows: 26px auto; align-items: end; row-gap: 3px; min-width: 0; }
 .tb b { font: 700 20px/1 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
 .tb b em { font-style: normal; color: var(--stage-2); }
@@ -425,10 +436,10 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
 
 @media (max-width: 900px) {
   .tabs { display: flex; }
-  :root[data-asta] .marca { order: 0; }
-  :root[data-asta] #asta-ctl { order: 1; margin-left: auto; }
-  :root[data-asta] .tabellone { order: 2; flex-basis: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
-  :root[data-asta] .budget { order: 3; flex-basis: 100%; padding: 12px 0 0; border-left: 0; border-top: 1px solid rgb(255 255 255 / 0.14);
+  :root[data-asta] .top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "marca" "ctl" "tab" "bud"; row-gap: 12px; }
+  :root[data-asta] #asta-ctl { margin-top: -4px; }
+  :root[data-asta] .tabellone { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+  :root[data-asta] .budget { justify-self: stretch; padding: 12px 0 0; border-left: 0; border-top: 1px solid rgb(255 255 255 / 0.14);
     display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 10px; }
   :root[data-asta] .budget .stat b { font-size: 22px; }
   .tb-ultimo { max-width: none; }
