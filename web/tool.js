@@ -533,7 +533,7 @@ function applicaLega() {
     const l = DATA.giocatori.filter((g) => g.r === r).map((g) => g.pg).sort((a, b) => b - a);
     SOGLIA[r] = l[Math.min(T[r], l.length) - 1] ?? 0;
   }
-  $("#meta").innerHTML = [`Serie A ${META.stagione}`, `dati alla ${META.giornata}ª giornata`, `${META.giornate_residue} giornate da comprare`,
+  $("#meta").innerHTML = [`Serie A ${META.stagione}`, `Dati alla ${META.giornata}ª giornata`, `${META.giornate_residue} giornate da comprare`,
     `${META.n_squadre} squadre · ${META.crediti} crediti`].map((t) => `<span>${t}</span>`).join("");
 }
 function cambiaLega(chiave, v) {
