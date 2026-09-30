@@ -398,7 +398,7 @@ function renderRosa() {
       <label class="check"><input id="esenzione" type="checkbox" ${S.esenzioneP ? "checked" : ""}> Blocco portieri libero</label>
     </div>
     ${chips ? `<div class="squadre-box"><span class="lbl">Giocatori per squadra</span><div class="squadre">${chips}</div></div>` : ""}
-    <div class="row" style="margin-top:10px">
+    <div class="row azioni">
       ${inAsta() ? "" : `<button class="btn small" id="svuota">Svuota il piano</button>
       <button class="btn small" id="esporta">Esporta</button>
       <button class="btn small" id="importa">Importa</button>`}
