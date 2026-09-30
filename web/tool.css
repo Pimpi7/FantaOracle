@@ -83,7 +83,6 @@ button { cursor: pointer; }
 .top .meta { color: rgb(255 255 255 / 0.78); }
 .top .stat small { color: rgb(255 255 255 / 0.72); }
 .top .brand { color: #ffffff; }
-.top .brand span { color: #1b1606; }
 .brand { font: 700 30px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
 .marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .marca .logo { height: 68px; width: auto; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
@@ -91,7 +90,13 @@ button { cursor: pointer; }
 :root[data-asta] .marca .logo { display: none; }
 :root[data-asta] .marca .logo-asta { display: block; }
 .marca-txt { display: grid; gap: 8px; min-width: 0; }
-.brand span { background: var(--mark); padding: 2px 5px 1px; margin-right: 3px; border-radius: 4px; }
+/* titolo: "Fanta" giallo, la O e' la sfera di cristallo del logo */
+.brand span { color: var(--mark); }
+.brand .o-sfera { width: 0.9em; height: 0.9em; margin: 0 0.03em 0 0.06em; transform: translateY(0.02em); flex: none;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); }
+.brand .o-asta { display: none; }
+:root[data-asta] .brand .o-sfera { display: none; }
+:root[data-asta] .brand .o-asta { display: block; }
 .meta { color: var(--ink-2); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 5px 6px; }
 .meta span { white-space: nowrap; }
 .top .meta span { background: rgb(0 0 0 / 0.24); color: #ffffff; padding: 3px 9px 2px; border-radius: 999px; font-size: 12px; letter-spacing: 0.01em; }
@@ -323,11 +328,10 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 :root[data-asta] .top { color: var(--stage-fg); border-bottom: 0; padding-bottom: 20px;
   /* nastro a strisce diagonali nere e gialle sul bordo inferiore */
   background: repeating-linear-gradient(-45deg, var(--live) 0 7px, var(--stage) 7px 14px) left bottom / 100% 8px no-repeat, var(--stage); }
-:root[data-asta] .top .brand span { color: var(--live-fg); }
 :root[data-asta] .brand { display: flex; align-items: center; }
 :root[data-asta] .top .meta, :root[data-asta] .stat small { color: var(--stage-2); }
 :root[data-asta] .top { --cs: 78%; --cl: 64%; }
-:root[data-asta] .brand span { background: var(--live); color: var(--live-fg); padding: 2px 5px 1px; margin-right: 3px; border-radius: 4px; }
+:root[data-asta] .brand span { color: #ffc21a; }
 :root[data-asta] .tabs { display: flex; }
 @media (prefers-reduced-motion: no-preference) {
   .asta-btn.pulse { animation: pulsa 2s ease-in-out infinite; }
