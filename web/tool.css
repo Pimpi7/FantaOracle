@@ -226,9 +226,13 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .alts div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; font-size: 12.5px; }
 .alts span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .squadre { display: flex; flex-wrap: wrap; gap: 6px; }
-/* riepilogo per squadra reale: fascia a parte fra le impostazioni e i comandi */
-.squadre-box { margin: 14px -12px 0; padding: 10px 12px 12px; background: var(--tint); border-block: 1px solid var(--rule); display: grid; gap: 7px; }
-.squadre-box .chip { background: var(--sheet); }
+/* riepilogo per squadra reale: fascia d'erba a tutta larghezza, come la testata, con etichette bianche */
+.squadre-box { margin: 14px -12px 0; padding: 10px 12px 12px; display: grid; gap: 8px; color: #ffffff;
+  background: repeating-linear-gradient(90deg, var(--grass-1) 0 48px, var(--grass-2) 48px 96px); border-block: 2px solid var(--chalk); }
+.squadre-box .lbl { color: rgb(255 255 255 / 0.85); font-weight: 600; letter-spacing: 0.02em; }
+.squadre-box .chip { background: #ffffff; color: #16201a; border-color: transparent; }
+.squadre-box .chip.full { border-color: #d9821b; color: #8a4f00; background: #fff4dc; }
+.squadre-box .chip.over { border-color: var(--bad); color: #ffffff; background: var(--bad); }
 .lega .bud input { width: 72px; font-size: 14px; }
 .lega .bud input:disabled { opacity: 0.55; }
 .row.azioni { justify-content: flex-end; margin-top: 12px; }
