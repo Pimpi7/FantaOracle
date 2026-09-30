@@ -72,6 +72,7 @@ Le impostazioni che puoi cambiare:
 
 - **Strategia**: *Omogenea* distribuisce i crediti dove rendono di più; *Top + 1 cr* chiude gli ultimi slot con giocatori da un credito e concentra il budget sui titolari.
 - **Budget per ruolo**: automatico, oppure fissi tu quanti crediti dare a portieri, difensori, centrocampisti e attaccanti.
+- **Lega**: numero di squadre e crediti a squadra. Se non sono 8 e 500, valori e prezzi vengono ricalcolati per la tua lega (le proiezioni in punti non cambiano).
 - **Margine sui prezzi**: quanto prudente essere sulle stime di prezzo.
 - **Max per squadra** e **blocco portieri**: quanti giocatori della stessa squadra reale accettare, con i portieri che possono fare eccezione.
 - **Piani A, B, C**: tre rose alternative salvate nel browser, esportabili come testo per passarle da un dispositivo all'altro.
