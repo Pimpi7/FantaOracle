@@ -44,7 +44,7 @@ from .resolve.match import match_players
 from .resolve.normalize import normalize_team
 from .store import read_all_snapshots, read_snapshot
 
-DB_PATH = DATA_DIR / "fantaorb.duckdb"
+DB_PATH = DATA_DIR / "fantaoracle.duckdb"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS squadre (

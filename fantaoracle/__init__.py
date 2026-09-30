@@ -1,4 +1,4 @@
-"""FantaOrb — framework dati per il fantacalcio.
+"""FantaOracle — framework dati per il fantacalcio.
 
 Raccolta dati, database, proiezioni e tool per costruire la rosa all'asta.
 Vedi specifiche.md per l'architettura.

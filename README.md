@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/img/logo.png" alt="FantaOrb: la sfera di cristallo del fantacalcio" width="260">
+  <img src="docs/img/logo.png" alt="FantaOracle: la sfera di cristallo del fantacalcio" width="260">
 </p>
 
 <h1 align="center">FantaOracle</h1>
@@ -10,7 +10,7 @@
 
 però comunque non riesci a smettere di vedere le partite della Maggica perchè Daje Roma Daje 🐺?
 
-🔮 Ecco a te **FantaOrb**, la tua sfera di cristallo per il fantacalcio, un tool semplicissimo che **fa il lavoro sporco al posto tuo**, studiando per te le statistiche delle ultime stagioni (**gol attesi, assist, rigori, clean sheet, affidabilità sulla titolarità**) e trasformandole in una **stima dei fantapunti** che ogni giocatore porterà a giornata, senza che tu debba aprire un solo foglio Excel. ✨Ma c'è di più!✨
+🔮 Ecco a te **FantaOracle**, la tua sfera di cristallo per il fantacalcio, un tool semplicissimo che **fa il lavoro sporco al posto tuo**, studiando per te le statistiche delle ultime stagioni (**gol attesi, assist, rigori, clean sheet, affidabilità sulla titolarità**) e trasformandole in una **stima dei fantapunti** che ogni giocatore porterà a giornata, senza che tu debba aprire un solo foglio Excel. ✨Ma c'è di più!✨
 
 🔴 Il giorno dell'asta potrai avviare la **Modalità Asta** che ti guiderà passo passo durante la fase più calda di tutto il Fantacalcio, permettendoti di tenere sotto controllo la tua situazione e quella delle altre squadre, **ricalcolando dinamicamente i suggerimenti di acquisto** e la **possibile riallocazione del budget**, sulla base dell'andamento generale del mercato e dei crediti che tu e i tuoi avversari state spendendo, e mostrandoti nelle fasi finali le **"occasioni"** rimaste.
 
@@ -30,7 +30,7 @@ Funziona nel browser, da computer e da telefono, senza installare nulla. I dati 
 
 La fantamedia ti dice quanto ha preso un giocatore *quando ha giocato*. Ma chi gioca metà delle partite ti porta metà dei punti, un portiere da 5 e mezzo di media è un'altra cosa se la sua difesa ti regala il modificatore, e il nome in voga costa il doppio di quanto vale.
 
-FantaOrb mette insieme tre stagioni di voti Fantacalcio.it, le prime giornate di quest'anno, le statistiche avanzate e le quote dei bookmaker, e per ogni giocatore stima **quanti punti porterà a giornata da qui a fine campionato**. Poi traduce quei punti in crediti, tenendo conto delle regole della nostra lega: 8 squadre, 500 crediti, h2h, modificatore difesa.
+FantaOracle mette insieme tre stagioni di voti Fantacalcio.it, le prime giornate di quest'anno, le statistiche avanzate e le quote dei bookmaker, e per ogni giocatore stima **quanti punti porterà a giornata da qui a fine campionato**. Poi traduce quei punti in crediti, tenendo conto delle regole della nostra lega: 8 squadre, 500 crediti, h2h, modificatore difesa.
 
 ---
 
@@ -110,10 +110,10 @@ Tutti i dettagli su dati, modello, backtest e ottimizzatore sono in **[specifich
 Serve Python 3.11 o superiore.
 
 ```bash
-git clone https://github.com/Pimpi7/FantaOrb.git
-cd FantaOrb
+git clone https://github.com/Pimpi7/fantaOracle.git
+cd fantaOracle
 pip install -e ".[dev]"
-python -m fantaorb all          # scarica i dati, costruisce il database, calcola il modello
+python -m fantaoracle all          # scarica i dati, costruisce il database, calcola il modello
 cd web && python -m http.server    # poi apri http://localhost:8000
 ```
 

@@ -1,5 +1,5 @@
 [project]
-name = "fantaorb"
+name = "fantaoracle"
 version = "0.2.0"
 description = "Framework dati per asta e formazioni del fantacalcio: raccolta, database, proiezioni, tool di costruzione rosa"
 requires-python = ">=3.11"
@@ -20,11 +20,11 @@ dependencies = [
 dev = ["pytest>=7"]
 
 [project.scripts]
-fantaorb = "fantaorb.cli:main"
+fantaoracle = "fantaoracle.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["fantaorb*"]
+include = ["fantaoracle*"]

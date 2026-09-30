@@ -8,8 +8,8 @@ a gradini vanno applicate alle simulazioni e non alla media.
 import numpy as np
 import pytest
 
-from fantaorb.config import LeagueConfig, load_league
-from fantaorb.model.scoring import (
+from fantaoracle.config import LeagueConfig, load_league
+from fantaoracle.model.scoring import (
     bonus_da_tabella,
     fantavoto,
     media_difensiva,

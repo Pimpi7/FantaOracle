@@ -1,4 +1,4 @@
-// FantaOrb — logica del tool: dati, ottimizzatore, listone, rosa, modalita' asta.
+// FantaOracle — logica del tool: dati, ottimizzatore, listone, rosa, modalita' asta.
 // Legge data.json dalla stessa cartella; non ha dipendenze esterne.
 
 "use strict";
@@ -10,10 +10,7 @@ const NOMI_RUOLO = { P: "Portieri", D: "Difensori", C: "Centrocampisti", A: "Att
 // della 5a riserva di altri ruoli perche' il modificatore vuole la difesa a 4.
 const PESI = { P: [1, 0.10, 0.03], D: [1, 1, 1, 1, 0.45, 0.25, 0.12, 0.06],
                C: [1, 1, 1, 0.75, 0.40, 0.20, 0.10, 0.05], A: [1, 1, 0.55, 0.30, 0.12, 0.05] };
-const KEY = "fantaorb:v1";
-// Chiave usata prima della rinomina del progetto: si legge ancora, cosi' i piani
-// e l'asta salvati nel browser non si perdono. Non viene mai cancellata.
-const KEY_VECCHIA = "fantaoracle:v1";
+const KEY = "fantaoracle:v1";
 
 let DATA = null, BY_ID = new Map(), META = null;
 const S = {
@@ -36,7 +33,7 @@ function salva() {
 }
 function carica() {
   try {
-    const x = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem(KEY_VECCHIA) || "null");
+    const x = JSON.parse(localStorage.getItem(KEY) || "null");
     if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
       presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, asta: x.asta || null, archivio: x.archivio || [], campoChiuso: !!x.campoChiuso });
   } catch (e) { /* storage non disponibile */ }

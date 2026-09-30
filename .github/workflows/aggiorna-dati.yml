@@ -35,11 +35,11 @@ jobs:
         run: python -m pytest tests -q
 
       - name: Pipeline completa
-        run: python -m fantaorb all
+        run: python -m fantaoracle all
 
       - name: Salva i dati nuovi
         run: |
-          git config user.name "FantaOrb bot"
+          git config user.name "FantaOracle bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/raw web/data.json
           if git diff --cached --quiet; then
