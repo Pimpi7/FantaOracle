@@ -83,9 +83,11 @@ button { cursor: pointer; }
 .top .meta { color: rgb(255 255 255 / 0.78); }
 .top .stat small { color: rgb(255 255 255 / 0.72); }
 .top .brand { color: #ffffff; }
-.brand { font: 700 46px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
+.brand { font: 700 60px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
 .marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.marca-txt { display: grid; gap: 8px; min-width: 0; }
+/* titolo a sinistra, etichette della lega alla sua destra (su due righe) */
+.marca-txt { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 24px; min-width: 0; }
+@media (max-width: 1120px) { .marca-txt { flex-direction: column; align-items: flex-start; } }
 /* titolo: "Fanta" giallo, la O e' la sfera di cristallo del logo */
 .brand span { color: var(--mark); }
 .brand .o-sfera { width: 1.52em; height: 1.22em; margin: -0.1em -0.2em -0.1em -0.17em; flex: none; position: relative; z-index: 1;
@@ -105,7 +107,8 @@ button { cursor: pointer; }
 .o-sfera .scintille path { fill: #fff8d6; transform-box: fill-box; transform-origin: center; }
 .meta { color: var(--ink-2); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 5px 6px; }
 .meta span { white-space: nowrap; }
-.top .meta span { background: rgb(0 0 0 / 0.24); color: #ffffff; padding: 3px 9px 2px; border-radius: 999px; font-size: 12px; letter-spacing: 0.01em; }
+.top .meta { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px; }
+.top .meta span { justify-self: start; background: rgb(0 0 0 / 0.24); color: #ffffff; padding: 3px 9px 2px; border-radius: 999px; font-size: 12px; letter-spacing: 0.01em; }
 .budget { margin-left: auto; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
 .stat { display: grid; }
 .stat b { font: 700 24px/1 var(--font-display); }
@@ -345,7 +348,7 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 :root[data-asta] .top { color: var(--stage-fg); border-bottom: 0; padding-bottom: 20px;
   /* nastro a strisce diagonali nere e gialle sul bordo inferiore */
   background: repeating-linear-gradient(-45deg, var(--live) 0 7px, var(--stage) 7px 14px) left bottom / 100% 8px no-repeat, var(--stage); }
-:root[data-asta] .brand { display: flex; align-items: center; }
+:root[data-asta] .brand { display: flex; align-items: center; font-size: 46px; }
 :root[data-asta] .top .meta, :root[data-asta] .stat small { color: var(--stage-2); }
 :root[data-asta] .top { --cs: 78%; --cl: 64%; }
 :root[data-asta] .brand span { color: #ffc21a; }
@@ -452,7 +455,8 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
 }
 @media (max-width: 520px) {
   .marca { gap: 8px; }
-  .brand { font-size: 38px; }
+  .brand, :root[data-asta] .brand { font-size: 42px; }
+  .top .meta { display: flex; flex-wrap: wrap; }
   .top .meta span { font-size: 11px; padding: 2px 7px 1px; }
   .slot.sugg { grid-template-columns: 22px minmax(0, 1fr) auto auto; }
   .slot.sugg > .row { grid-column: 2 / -1; justify-content: flex-end; }
