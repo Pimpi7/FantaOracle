@@ -10,14 +10,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
 <link rel="icon" type="image/png" href="logo.png">
-<link rel="stylesheet" href="tool.css?v=e7a9ef79f7">
+<link rel="stylesheet" href="tool.css?v=0127fc9873">
 <div class="app">
   <header class="top">
     <div class="marca">
-      <img class="logo" src="logo.png" alt="" width="64" height="68">
-      <img class="logo logo-asta" src="logo-asta.png" alt="" width="64" height="68">
       <div class="marca-txt">
-        <h1 class="brand" aria-label="FantaOracle"><span>Fanta</span><img class="o-sfera" src="o-sfera.png" alt="" width="28" height="28"><img class="o-sfera o-asta" src="o-sfera-asta.png" alt="" width="28" height="28">racle</h1>
+        <h1 class="brand" aria-label="FantaOracle"><span>Fanta</span><svg class="o-sfera" id="o-sfera" viewBox="-80 -64 160 128" aria-hidden="true">
+          <g class="dietro"><path class="traccia" d="M-68 0A68 17 0 0 1 68 0" transform="rotate(-17)"/></g>
+          <image class="img-v" href="o-sfera.png" x="-50" y="-50" width="100" height="100"/>
+          <image class="img-a" href="o-sfera-asta.png" x="-50" y="-50" width="100" height="100"/>
+          <g class="davanti"><path class="traccia" d="M-68 0A68 17 0 0 0 68 0" transform="rotate(-17)"/></g>
+          <g class="scintille">
+            <path d="M0-6 1.3-1.3 6 0 1.3 1.3 0 6-1.3 1.3-6 0-1.3-1.3Z" transform="translate(47 -46)"/>
+            <path d="M0-6 1.3-1.3 6 0 1.3 1.3 0 6-1.3 1.3-6 0-1.3-1.3Z" transform="translate(-54 38) scale(.7)"/>
+            <path d="M0-6 1.3-1.3 6 0 1.3 1.3 0 6-1.3 1.3-6 0-1.3-1.3Z" transform="translate(62 30) scale(.55)"/>
+          </g>
+        </svg>racle</h1>
         <div class="meta" id="meta">Carico i dati…</div>
       </div>
     </div>
@@ -96,7 +104,7 @@
 
 <div class="overlay" id="overlay" hidden></div>
 
-<script src="tool.js?v=004dc30f28"></script>
+<script src="tool.js?v=6e31e6419e"></script>
 
 </body>
 </html>

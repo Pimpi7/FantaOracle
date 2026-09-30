@@ -83,20 +83,26 @@ button { cursor: pointer; }
 .top .meta { color: rgb(255 255 255 / 0.78); }
 .top .stat small { color: rgb(255 255 255 / 0.72); }
 .top .brand { color: #ffffff; }
-.brand { font: 700 30px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
+.brand { font: 700 46px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
 .marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.marca .logo { height: 68px; width: auto; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
-.marca .logo-asta { display: none; }
-:root[data-asta] .marca .logo { display: none; }
-:root[data-asta] .marca .logo-asta { display: block; }
 .marca-txt { display: grid; gap: 8px; min-width: 0; }
 /* titolo: "Fanta" giallo, la O e' la sfera di cristallo del logo */
 .brand span { color: var(--mark); }
-.brand .o-sfera { width: 0.9em; height: 0.9em; margin: 0 0.03em 0 0.06em; transform: translateY(0.02em); flex: none;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); }
-.brand .o-asta { display: none; }
-:root[data-asta] .brand .o-sfera { display: none; }
-:root[data-asta] .brand .o-asta { display: block; }
+.brand .o-sfera { width: 1.52em; height: 1.22em; margin: -0.1em -0.2em -0.1em -0.17em; flex: none; position: relative; z-index: 1;
+  overflow: visible; --b1: #f6d743; --b2: #c9f7da; }
+.o-sfera image { filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35)); }
+.o-sfera .img-a { display: none; }
+:root[data-asta] .o-sfera .img-v { display: none; }
+:root[data-asta] .o-sfera .img-a { display: inline; }
+:root[data-asta] .o-sfera { --b1: #ffc21a; --b2: #fff1c7; }
+/* anelli di cifre binarie: le cifre sono posizionate da tool.js (anelliSfera) */
+.o-sfera .traccia { fill: none; stroke: var(--b1); stroke-width: 0.9; }
+.o-sfera .dietro .traccia { opacity: 0.22; }
+.o-sfera .davanti .traccia { opacity: 0.55; }
+.o-sfera text { font: 700 10.5px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; text-anchor: middle; dominant-baseline: central; }
+.o-sfera text.b1 { fill: var(--b1); }
+.o-sfera text.b2 { fill: var(--b2); font-size: 8px; }
+.o-sfera .scintille path { fill: #fff8d6; transform-box: fill-box; transform-origin: center; }
 .meta { color: var(--ink-2); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 5px 6px; }
 .meta span { white-space: nowrap; }
 .top .meta span { background: rgb(0 0 0 / 0.24); color: #ffffff; padding: 3px 9px 2px; border-radius: 999px; font-size: 12px; letter-spacing: 0.01em; }
@@ -334,6 +340,10 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 :root[data-asta] .brand span { color: #ffc21a; }
 :root[data-asta] .tabs { display: flex; }
 @media (prefers-reduced-motion: no-preference) {
+  .o-sfera .scintille path { animation: scintilla 2.6s ease-in-out infinite; }
+  .o-sfera .scintille path:nth-child(2) { animation-delay: -0.9s; }
+  .o-sfera .scintille path:nth-child(3) { animation-delay: -1.7s; }
+  @keyframes scintilla { 0%, 100% { opacity: 0.15; scale: 0.55; } 50% { opacity: 1; scale: 1; } }
   .asta-btn.pulse { animation: pulsa 2s ease-in-out infinite; }
   @keyframes pulsa { 0%, 100% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 0 rgb(255 255 255 / 0.6); } 60% { box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 0 0 11px rgb(255 255 255 / 0); } }
   /* palleggio ogni 3 s: a riposo il pallone e' tondo e combacia con la curva del bottone; poi si carica,
@@ -431,7 +441,7 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
 }
 @media (max-width: 520px) {
   .marca { gap: 8px; }
-  .marca .logo { height: 54px; }
+  .brand { font-size: 38px; }
   .top .meta span { font-size: 11px; padding: 2px 7px 1px; }
   .slot.sugg { grid-template-columns: 22px minmax(0, 1fr) auto auto; }
   .slot.sugg > .row { grid-column: 2 / -1; justify-content: flex-end; }
