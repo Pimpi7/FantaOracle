@@ -1,10 +1,10 @@
-# ⚽ FantaOrb
+# 🔮 FantaOrb
 
 ⚽ Vuoi fare il fantacalcio con gli amici ma non hai tempo di studiarti tutto il listone, e magari non segui neanche così tanto il calcio perchè:
 
 > "☝🏻Non ci sono più i giocatori di una volta, questi pensano solo ai soldi!"
 
-però comunque non riesci a smettere di vedere le partite della Maggica perchè Daje Roma Daje?
+però comunque non riesci a smettere di vedere le partite della Maggica perchè Daje Roma Daje 🐺?
 
 🔮 Ecco a te **FantaOrb**, la tua sfera di cristallo per il fantacalcio, un tool semplicissimo che **fa il lavoro sporco al posto tuo**, studiando per te le statistiche delle ultime stagioni (**gol attesi, assist, rigori, clean sheet, affidabilità sulla titolarità**) e trasformandole in una **stima dei fantapunti** che ogni giocatore porterà a giornata, senza che tu debba aprire un solo foglio Excel. ✨Ma c'è di più!✨
 
