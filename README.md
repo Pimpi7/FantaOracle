@@ -1,6 +1,16 @@
-# ⚽ fantaOracle
+# ⚽ FantaOrb
 
-**Il listone che ti dice quanti punti farà ogni giocatore, quanto vale e quanto costerà davvero. Poi ti costruisce la rosa e ti accompagna chiamata per chiamata all'asta.**
+⚽ Vuoi fare il fantacalcio con gli amici ma non hai tempo di studiarti tutto il listone, e magari non segui neanche così tanto il calcio perchè:
+
+> "☝🏻Non ci sono più i giocatori di una volta, questi pensano solo ai soldi!"
+
+però comunque non riesci a smettere di vedere le partite della Maggica perchè Daje Roma Daje?
+
+🔮 Ecco a te **FantaOrb**, la tua sfera di cristallo per il fantacalcio, un tool semplicissimo che **fa il lavoro sporco al posto tuo**, studiando per te le statistiche delle ultime stagioni (**gol attesi, assist, rigori, clean sheet, affidabilità sulla titolarità**) e trasformandole in una **stima dei fantapunti** che ogni giocatore porterà a giornata, senza che tu debba aprire un solo foglio Excel. ✨Ma c'è di più!✨
+
+🔴 Il giorno dell'asta potrai avviare la **"Modalità Asta"** che ti guiderà passo passo durante la fase più calda di tutto il Fantacalcio, permettendoti di tenere sotto controllo la tua situazione e quella delle altre squadre, **ricalcolando dinamicamente i suggerimenti di acquisto** e la **possibile riallocazione del budget**, sulla base dell'andamento generale del mercato e dei crediti che tu e i tuoi avversari state spendendo, e mostrandoti nelle fasi finali le **"occasioni"** rimaste.
+
+‼️ Tutte queste feature sono sempre dei **suggerimenti**, la scelta finale sarà sempre tua!
 
 ### 👉 [Apri il tool](https://pimpi7.github.io/fantaOracle/)
 
