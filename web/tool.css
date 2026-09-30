@@ -85,7 +85,7 @@ button { cursor: pointer; }
 .top .brand { color: #ffffff; }
 .top .brand span { color: #1b1606; }
 .brand { font: 700 30px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
-.brand .logo { height: 52px; width: auto; margin-right: 8px; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+.brand .logo { height: 68px; width: auto; margin-right: 8px; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .brand span { background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 92%, transparent 92%); padding-inline: 2px; }
 .meta { color: var(--ink-2); font-size: 12.5px; }
 .budget { margin-left: auto; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
