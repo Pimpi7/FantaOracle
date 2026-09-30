@@ -87,6 +87,9 @@ button { cursor: pointer; }
 .brand { font: 700 30px/1 var(--font-display); letter-spacing: -0.01em; margin: 0; display: flex; align-items: center; }
 .marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .marca .logo { height: 68px; width: auto; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+.marca .logo-asta { display: none; }
+:root[data-asta] .marca .logo { display: none; }
+:root[data-asta] .marca .logo-asta { display: block; }
 .marca-txt { display: grid; gap: 8px; min-width: 0; }
 .brand span { background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 92%, transparent 92%); padding-inline: 2px; }
 .meta { color: var(--ink-2); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 5px 6px; }
