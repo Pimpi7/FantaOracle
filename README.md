@@ -59,6 +59,8 @@ Le etichette **RIG** segnalano i rigoristi, **TIFO** i giocatori che in lega cos
 
 Un clic sul nome e vedi da dove nasce il suo punteggio: voto atteso, gol, assist, rigori, cartellini, minuti, i fantavoti di quest'anno, lo storico delle ultime stagioni e i suoi **infortuni**: quello in corso con la data di rientro e quanto farebbe da sano, e tutti gli stop dalla 23/24. Da lì lo metti in rosa o lo escludi dai suggerimenti (se non lo vuoi, o per vedere come cambia il piano se te lo soffiano).
 
+Per **portieri e attaccanti** la scheda ha anche la **griglia di alternanza**, come quella di [FantaLab](https://app.fantalab.it/griglia-portieri): ogni giornata che resta con l'avversario colorato in verde, giallo o rosso secondo quanto è facile affrontarlo. Sotto trovi i **compagni con cui alternarlo**: con chi, schierando ogni turno quello con la partita migliore, hai quasi sempre una partita facile, e quanti punti a giornata ti fa guadagnare la coppia. Ci sono i migliori, quelli low cost e quelli che hai già in rosa.
+
 ![Scheda giocatore](docs/img/scheda.png)
 
 ### 3. Costruisci la rosa
@@ -66,6 +68,8 @@ Un clic sul nome e vedi da dove nasce il suo punteggio: voto atteso, gol, assist
 Aggiungi chi vuoi, al prezzo che pensi di pagarlo, con il **+** nel listone o dalla scheda. Il tool riempie gli slot vuoti con la combinazione più forte che sta nel budget che ti resta, la evidenzia in giallo e la ricalcola a ogni tuo cambiamento. Per ogni suggerito trovi le alternative (**Altri**) e puoi sceglierlo con un clic.
 
 Rispetta sempre la rosa 3-8-8-6, i 500 crediti e il limite di giocatori della stessa squadra reale. In cima trovi la **formazione tipo** disegnata sul campo, nel modulo che rende di più.
+
+Portieri e attaccanti li sceglie **giornata per giornata**: ogni turno conta chi ha la partita più comoda, quindi due portieri che si coprono il calendario valgono più dei loro punti presi da soli. Sotto i tuoi portieri vedi in quante giornate almeno uno affronta una squadra facile e quanto rende l'alternanza.
 
 ![Formazione tipo](docs/img/formazione.png)
 
@@ -104,6 +108,8 @@ Stesso tool, con due schede: *Listone* e *La mia rosa*.
 ## Quanto ci si può fidare
 
 Il modello è stato messo alla prova sulle due stagioni passate: congelato alla quinta giornata, come se l'asta fosse quel giorno, e confrontato con quello che i giocatori hanno fatto davvero dopo. Ordina i giocatori meglio della fantamedia e della quotazione, ma di poco: il calcio resta imprevedibile e nessun numero ti salva da un infortunio a novembre. Usalo per non strapagare e per non dimenticarti di nessuno, non come un oracolo.
+
+Anche l'alternanza è stata provata: fra due portieri titolari, schierare ogni giornata quello con la partita migliore ha cambiato scelta in circa una giornata su sette, e quando ha cambiato ha fatto in media fra 0,2 e 0,5 punti in più. Per gli attaccanti l'effetto è più piccolo.
 
 Tutti i dettagli su dati, modello, backtest e ottimizzatore sono in **[specifiche.md](specifiche.md)**.
 

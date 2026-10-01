@@ -59,6 +59,19 @@ hanno deciso il giudizio. Un filtro tiene solo i disponibili, i disponibili non
 fragili, gli indisponibili o i fragili e delicati. La scheda ha una sezione Infortuni con
 lo stop in corso, quanto farebbe da sano e l'elenco degli stop dalla 23/24.
 
+**Calendario e abbinamenti.** Nella scheda di portieri e attaccanti c'è la loro
+riga della griglia di alternanza: una casella per giornata con l'avversario,
+verde, gialla o rossa secondo la fascia della griglia di
+[FantaLab](https://app.fantalab.it/griglia-portieri) (facile, media, difficile),
+maiuscola in casa e minuscola fuori. Sotto, i compagni con cui alternarlo meglio:
+per ognuno le giornate in cui almeno uno dei due ha una partita facile, il voto
+FantaLab della coppia (0–100) e **+Pt/g**, i punti a giornata in più se ogni turno
+schieri chi ha la partita migliore invece di lui sempre in campo. Tre gruppi: chi
+hai già in rosa, i migliori, e i low cost (fino a 5 crediti su 500). Un clic su
+*Griglia* mette la coppia nella griglia, con sbiadita la partita di chi resta in
+panchina e barrate le giornate che un giocatore salta per infortunio o
+squalifica. Le riserve (meno di un voto ogni tre giornate) non compaiono.
+
 **Costruttore guidato.** Metti in rosa chi vuoi, al prezzo che vuoi: il tool
 completa gli slot rimanenti con la combinazione più forte che sta nel budget
 restante e la evidenzia in giallo, anche nel listone. Ogni volta che cambi
@@ -68,6 +81,12 @@ budget. I giocatori esclusi (✕) escono dai suggerimenti.
 Vincoli rispettati: rosa 3-8-8-6, 500 crediti, almeno 1 credito per ogni slot
 ancora vuoto, al massimo 3 giocatori della stessa squadra reale (il blocco
 portieri può essere escluso), margine di prudenza sui prezzi (0–30%).
+
+Portieri e attaccanti si valutano giornata per giornata (vedi
+[il costruttore](#il-costruttore)): una coppia di portieri con calendari che si
+coprono vale più della somma dei loro Pt/g. Sotto i portieri della rosa il tool
+dice in quante giornate almeno uno ha una partita facile e quanti punti rende
+l'alternanza; sotto gli attaccanti, quanti in media hanno una partita facile.
 
 Due strategie:
 - **Omogenea**: i crediti vanno dove rendono di più, su tutta la rosa.
@@ -194,10 +213,11 @@ fonti ci arrivano attraverso la tabella `alias`.
 | `giocatori` | anagrafica; `nel_listone` per i giocatori acquistabili |
 | `alias` | fonte + chiave esterna → `fc_id`, con punteggio e metodo del match |
 | `voti` | giocatore × giornata: voto, fantavoto, eventi, subentri (il target del modello) |
-| `partite` | calendario 2023–2027 con risultati, xG e quote |
+| `partite` | calendario 2023–2027 con risultati, xG e quote; `giornata` per la stagione in corso, dal calendario ufficiale |
 | `stat_avanzate` | giocatore × stagione: minuti, xG, npxG, xA, tiri, rigori stimati |
 | `quotazioni` | serie storica di QI, QA, FVM |
 | `proiezioni`, `valutazioni` | output del modello, con versione (`v1-data-giornata`) |
+| `proiezioni_giornata` | punti attesi di portieri e attaccanti partita per partita, con avversario e campo (zero nelle giornate che saltano) |
 | `fasce` | fascia SOS Fanta per giocatore (`fascia`, `ordine`, `posizione`), abbinata al listone dentro il ruolo |
 | `indisponibili` | chi è fermo adesso: tipo, motivo, giornata (SosFanta) e data (Transfermarkt) di rientro |
 | `storico_infortuni` | giocatore × stop dalla 23/24, da Transfermarkt: base della propensione |
@@ -206,7 +226,8 @@ fonti ci arrivano attraverso la tabella `alias`.
 | `log_ingest` | esito di ogni build con i controlli di qualità |
 
 Controlli a ogni build: voti senza giocatore, voti fuori scala, fantavoto non
-ricostruibile, numero di squadre in Serie A. L'allineamento dei nomi Understat →
+ricostruibile, numero di squadre in Serie A, partite della stagione in corso
+senza numero di giornata. L'allineamento dei nomi Understat →
 Fantacalcio.it copre fra il 98,4% e il 99% dei giocatori con almeno 5 voti.
 Un cognome composto scritto da solo ("Kolo Muani") e con il nome ("Randal Kolo
 Muani") è lo stesso giocatore anche se lo split li legge diversamente, e la ı
@@ -243,8 +264,63 @@ punti a giornata = probabilità di voto × fantavoto atteso quando gioca
 | Rigori | Quota dei rigori della squadra calciati dal giocatore, contando solo le stagioni nella squadra attuale; valore atteso 1,68 punti a rigore (78% di conversione, ±3). |
 | Assist | Assist Fantacalcio.it mescolati a xA ricalibrato sugli assist redazionali. |
 | Malus | Ammonizioni, espulsioni e autogol, con shrinkage. |
-| Portieri | Gol subiti e imbattibilità dal rating difensivo della squadra sulle 33 partite residue (rating da xG e gol, pesati per recenza; neopromosse con prior pessimista). |
+| Portieri | Gol subiti e imbattibilità partita per partita, dal rating difensivo della squadra e dall'attacco dell'avversario, sulle 33 partite residue (rating da xG e gol, pesati per recenza; neopromosse con prior pessimista). |
+| Calendario attaccanti | Gol, assist e rigori attesi moltiplicati, partita per partita, per la difesa dell'avversario rispetto a una media e per il fattore campo. |
 | Modificatore | Per portieri e difensori, 0,72 punti per ogni punto di voto sopra il 6: pendenza della tabella a fasce intorno a 6,2 per la probabilità di schierare la difesa a 4. |
+
+### Partita per partita: calendario e alternanza
+
+[`fantaoracle/model/calendario.py`](fantaoracle/model/calendario.py)
+
+Per portieri e attaccanti il modello stima i punti di ogni partita che resta, non
+solo la media: è quello che serve per alternarli. La media sulle giornate è il
+Pt/g del listone, quindi i due numeri non possono divergere.
+
+La difficoltà di una partita mescola due giudizi sull'avversario:
+
+- **il modello**: attacco e difesa da xG e gol pesati per recenza, più il fattore
+  campo (1,08);
+- **FantaLab**: la fascia della loro griglia, facile, media o difficile,
+  separata per chi affronta quella squadra da portiere (quanto attacca) e da
+  attaccante (quanto difende). È in
+  [`data/ref/fantalab_difficolta.csv`](data/ref/fantalab_difficolta.csv), letta a
+  mano dalla griglia: il colore dipende solo dall'avversario, mai dal campo o
+  dalla giornata.
+
+La fascia diventa un rating con il modello stesso: il livello di "difficile" per i
+portieri è l'attacco medio (geometrico) delle squadre che FantaLab mette in quella
+fascia. Il rating usato per l'avversario è la media geometrica fra il suo e quello
+della sua fascia (`peso_fantalab = 0,5`): il modello resta l'ancora, FantaLab
+sposta le squadre che giudica diversamente.
+
+Il calendario ufficiale con i numeri di giornata (Understat ha solo le date) è
+in [`data/ref/calendario_2026-27.csv`](data/ref/calendario_2026-27.csv), da
+Fantacalcio.it: tutte le 380 partite coincidono con quelle di Understat. Un test
+ricostruisce il voto che la griglia FantaLab stampa per Atalanta + Bologna sulle
+giornate 6–38 (86 per i portieri, 91 per gli attaccanti).
+
+**Backtest dell'alternanza.** Il modello è stato congelato alla 5ª giornata del
+2024-25 e del 2025-26 (senza FantaLab, che non ha una classificazione storica),
+e i punti previsti partita per partita sono stati confrontati con i fantavoti
+reali. Per le coppie di titolari di squadre diverse si confronta lo schierare
+ogni giornata chi ha la partita migliore con lo schierare sempre quello dal
+Pt/g più alto, sulle giornate in cui hanno preso voto entrambi
+(`backtest.alternanza`).
+
+| Ruolo | Stagione | Correlazione nel giocatore | Giornate in cui si cambia | Guadagno quando si cambia |
+|---|---|---|---|---|
+| P | 2024-25 | 0,21 | 14% | +0,50 |
+| P | 2025-26 | 0,16 | 16% | +0,21 |
+| A | 2024-25 | 0,05 | 6% | +0,01 |
+| A | 2025-26 | 0,12 | 5% | +0,29 |
+
+Per i portieri il segnale c'è in entrambe le stagioni, e la pendenza fra scarti
+previsti e reali è vicina a 1 (0,97 e 1,43): la differenza di punti fra una
+partita facile e una difficile è stimata nella misura giusta. Per gli attaccanti
+il calendario conta meno e il segnale è più rumoroso: l'alternanza fra
+attaccanti è un criterio di spareggio, non un motivo per comprare. Sulla
+classifica di stagione il calendario degli attaccanti non sposta nulla
+(correlazione di rango 0,652 contro 0,651 e 0,471 contro 0,472).
 
 **Calibrazione.** Sul backtest le presenze arrivate erano l'88–90% di quelle
 previste, in tutti i ruoli: le prime giornate mostrano chi è titolare, non gli
@@ -263,15 +339,19 @@ quelli. Lo stesso codice fa la proiezione vera e il backtest.
 
 **Chi è fermo adesso** cambia i punti. La giornata di rientro viene da SosFanta
 ("in dubbio per la 8a"); dove manca, dalla data di probabile ritorno di
-Transfermarkt, letta sul calendario del club (la k-esima partita di una squadra
-è la sua k-esima giornata). Le giornate saltate si contano solo fra quelle da
+Transfermarkt, letta sul calendario del club (con la giornata del calendario
+ufficiale; senza, la k-esima partita di una squadra è la sua k-esima giornata).
+Le giornate saltate si contano solo fra quelle da
 giocare: chi è in dubbio per la prossima non ne perde nessuna. La probabilità di
 voto si moltiplica per la quota di giornate residue in cui c'è (chi ne salta 11
 su 33 tiene i due terzi dei punti attesi), e da lì cambiano valore e
 suggerimenti. Le squalifiche valgono una giornata, diffide e acciacchi senza
 data nessuna. Chi è fermo solo per Transfermarkt con una data di ritorno già
 passata non entra: è una pagina non aggiornata. La proiezione da sano resta
-nella scheda.
+nella scheda. Per portieri e attaccanti le giornate saltate valgono zero
+partita per partita e il Pt/g è la media delle partite: chi salta proprio quelle
+facili perde un po' di più, e nella griglia di alternanza quelle giornate sono
+barrate, perché lì serve il compagno.
 
 **Chi si ferma spesso** resta un avviso e non tocca i punti: lo storico delle
 presenze, che il modello già usa, contiene le partite saltate per infortunio, e
@@ -363,6 +443,19 @@ Il quinto difensore pesa più delle quinte scelte degli altri ruoli perché il
 modificatore richiede la difesa a 4. Questi pesi sono ciò che produce una rosa
 equilibrata invece di tre campioni e ventidue scarti.
 
+Per portieri e attaccanti l'ordine si rifà **giornata per giornata** sui punti
+partita per partita: ogni turno il titolare è chi ha la partita migliore, e la
+forza del reparto è la media sulle giornate. Con calendari piatti il conto è
+identico a quello di stagione; con calendari complementari la coppia vale di più.
+Per non rallentare l'ottimizzatore, ogni reparto si ordina una volta per giornata
+e il guadagno di un candidato costa solo la ricerca della sua posizione: sulla
+rosa vuota resta intorno ai 90 ms.
+
+Il calcolo di "fin dove spingerti" all'asta tiene conto che l'ottimizzatore è
+un'euristica: una rosa trovata pagando un giocatore di più resta valida pagandolo
+di meno, quindi la forza con lui a un prezzo è almeno la migliore trovata a un
+prezzo uguale o più alto.
+
 Algoritmo: greedy su guadagno di forza meno λ × prezzo per 14 valori di λ, si
 tiene la rosa migliore, poi ricerca locale con scambi migliorativi dentro il
 budget. Circa 85 ms sulla rosa vuota.
@@ -391,8 +484,9 @@ fantaoracle/
   resolve/                  allineamento dei nomi fra fonti
   model/
     projection.py           punti attesi per giocatore
+    calendario.py           difficoltà delle partite, FantaLab, punti per giornata
     infortuni.py            giornate saltate e propensione agli infortuni
-    backtest.py             validazione sulle stagioni passate
+    backtest.py             validazione sulle stagioni passate (anche dell'alternanza)
     valuation.py            valore, prezzo atteso, affare
     odds.py                 quote -> gol attesi e clean sheet
     scoring.py              fantavoto, modificatore difesa, esito h2h
@@ -407,8 +501,9 @@ web/
   index.html                documento completo per Pages, generato da `export`
   data.json                 giocatori, proiezioni, valutazioni e regole della lega
 data/raw/                   snapshot in Parquet
-data/ref/                   tabelle curate a mano (override dei nomi)
-tests/                      97 test
+data/ref/                   tabelle curate a mano: override dei nomi, calendario
+                            ufficiale con le giornate, fasce FantaLab
+tests/                      111 test
 ```
 
 Due moduli preparano il terreno per il tool formazione e non sono ancora usati
@@ -428,6 +523,11 @@ funzioni a gradini la media non basta).
   giornate giocate qui e sulla media del ruolo.
 - Il mercato di gennaio non è modellato.
 - Il fattore tifo è una stima a mano, con peso volutamente basso.
+- La classificazione FantaLab si aggiorna a mano: se rivedono un giudizio, va
+  corretto `data/ref/fantalab_difficolta.csv` (con la data in testa).
+- Il calendario partita per partita cambia gol e porta inviolata, non il voto: un
+  portiere che subisce tre gol prende anche un voto più basso. La differenza fra
+  partite facili e difficili è quindi, se mai, sottostimata.
 
 ## Prossimi passi
 
