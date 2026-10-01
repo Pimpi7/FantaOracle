@@ -78,12 +78,23 @@ def esporta(verbose: bool = True) -> dict:
     df = df.merge(quot, on="fc_id", how="left")
 
     # Fascia della guida all'asta di SOS Fanta: indice nell'elenco ordinato
-    # meta.fasce (0 = la migliore). Chi la guida non classifica resta senza.
-    from .ingest.sosfanta import ordina_fasce
+    # meta.fasce (0 = la migliore). Chi la guida mette fra gli infortunati non ha
+    # un livello: se ne stima uno dal confronto con gli altri del ruolo (`fi`).
+    # Chi la guida non cita resta senza.
+    from .ingest.sosfanta import FASCIA_INFORTUNATI, ordina_fasce
+    from .model.fasce import stima_fasce
     fasce = tabella("SELECT fc_id, fascia, rilevato FROM fasce")
-    etichette = ordina_fasce(fasce["fascia"])
+    sos = dict(zip(fasce["fc_id"], fasce["fascia"]))
+    stimate = stima_fasce(pd.DataFrame({
+        "fc_id": df["fc_id"], "ruolo": df["ruolo"], "fascia": df["fc_id"].map(sos),
+        "fvm": df["fvm1000"], "qi": df["qi"], "pg": df["punti_giornata"]}),
+        FASCIA_INFORTUNATI)
+    finale = {i: f for i, f in sos.items() if f != FASCIA_INFORTUNATI}
+    finale.update(stimate)
+    finale = {i: f for i, f in finale.items() if i in set(df["fc_id"])}
+    etichette = ordina_fasce(finale.values())
     indice = {e: i for i, e in enumerate(etichette)}
-    fascia_di = dict(zip(fasce["fc_id"], fasce["fascia"].map(indice)))
+    fascia_di = {i: indice[f] for i, f in finale.items()}
     fasce_data = None if fasce.empty else pd.Timestamp(fasce["rilevato"].max()).date().isoformat()
 
     storico = tabella("""
@@ -120,7 +131,8 @@ def esporta(verbose: bool = True) -> dict:
             "gs": _r(d.get("gol_subiti_attesi"), 2), "cs": _r(d.get("p_clean_sheet"), 3),
             "val": _r(r["valore"], 0), "pa": int(r["prezzo_atteso"]),
             "aff": _r(r["affare"], 0), "tifo": _r(r["fattore_tifo"], 2),
-            "fa": int(fascia_di[r["fc_id"]]) if r["fc_id"] in fascia_di else None,
+            "fa": fascia_di.get(r["fc_id"]),
+            **({"fi": 1} if r["fc_id"] in stimate else {}),
             "st": [] if s is None else [
                 [x.stagione, x.squadra, int(x.presenze), _r(x.media), _r(x.fm), int(x.gol), int(x.assist)]
                 for x in s.itertuples()],
@@ -154,6 +166,7 @@ def esporta(verbose: bool = True) -> dict:
     fp.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     pagina()
     if verbose:
+        print(f"  fasce: {len(fascia_di)} giocatori, di cui {len(stimate)} stimate")
         print(f"  {fp.relative_to(ROOT)}: {len(giocatori)} giocatori, "
               f"{fp.stat().st_size / 1024:.0f} KB, versione {versione}")
     return out

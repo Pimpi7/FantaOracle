@@ -45,6 +45,10 @@ ORDINE_FASCE = [
     "A RISCHIO", "DA EVITARE",
 ]
 
+# Non e' un livello ma uno stato: i giocatori che la guida mette qui non hanno
+# una fascia, e il tool ne stima una (model/fasce.py).
+FASCIA_INFORTUNATI = "INFORTUNATI"
+
 _TRATTINI = "-–—"
 _NOTE = re.compile(r"\s*[\(\[].*?[\)\]]")      # "(rigorista)" e simili dopo un nome
 _SPAZI = re.compile(r"\s+")
