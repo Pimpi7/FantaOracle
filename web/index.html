@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
 <link rel="icon" type="image/png" href="logo.png">
-<link rel="stylesheet" href="tool.css?v=a5be442d01">
+<link rel="stylesheet" href="tool.css?v=59c7bb4fb8">
 <div class="app">
   <header class="top">
     <div class="marca">
@@ -52,6 +52,13 @@
         </div>
         <select id="sq" aria-label="Squadra"><option value="">Tutte le squadre</option></select>
         <input id="pmax" type="number" min="1" placeholder="Prezzo max" aria-label="Prezzo atteso massimo">
+        <select id="salute" aria-label="Infortuni" title="Indisponibili di oggi (SosFanta e Transfermarkt) e propensione agli infortuni dallo storico">
+          <option value="">Tutti, anche infortunati</option>
+          <option value="disponibili">Solo disponibili</option>
+          <option value="sani">Disponibili e non fragili</option>
+          <option value="fuori">Solo indisponibili</option>
+          <option value="fragili">Solo fragili o delicati</option>
+        </select>
         <label class="toggle"><input id="hide" type="checkbox"><span id="hide-lbl">Nascondi gli esclusi</span></label>
         <span class="count" id="count"></span>
       </div>
@@ -105,7 +112,7 @@
 
 <div class="overlay" id="overlay" hidden></div>
 
-<script src="tool.js?v=f54382078e"></script>
+<script src="tool.js?v=d4116e0577"></script>
 
 </body>
 </html>

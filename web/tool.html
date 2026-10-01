@@ -45,6 +45,13 @@
         </div>
         <select id="sq" aria-label="Squadra"><option value="">Tutte le squadre</option></select>
         <input id="pmax" type="number" min="1" placeholder="Prezzo max" aria-label="Prezzo atteso massimo">
+        <select id="salute" aria-label="Infortuni" title="Indisponibili di oggi (SosFanta e Transfermarkt) e propensione agli infortuni dallo storico">
+          <option value="">Tutti, anche infortunati</option>
+          <option value="disponibili">Solo disponibili</option>
+          <option value="sani">Disponibili e non fragili</option>
+          <option value="fuori">Solo indisponibili</option>
+          <option value="fragili">Solo fragili o delicati</option>
+        </select>
         <label class="toggle"><input id="hide" type="checkbox"><span id="hide-lbl">Nascondi gli esclusi</span></label>
         <span class="count" id="count"></span>
       </div>

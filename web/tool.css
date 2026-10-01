@@ -217,6 +217,17 @@ td.big { font-weight: 700; }
 .role.P { background: var(--r-p); } .role.D { background: var(--r-d); } .role.C { background: var(--r-c); } .role.A { background: var(--r-a); }
 .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 5px; vertical-align: 1px; border: 1px solid currentColor; letter-spacing: 0.02em; }
 .tag.rig { color: var(--r-c); } .tag.tifo { color: var(--warn); } .tag.uno { color: inherit; opacity: 0.8; }
+/* Infortuni: rosso pieno chi e' fuori, contorno per i dubbi, arancio per la propensione. */
+.tag.out { color: #fff; background: var(--bad); border-color: var(--bad); cursor: help; }
+.tag.dubbio { color: var(--warn); border-style: dashed; cursor: help; }
+.tag.fragile { color: var(--bad); cursor: help; }
+.tag.rischio { color: var(--ink-2); border-style: dotted; cursor: help; }
+.inf-box { border-left: 3px solid var(--bad); padding: 6px 10px; margin: 6px 0 10px; background: var(--tint); border-radius: 0 var(--radius) var(--radius) 0; font-size: 13px; display: grid; gap: 3px; }
+.inf-box.dubbio { border-left-color: var(--warn); }
+.inf-kv { margin: 6px 0 8px; }
+.inf-st td.musc { color: var(--warn); }
+.inf-st td.l:nth-child(2) { white-space: normal; }
+.fonte { font-size: 11px; margin-top: 6px; }
 td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .ic { width: 26px; height: 26px; display: inline-grid; place-items: center; border: 1px solid var(--rule); background: var(--sheet); border-radius: 5px; font-weight: 700; line-height: 1; }
 .ic:hover { border-color: var(--ink); }

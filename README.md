@@ -53,9 +53,11 @@ I 599 giocatori delle 20 squadre di Serie A, ordinati per punti attesi. Filtri p
 
 Le etichette **RIG** segnalano i rigoristi, **TIFO** i giocatori che in lega costeranno un po' di più perché qualcuno ci è affezionato.
 
+🚑 Accanto al nome vedi anche chi è **infortunato**: **OUT → 8a** se salta le prossime giornate e rientra alla 8ª (con la data, passandoci sopra), **IN DUBBIO** se potrebbe esserci già alla prossima. E chi **si fa male spesso**: **FRAGILE** se negli ultimi tre anni ha perso almeno un quarto di stagione a forza di stop, **DELICATO** se ci va vicino. Un filtro ti lascia solo i disponibili, o solo i disponibili non fragili. Le giornate che un infortunato salta sono già tolte dai suoi punti attesi e dal suo valore; la fragilità invece è un avviso, la decisione è tua.
+
 ### 2. Apri la scheda di un giocatore
 
-Un clic sul nome e vedi da dove nasce il suo punteggio: voto atteso, gol, assist, rigori, cartellini, minuti, i fantavoti di quest'anno e lo storico delle ultime stagioni. Da lì lo metti in rosa o lo escludi dai suggerimenti (se non lo vuoi, o per vedere come cambia il piano se te lo soffiano).
+Un clic sul nome e vedi da dove nasce il suo punteggio: voto atteso, gol, assist, rigori, cartellini, minuti, i fantavoti di quest'anno, lo storico delle ultime stagioni e i suoi **infortuni**: quello in corso con la data di rientro e quanto farebbe da sano, e tutti gli stop dalla 23/24. Da lì lo metti in rosa o lo escludi dai suggerimenti (se non lo vuoi, o per vedere come cambia il piano se te lo soffiano).
 
 ![Scheda giocatore](docs/img/scheda.png)
 

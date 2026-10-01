@@ -156,7 +156,7 @@ def _conta(r) -> bool:
 
 
 def livello(stop: int, muscolari: int, giorni_st: float, partite_st: float) -> str:
-    """alta ("fragile") | media ("a rischio") | bassa.
+    """alta ("fragile") | media ("delicato") | bassa.
 
     - alta: almeno tre stop e, a stagione, dieci partite perse o novanta giorni
       fuori (un quarto di campionato); oppure nove muscolari, la ricaduta
@@ -165,7 +165,7 @@ def livello(stop: int, muscolari: int, giorni_st: float, partite_st: float) -> s
       muscolari; oppure sei stop in tutto.
 
     Tarate sul listone 2026/27 perche' "fragile" resti raro (circa uno su
-    sette) e "a rischio" uno su quattro: un flag che accende mezzo listone non
+    sette) e "delicato" uno su quattro: un flag che accende mezzo listone non
     flagga niente.
     """
     if (stop >= 3 and (partite_st >= 10 or giorni_st >= 90)) or muscolari >= 9:

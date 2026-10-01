@@ -48,6 +48,17 @@ essere prudente per i campioni.
 lega ci sono molti tifosi di quella squadra. Un clic sul nome apre la scheda: da
 cosa nasce il punteggio, fantavoti di questa stagione, storico delle ultime tre.
 
+**Infortuni.** Accanto al nome, in rosso pieno chi salta almeno una delle
+prossime giornate (`OUT → 8a`: rientro alla 8ª, `OUT STAGIONE` se torna dopo
+l'ultima, `SQUALIFICATO`), tratteggiato chi è in dubbio per la prossima o ha un
+acciacco senza data (`IN DUBBIO`, `DIFFIDATO`). Poi la propensione dallo
+storico: `FRAGILE` (circa uno su sette) e, più discreto, `DELICATO` (uno su
+quattro). È un giudizio nostro sullo storico, diverso dalla fascia "A rischio"
+della guida SOS Fanta. Passandoci sopra si leggono motivo, data di rientro e i numeri che
+hanno deciso il giudizio. Un filtro tiene solo i disponibili, i disponibili non
+fragili, gli indisponibili o i fragili e delicati. La scheda ha una sezione Infortuni con
+lo stop in corso, quanto farebbe da sano e l'elenco degli stop dalla 23/24.
+
 **Costruttore guidato.** Metti in rosa chi vuoi, al prezzo che vuoi: il tool
 completa gli slot rimanenti con la combinazione più forte che sta nel budget
 restante e la evidenzia in giallo, anche nel listone. Ogni volta che cambi
@@ -122,7 +133,7 @@ Comandi singoli:
 | Comando | Cosa fa |
 |---|---|
 | `python -m fantaoracle status` | regole da confermare, snapshot raccolti, stato del database |
-| `python -m fantaoracle ingest` | raccolta da tutte le fonti (`--fonte voti`, `--completo`). Le fasce di SOS Fanta sono facoltative: se la pagina cambia o non risponde, l'aggiornamento del resto prosegue |
+| `python -m fantaoracle ingest` | raccolta da tutte le fonti (`--fonte voti`, `--fonte infortuni`, `--completo`). Fasce di SOS Fanta e infortuni sono facoltativi: se una pagina cambia o non risponde, l'aggiornamento del resto prosegue |
 | `python -m fantaoracle db` | ricostruisce `data/fantaoracle.duckdb` dagli snapshot |
 | `python -m fantaoracle model` | proiezioni e valutazioni, scritte nel database |
 | `python -m fantaoracle export` | `web/data.json` e `web/index.html` |
@@ -157,8 +168,15 @@ ogni aggiornamento senza aggiungere nulla di non ricostruibile.
 | Understat | xG, npxG, xA, tiri, minuti; storico xG delle squadre; calendario completo | API JSON |
 | football-data.co.uk | risultati, quote 1X2 e Over/Under | CSV |
 | SOS Fanta, Guida all'Asta | fascia di ogni giocatore, per ruolo, aggiornata dalla redazione | HTML pubblico |
+| SosFanta, tabella indisponibili | infortunati, squalificati e diffidati, con la giornata di rientro | HTML pubblico |
+| Transfermarkt, rose e pagine "Infortuni" | data di probabile ritorno di chi è fermo; storico degli stop dalla 23/24 (tipo, giorni, partite perse) | HTML pubblico |
 
 FBref non è usato: da febbraio 2026 non pubblica più xG e xA.
+
+Gli infortuni sono un complemento: se SosFanta o Transfermarkt bloccano la
+raccolta, l'aggiornamento prosegue e il database usa l'ultimo snapshot buono.
+Lo storico Transfermarkt (circa 600 pagine) si riscarica solo quando l'ultimo
+snapshot ha più di sei giorni.
 
 I voti sono presi solo dalla colonna della redazione Fantacalcio, perché è la
 fonte voti della lega: voti di redazioni diverse non sono confrontabili. A ogni
@@ -181,13 +199,21 @@ fonti ci arrivano attraverso la tabella `alias`.
 | `quotazioni` | serie storica di QI, QA, FVM |
 | `proiezioni`, `valutazioni` | output del modello, con versione (`v1-data-giornata`) |
 | `fasce` | fascia SOS Fanta per giocatore (`fascia`, `ordine`, `posizione`), abbinata al listone dentro il ruolo |
-| `indisponibili`, `probabili` | pronte per infortuni e probabili formazioni |
+| `indisponibili` | chi è fermo adesso: tipo, motivo, giornata (SosFanta) e data (Transfermarkt) di rientro |
+| `storico_infortuni` | giocatore × stop dalla 23/24, da Transfermarkt: base della propensione |
+| `probabili` | pronta per le probabili formazioni |
 | `rose_lega`, `override_manuali` | stato della lega; il rebuild non le tocca |
 | `log_ingest` | esito di ogni build con i controlli di qualità |
 
 Controlli a ogni build: voti senza giocatore, voti fuori scala, fantavoto non
 ricostruibile, numero di squadre in Serie A. L'allineamento dei nomi Understat →
-Fantacalcio.it copre fra il 97% e il 98,5% dei giocatori con almeno 5 voti.
+Fantacalcio.it copre fra il 98,4% e il 99% dei giocatori con almeno 5 voti.
+Un cognome composto scritto da solo ("Kolo Muani") e con il nome ("Randal Kolo
+Muani") è lo stesso giocatore anche se lo split li legge diversamente, e la ı
+turca diventa i (Yıldız). Le rose Transfermarkt agganciano 533 dei 599
+giocatori del listone: gli altri, per Transfermarkt, sono in un'altra squadra o
+fuori rosa, e per loro la scheda dice che lo storico manca invece di
+dichiararli sani.
 
 ### Allineamento dei nomi
 
@@ -231,6 +257,38 @@ centrocampisti e attaccanti. Non cambiano l'ordinamento dentro il ruolo.
 La funzione è point in time: riceve i dati fino a una giornata e guarda solo
 quelli. Lo stesso codice fa la proiezione vera e il backtest.
 
+### Infortuni
+
+[`fantaoracle/model/infortuni.py`](fantaoracle/model/infortuni.py)
+
+**Chi è fermo adesso** cambia i punti. La giornata di rientro viene da SosFanta
+("in dubbio per la 8a"); dove manca, dalla data di probabile ritorno di
+Transfermarkt, letta sul calendario del club (la k-esima partita di una squadra
+è la sua k-esima giornata). Le giornate saltate si contano solo fra quelle da
+giocare: chi è in dubbio per la prossima non ne perde nessuna. La probabilità di
+voto si moltiplica per la quota di giornate residue in cui c'è (chi ne salta 11
+su 33 tiene i due terzi dei punti attesi), e da lì cambiano valore e
+suggerimenti. Le squalifiche valgono una giornata, diffide e acciacchi senza
+data nessuna. Chi è fermo solo per Transfermarkt con una data di ritorno già
+passata non entra: è una pagina non aggiornata. La proiezione da sano resta
+nella scheda.
+
+**Chi si ferma spesso** resta un avviso e non tocca i punti: lo storico delle
+presenze, che il modello già usa, contiene le partite saltate per infortunio, e
+scontarle di nuovo punirebbe due volte lo stesso fatto. Il giudizio usa gli stop
+da Transfermarkt dalla 23/24, togliendo malattie, "ritardo di condizione" e
+acciacchi sotto i 10 giorni senza partite perse. Le medie per stagione pesano
+25/26 piena, 24/25 a 0,75, 23/24 a 0,5; la stagione in corso conta negli stop ma
+non nelle medie. Un solo stop vale al massimo 365 giorni.
+
+| Livello | Regola |
+|---|---|
+| **Fragile** | almeno 3 stop e, a stagione, 10 partite perse o 90 giorni fuori; oppure 9 stop muscolari |
+| **Delicato** | almeno 2 stop e, a stagione, 5 partite o 45 giorni; oppure 4 muscolari; oppure 6 stop |
+
+Sul listone di oggi: 78 fragili, 144 delicati, 311 senza segnalazioni, 66 senza
+storico. Un solo crociato, anche lungo, non fa un fragile.
+
 ### Backtest
 
 [`fantaoracle/model/backtest.py`](fantaoracle/model/backtest.py). Le stagioni
@@ -244,7 +302,7 @@ Correlazione di rango fra punti previsti e reali, media delle due stagioni:
 | Ruolo | FantaOracle | Punti prime 5 giornate | Fantamedia pesata × presenze | Punti anno scorso |
 |---|---|---|---|---|
 | P | **0,606** | 0,553 | 0,594 | 0,487 |
-| D | 0,542 | **0,556** | 0,537 | 0,319 |
+| D | 0,543 | **0,556** | 0,537 | 0,319 |
 | C | **0,553** | 0,516 | 0,510 | 0,331 |
 | A | 0,562 | **0,566** | 0,535 | 0,254 |
 | **Media** | **0,566** | 0,548 | 0,544 | 0,348 |
@@ -329,10 +387,11 @@ Developer Pack).
 ```
 config/league.yaml          regole della lega, mercato, parametri del motore
 fantaoracle/
-  ingest/                   raccolta: Fantacalcio.it, Understat, football-data
+  ingest/                   raccolta: Fantacalcio.it, Understat, football-data, infortuni
   resolve/                  allineamento dei nomi fra fonti
   model/
     projection.py           punti attesi per giocatore
+    infortuni.py            giornate saltate e propensione agli infortuni
     backtest.py             validazione sulle stagioni passate
     valuation.py            valore, prezzo atteso, affare
     odds.py                 quote -> gol attesi e clean sheet
@@ -349,7 +408,7 @@ web/
   data.json                 giocatori, proiezioni, valutazioni e regole della lega
 data/raw/                   snapshot in Parquet
 data/ref/                   tabelle curate a mano (override dei nomi)
-tests/                      63 test
+tests/                      97 test
 ```
 
 Due moduli preparano il terreno per il tool formazione e non sono ancora usati
@@ -362,9 +421,8 @@ funzioni a gradini la media non basta).
 
 ## Limiti noti
 
-- Gli infortuni non sono ancora nel modello: un giocatore fermo per due mesi ha
-  la stessa probabilità di voto di prima dell'infortunio finché non salta le
-  partite. La tabella `indisponibili` è pronta.
+- La propensione agli infortuni è un avviso, non entra nei punti (vedi sopra).
+  Le date di rientro sono quelle delle fonti: un "in dubbio" resta un dubbio.
 - Le statistiche avanzate raccolte sono solo quelle di Serie A: per chi è
   arrivato quest'estate da un altro campionato il punteggio si basa sulle
   giornate giocate qui e sulla media del ruolo.
@@ -382,6 +440,5 @@ funzioni a gradini la media non basta).
    smette di lampeggiare e resta visibile lo stato "In asta". Per stimarle servono
    i crediti e gli slot rimasti a ciascun avversario: chi ha pochi crediti o il
    ruolo già pieno non rilancia.
-2. Indisponibili con data di rientro nella probabilità di voto.
-3. Tool formazione: probabili formazioni da più fonti, simulazione della
+2. Tool formazione: probabili formazioni da più fonti, simulazione della
    giornata con modificatore, switch e confronto h2h con l'avversario.
