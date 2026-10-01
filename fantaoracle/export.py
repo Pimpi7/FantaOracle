@@ -77,6 +77,15 @@ def esporta(verbose: bool = True) -> dict:
         QUALIFY row_number() OVER (PARTITION BY fc_id ORDER BY rilevato DESC) = 1""")
     df = df.merge(quot, on="fc_id", how="left")
 
+    # Fascia della guida all'asta di SOS Fanta: indice nell'elenco ordinato
+    # meta.fasce (0 = la migliore). Chi la guida non classifica resta senza.
+    from .ingest.sosfanta import ordina_fasce
+    fasce = tabella("SELECT fc_id, fascia, rilevato FROM fasce")
+    etichette = ordina_fasce(fasce["fascia"])
+    indice = {e: i for i, e in enumerate(etichette)}
+    fascia_di = dict(zip(fasce["fc_id"], fasce["fascia"].map(indice)))
+    fasce_data = None if fasce.empty else pd.Timestamp(fasce["rilevato"].max()).date().isoformat()
+
     storico = tabella("""
         SELECT fc_id, stagione, squadra,
                count(*) FILTER (WHERE NOT sv) AS presenze,
@@ -111,6 +120,7 @@ def esporta(verbose: bool = True) -> dict:
             "gs": _r(d.get("gol_subiti_attesi"), 2), "cs": _r(d.get("p_clean_sheet"), 3),
             "val": _r(r["valore"], 0), "pa": int(r["prezzo_atteso"]),
             "aff": _r(r["affare"], 0), "tifo": _r(r["fattore_tifo"], 2),
+            "fa": int(fascia_di[r["fc_id"]]) if r["fc_id"] in fascia_di else None,
             "st": [] if s is None else [
                 [x.stagione, x.squadra, int(x.presenze), _r(x.media), _r(x.fm), int(x.gol), int(x.assist)]
                 for x in s.itertuples()],
@@ -133,6 +143,8 @@ def esporta(verbose: bool = True) -> dict:
             "max_per_squadra": cfg.get("mercato.max_per_squadra"),
             "blocco_portieri_esente": cfg.get("mercato.blocco_portieri_esente"),
             "tifo": cfg.get("mercato.tifo"),
+            "fasce": [e.capitalize() for e in etichette],
+            "fasce_data": fasce_data,
         },
         "squadre": [{"slug": a, "nome": b} for a, b in squadre.itertuples(index=False)],
         "giocatori": giocatori,

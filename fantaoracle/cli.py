@@ -48,10 +48,14 @@ def giornate_giocate() -> int:
 
 
 def cmd_ingest(args) -> int:
-    from .ingest import fantacalcio_it, footballdata, understat
+    from .ingest import fantacalcio_it, footballdata, sosfanta, understat
 
-    fonti = ["understat", "footballdata", "listone", "voti"] if args.fonte == "all" \
+    fonti = ["understat", "footballdata", "listone", "voti", "sosfanta"] if args.fonte == "all" \
         else [args.fonte]
+    # Le fasce sono un'etichetta in piu' accanto alle stime, non un dato da cui
+    # dipende il modello: se SOS Fanta cambia pagina o non risponde, l'aggiornamento
+    # di tutto il resto deve andare avanti (il tool mostra l'ultima fascia salvata).
+    facoltative = {"sosfanta"}
     errori = 0
     for f in fonti:
         print(f"[{f}]")
@@ -69,9 +73,14 @@ def cmd_ingest(args) -> int:
                     stagioni = dict(STAGIONI_STORICHE)
                     stagioni[STAGIONE_CORRENTE] = giornate_giocate()
                     fantacalcio_it.ingest_voti(stagioni)
+            elif f == "sosfanta":
+                sosfanta.ingest()
         except Exception as e:                                  # noqa: BLE001
-            print(f"  fallito: {type(e).__name__}: {e}")
-            errori += 1
+            if f in facoltative:
+                print(f"  saltato (fonte facoltativa): {type(e).__name__}: {e}")
+            else:
+                print(f"  fallito: {type(e).__name__}: {e}")
+                errori += 1
     return 1 if errori else 0
 
 
@@ -109,7 +118,7 @@ def main(argv=None) -> int:
     sub.add_parser("status").set_defaults(func=cmd_status)
     s = sub.add_parser("ingest")
     s.add_argument("--fonte", default="all",
-                   choices=["all", "understat", "footballdata", "listone", "voti"])
+                   choices=["all", "understat", "footballdata", "listone", "voti", "sosfanta"])
     s.add_argument("--completo", action="store_true",
                    help="riscarica anche le stagioni concluse")
     s.set_defaults(func=cmd_ingest)

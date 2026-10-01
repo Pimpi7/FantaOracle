@@ -121,6 +121,13 @@ CREATE TABLE IF NOT EXISTS indisponibili (
     fc_id INTEGER, rilevato DATE, motivo VARCHAR, rientro DATE, fonte VARCHAR
 );
 
+CREATE TABLE IF NOT EXISTS fasce (
+    fc_id INTEGER, rilevato DATE, fonte VARCHAR,
+    fascia VARCHAR,         -- etichetta di SOS Fanta: 'SUPER TOP', 'JOLLY 1ª FASCIA'...
+    ordine INTEGER,         -- posizione della fascia nella scheda del ruolo
+    posizione INTEGER       -- posizione del nome dentro la fascia
+);
+
 CREATE TABLE IF NOT EXISTS probabili (
     fc_id INTEGER, stagione VARCHAR, giornata INTEGER, fonte VARCHAR,
     stato VARCHAR,          -- titolare | panchina | dubbio | indisponibile
@@ -164,7 +171,7 @@ CREATE TABLE IF NOT EXISTS log_ingest (
 
 # Tabelle derivate dagli snapshot: svuotate e ricaricate a ogni build.
 DERIVATE = ["squadre", "giocatori", "alias", "voti", "partite", "stat_avanzate",
-            "quotazioni", "indisponibili"]
+            "quotazioni", "indisponibili", "fasce"]
 
 
 def connetti(read_only: bool = False) -> duckdb.DuckDBPyConnection:
@@ -325,6 +332,54 @@ def _indisponibili(giocatori: pd.DataFrame) -> pd.DataFrame:
     })
 
 
+def abbina_fasce(fasce: pd.DataFrame, cand: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Assegna un fc_id a ogni nome della guida di SOS Fanta.
+
+    La guida non dice la squadra, ma divide i giocatori per ruolo: si abbina
+    dentro il ruolo (un "Thuram" fra gli attaccanti non e' il "Thuram K."
+    centrocampista). `cand` ha fc_id, nome, squadra, ruolo del listone.
+    Restituisce le righe abbinate e un resoconto con i nomi non risolti.
+    """
+    abbinati, non_risolti, ambigui = [], [], []
+    for ruolo, sos in fasce.groupby("ruolo"):
+        pool = cand[cand["ruolo"] == ruolo]
+        sinistra = sos[["nome"]].drop_duplicates().assign(squadra="")
+        rep = match_players(sinistra, pool[["nome", "squadra"]], fonte_left="sosfanta",
+                            soglia=82.0, usa_blocking=False)
+        m = rep.matched.merge(pool[["fc_id", "nome", "squadra"]]
+                              .rename(columns={"nome": "nome_canonico",
+                                               "squadra": "squadra_canonica"}),
+                              on=["nome_canonico", "squadra_canonica"])
+        abbinati.append(sos.merge(m[["nome_fonte", "fc_id"]], left_on="nome",
+                                  right_on="nome_fonte").drop(columns="nome_fonte"))
+        non_risolti += [f"{ruolo}:{n}" for n in rep.unmatched_left.get("nome", [])]
+        ambigui += [f"{ruolo}:{n}" for n in rep.ambiguous.get("nome", [])]
+
+    out = pd.concat(abbinati, ignore_index=True) if abbinati else fasce.iloc[0:0].assign(fc_id=0)
+    # Un giocatore compare una volta sola nella guida; se due nomi finissero sullo
+    # stesso fc_id e' un abbinamento sbagliato, e si tiene quello piu' in alto.
+    out = out.sort_values(["ordine", "posizione"]).drop_duplicates("fc_id")
+    return out, {"nomi": len(fasce), "abbinati": len(out),
+                 "non_risolti": non_risolti, "ambigui": ambigui}
+
+
+def _fasce(giocatori: pd.DataFrame) -> pd.DataFrame:
+    try:
+        sos = read_snapshot("sosfanta", "fasce")
+    except FileNotFoundError:
+        return pd.DataFrame(columns=["fc_id", "rilevato", "fonte", "fascia", "ordine", "posizione"])
+    cand = giocatori[giocatori["nel_listone"]][["fc_id", "nome", "squadra", "ruolo"]]
+    m, rep = abbina_fasce(sos, cand)
+    if rep["non_risolti"] or rep["ambigui"]:
+        print(f"  fasce SOS Fanta: {rep['abbinati']}/{rep['nomi']} abbinati | "
+              f"non risolti {rep['non_risolti']} | ambigui {rep['ambigui']}")
+    return pd.DataFrame({
+        "fc_id": m["fc_id"], "rilevato": pd.Timestamp(sos.attrs.get("asof")).date(),
+        "fonte": "sosfanta", "fascia": m["fascia"], "ordine": m["ordine"],
+        "posizione": m["posizione"],
+    })
+
+
 # --- build ---------------------------------------------------------------------
 
 def controlli(con) -> dict:
@@ -376,6 +431,7 @@ def build(verbose: bool = True) -> dict:
     _carica(con, "stat_avanzate", stat)
     _carica(con, "quotazioni", _quotazioni())
     _carica(con, "indisponibili", _indisponibili(giocatori))
+    _carica(con, "fasce", _fasce(giocatori))
 
     esito = controlli(con)
     esito["copertura_understat"] = copertura
