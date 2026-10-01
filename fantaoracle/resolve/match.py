@@ -82,6 +82,13 @@ def _score(l_cog: str, l_ini: str, l_comp: str,
     s_compact = fuzz.ratio(l_comp, r_comp)
     base = max(s_cognome, s_compact * 0.95)
 
+    # Cognome composto scritto senza nome da una fonte ("Kolo Muani") e con il
+    # nome dall'altra ("Randal Kolo Muani"): lo split del primo prende "Kolo"
+    # per un nome proprio. Se il nome intero di una parte e' esattamente il
+    # cognome dell'altra, e' lui, e il confronto fra nomi propri non ha senso.
+    if l_cog.replace(" ", "") == r_comp or r_cog.replace(" ", "") == l_comp:
+        return 100.0
+
     # Il nome proprio e' un discriminante forte, ma solo quando entrambe le fonti
     # lo espongono. Il confronto e' per prefisso, cosi' "Lorenzo" risulta
     # compatibile con l'abbreviazione "Lo." e incompatibile con "Lu.".

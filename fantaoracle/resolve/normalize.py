@@ -49,6 +49,7 @@ def strip_accents(s: str) -> str:
     s = s.replace("\u00f8", "o").replace("\u00d8", "O")  # ø Ø
     s = s.replace("\u0142", "l").replace("\u0141", "L")  # ł Ł
     s = s.replace("\u00df", "ss")                        # ß
+    s = s.replace("\u0131", "i")                         # ı turca senza punto (Yıldız)
     nfkd = unicodedata.normalize("NFKD", s)
     return "".join(c for c in nfkd if not unicodedata.combining(c))
 
