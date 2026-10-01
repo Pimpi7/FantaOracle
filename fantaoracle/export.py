@@ -174,6 +174,27 @@ def esporta(verbose: bool = True) -> dict:
 
     inf, fr, date_inf = _infortuni()
 
+    # Portieri e attaccanti partita per partita, allineati alle giornate che
+    # restano: la base della griglia di alternanza nel tool.
+    pgio = tabella("""
+        SELECT p.fc_id, p.giornata, p.avversario, p.casa, p.punti, g.squadra
+        FROM proiezioni_giornata p JOIN giocatori g USING (fc_id)
+        WHERE p.versione = ?""", [versione])
+    giornate = sorted(int(x) for x in pgio["giornata"].dropna().unique())
+    pos = {gi: i for i, gi in enumerate(giornate)}
+    pgg = {}
+    for fc_id, g in pgio.groupby("fc_id"):
+        riga = [None] * len(giornate)
+        for x in g.itertuples():
+            riga[pos[int(x.giornata)]] = _r(x.punti)
+        pgg[fc_id] = riga
+    calendario = {}
+    for sq, g in pgio.drop_duplicates(["squadra", "giornata"]).groupby("squadra"):
+        calendario[sq] = [[int(x.giornata), x.avversario, int(bool(x.casa))]
+                          for x in g.sort_values("giornata").itertuples()]
+    from .model.calendario import carica_fantalab
+    fl = carica_fantalab()
+
     giocatori = []
     for _, r in df.iterrows():
         d = json.loads(r["dettagli"]) if r["dettagli"] else {}
@@ -205,6 +226,10 @@ def esporta(verbose: bool = True) -> dict:
             "fr": fr.get(int(r["fc_id"])),
             "pgs": _r(d.get("punti_giornata_sano")),
         })
+        if r["fc_id"] in pgg:
+            giocatori[-1]["pgg"] = pgg[r["fc_id"]]
+        if r["ruolo"] == "A" and d.get("calendario_attacco") is not None:
+            giocatori[-1]["cal"] = _r(d["calendario_attacco"], 3)
 
     squadre = tabella("SELECT squadra, nome FROM squadre WHERE in_serie_a ORDER BY nome")
     from .model.pipeline import giornata_corrente
@@ -224,8 +249,18 @@ def esporta(verbose: bool = True) -> dict:
             "fasce": [e.capitalize() for e in etichette],
             "fasce_data": fasce_data,
             "infortuni": date_inf,
+            # Giornate a cui si riferiscono i punti partita per partita (`pgg`).
+            "giornate_cal": giornate,
         },
         "squadre": [{"slug": a, "nome": b} for a, b in squadre.itertuples(index=False)],
+        # Partite che restano: squadra -> [giornata, avversario, 1 se in casa].
+        "calendario": calendario,
+        # Fascia di ogni avversario per chi lo affronta, dalla griglia di FantaLab.
+        "fantalab": {
+            "letto_il": fl.attrs.get("letto_il"),
+            "P": dict(zip(fl["squadra"], fl["P"])),
+            "A": dict(zip(fl["squadra"], fl["A"])),
+        },
         "giocatori": giocatori,
     }
     WEB.mkdir(exist_ok=True)

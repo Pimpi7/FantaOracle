@@ -107,6 +107,103 @@ def esegui(stagione: str, giornata: int = 5, p: Parametri | None = None,
             "dettaglio": t}
 
 
+def _con_giornate(partite: pd.DataFrame, stagione: str) -> pd.DataFrame:
+    """Le partite di una stagione passata con il numero di giornata.
+
+    Il calendario ufficiale c'e' solo per quest'anno: per le stagioni passate la
+    giornata e' l'ordine della partita fra quelle della squadra, per data. Se le
+    due squadre non sono d'accordo (un recupero) la partita resta senza giornata
+    ed esce dal confronto.
+    """
+    s = partite[partite["stagione"] == stagione].drop(columns="giornata", errors="ignore")
+    lunga = pd.concat([s.assign(sq=s["casa"]), s.assign(sq=s["trasferta"])])
+    lunga["k"] = lunga.groupby("sq")["data"].rank(method="first").astype(int)
+    k = lunga.groupby(["casa", "trasferta"])["k"].agg(["min", "max"])
+    k = k[k["min"] == k["max"]]["min"].rename("giornata").reset_index()
+    altre = partite[partite["stagione"] != stagione]
+    return pd.concat([altre, s.merge(k, on=["casa", "trasferta"], how="left")], ignore_index=True)
+
+
+def alternanza(stagione: str, giornata: int = 5, p: Parametri | None = None,
+               dati: dict | None = None, primi: dict | None = None) -> pd.DataFrame:
+    """La scelta partita per partita serve davvero? Il test della griglia.
+
+    Si congela la stagione alla giornata dell'asta e si stimano i punti di ogni
+    portiere e attaccante partita per partita, con il solo modello (FantaLab non
+    ha una classificazione storica). Poi, per ruolo:
+
+    - correlazione dentro il giocatore: nelle partite in cui ha preso voto, il
+      fantavoto e' piu' alto proprio dove il modello se lo aspettava? (scarti
+      dalla media del giocatore, previsti contro reali)
+    - coppie: per ogni coppia di titolari di squadre diverse, schierare ogni
+      giornata quello con la partita migliore contro schierare sempre quello col
+      Pt/g piu' alto. Si contano le giornate in cui hanno preso voto entrambi.
+    """
+    from .calendario import punti_per_giornata
+
+    p = p or Parametri()
+    primi = primi or {"P": 20, "A": 40}
+    d = dati or {
+        "voti": tabella("SELECT * FROM voti"),
+        "stat": tabella("SELECT * FROM stat_avanzate"),
+        "partite": tabella("SELECT * FROM partite"),
+    }
+    voti = d["voti"]
+    partite = _con_giornate(d["partite"], stagione)
+    pop = popolazione(voti, stagione, giornata)
+    pr, _, fix = proietta(voti, d["stat"], partite, pop, stagione, giornata,
+                          usa_stat_correnti=False, p=p, con_partite=True)
+    pg = punti_per_giornata(pr, fix.dropna(subset=["giornata"]), p.correzione_fm)
+
+    reali = voti[(voti["stagione"] == stagione) & (voti["giornata"] > giornata) & ~voti["sv"]]
+    pg = pg.merge(reali[["fc_id", "giornata", "squadra", "fantavoto"]],
+                  on=["fc_id", "giornata", "squadra"], how="left")
+    stagione_pg = pr.set_index("fc_id")["punti_giornata"]
+
+    righe = []
+    for ruolo, g in pg.groupby("ruolo"):
+        giocate = g.dropna(subset=["fantavoto"])
+        n = giocate.groupby("fc_id")["fantavoto"].transform("size")
+        giocate = giocate[n >= 10]
+        dp = giocate["punti"] - giocate.groupby("fc_id")["punti"].transform("mean")
+        dr = giocate["fantavoto"] - giocate.groupby("fc_id")["fantavoto"].transform("mean")
+
+        # Coppie di titolari: i primi del ruolo per Pt/g di stagione.
+        ids = stagione_pg[stagione_pg.index.isin(g["fc_id"])].nlargest(primi[ruolo]).index
+        tab = giocate[giocate["fc_id"].isin(ids)].pivot_table(
+            index="giornata", columns="fc_id", values=["punti", "fantavoto"])
+        squadra = g.drop_duplicates("fc_id").set_index("fc_id")["squadra"]
+        guadagni, sui_cambi = [], []
+        ids = [i for i in ids if ("punti", i) in tab.columns]
+        for a_i, a in enumerate(ids):
+            for b in ids[a_i + 1:]:
+                if squadra[a] == squadra[b]:
+                    continue
+                fisso, altro = (a, b) if stagione_pg[a] >= stagione_pg[b] else (b, a)
+                t = tab[[("punti", fisso), ("punti", altro), ("fantavoto", fisso), ("fantavoto", altro)]].dropna()
+                if t.empty:
+                    continue
+                scegli_altro = t[("punti", altro)] > t[("punti", fisso)]
+                scelto = t[("fantavoto", altro)].where(scegli_altro, t[("fantavoto", fisso)])
+                guadagno = scelto - t[("fantavoto", fisso)]
+                guadagni.append(guadagno.values)
+                sui_cambi.append(guadagno[scegli_altro].values)
+        tutti = pd.Series([x for v in guadagni for x in v], dtype=float)
+        cambiate = pd.Series([x for v in sui_cambi for x in v], dtype=float)
+        righe.append({
+            "stagione": stagione, "ruolo": ruolo,
+            "partite": len(giocate),
+            "corr_dentro_giocatore": float(dp.corr(dr)),
+            # Pendenza: un punto previsto in piu' quanti ne porta davvero.
+            "pendenza": float((dp * dr).sum() / (dp * dp).sum()),
+            "coppie_giornate": len(tutti),
+            "quota_cambi": len(cambiate) / max(len(tutti), 1),
+            "guadagno_per_giornata": float(tutti.mean()) if len(tutti) else float("nan"),
+            "guadagno_per_cambio": float(cambiate.mean()) if len(cambiate) else float("nan"),
+        })
+    return pd.DataFrame(righe)
+
+
 def report(stagioni=("2024-25", "2025-26"), giornata: int = 5) -> pd.DataFrame:
     dati = {
         "voti": tabella("SELECT * FROM voti"),

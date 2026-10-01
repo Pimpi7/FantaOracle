@@ -1,0 +1,31 @@
+# Classificazione delle squadre di Serie A della griglia di FantaLab
+# (https://app.fantalab.it/griglia-portieri, schede Portieri e Attaccanti).
+#
+# P: quanto e' dura per il PORTIERE che affronta quella squadra (cioe' quanto attacca).
+# A: quanto e' dura per l'ATTACCANTE che affronta quella squadra (cioe' quanto difende).
+#
+# Il colore dipende solo dall'avversario, non dal campo ne' dalla giornata: le due
+# partite contro la stessa squadra hanno sempre lo stesso colore in tutte le righe.
+# Letta a mano il 2026-10-01 dalle righe di Atalanta e Bologna (giornate 1-38).
+# Si aggiorna a mano: e' l'unico posto da toccare se FantaLab rivede un giudizio.
+squadra,P,A
+atalanta,media,media
+bologna,media,media
+cagliari,facile,facile
+como,difficile,difficile
+fiorentina,media,facile
+frosinone,facile,facile
+genoa,facile,facile
+inter,difficile,difficile
+juventus,difficile,difficile
+lazio,media,media
+lecce,facile,facile
+milan,difficile,difficile
+monza,facile,facile
+napoli,difficile,difficile
+parma,facile,facile
+roma,difficile,difficile
+sassuolo,facile,facile
+torino,facile,facile
+udinese,facile,facile
+venezia,facile,facile

@@ -9,8 +9,9 @@ import pandas as pd
 
 from ..config import load_league
 from ..db import connetti, tabella
-from .infortuni import applica_rientri, calendario_squadre, rientri
-from .projection import proietta
+from .calendario import carica_fantalab, punti_per_giornata
+from .infortuni import applica_rientri, azzera_giornate_perse, calendario_squadre, rientri
+from .projection import Parametri, proietta
 from .valuation import prezzo_atteso, valore
 
 STAGIONE = "2026-27"
@@ -38,28 +39,42 @@ def run(verbose: bool = True) -> pd.DataFrame:
         SELECT fc_id, qi, qa, fvm1000, pct_giocate FROM quotazioni
         QUALIFY row_number() OVER (PARTITION BY fc_id ORDER BY rilevato DESC) = 1""")
 
-    pr, rating = proietta(voti, stat, partite, anag, STAGIONE, g, con_rating=True)
+    par = Parametri()
+    pr, rating, fix = proietta(voti, stat, partite, anag, STAGIONE, g, p=par,
+                               fantalab=carica_fantalab(), con_partite=True)
+    # Portieri e attaccanti partita per partita, da sani: la loro media e' il Pt/g.
+    pg = punti_per_giornata(pr, fix, par.correzione_fm)
 
     # Chi e' fermo adesso: le giornate che salta escono dai punti attesi, e
     # quindi dal valore. Il backtest non passa di qui (non ci sono snapshot
     # degli indisponibili di allora), e la proiezione da sano resta accanto.
+    # Partita per partita le giornate saltate valgono zero: e' li' che il
+    # compagno di alternanza deve coprirlo.
     ind = tabella("SELECT * FROM indisponibili")
     perse = rientri(ind, anag.set_index("fc_id")["squadra"], calendario_squadre(partite, STAGIONE))
     pr = applica_rientri(pr, perse)
+    pg = azzera_giornate_perse(pg, perse)
+    # Per portieri e attaccanti il Pt/g e' la media delle partite: chi salta
+    # proprio le partite facili perde di piu' di chi salta quelle difficili.
+    media = pg.groupby("fc_id")["punti"].mean()
+    pa = pr["fc_id"].isin(media.index)
+    pr.loc[pa, "punti_giornata"] = pr.loc[pa, "fc_id"].map(media)
+    pr.loc[pa, "punti_stagione"] = pr.loc[pa, "punti_giornata"] * pr.loc[pa, "giornate_residue"]
     pr = pr.merge(anag[["fc_id", "nome"]], on="fc_id").merge(quot, on="fc_id", how="left")
     pr = prezzo_atteso(valore(pr, cfg), cfg)
 
     versione = f"{VERSIONE_MODELLO}-{dt.date.today().isoformat()}-g{g}"
     adesso = dt.datetime.now()
     con = connetti()
-    con.execute("DELETE FROM proiezioni WHERE versione = ?", [versione])
-    con.execute("DELETE FROM valutazioni WHERE versione = ?", [versione])
+    for t in ("proiezioni", "valutazioni", "proiezioni_giornata"):
+        con.execute(f"DELETE FROM {t} WHERE versione = ?", [versione])
 
     dettagli = pr.apply(lambda r: json.dumps({
         k: (None if pd.isna(r[k]) else round(float(r[k]), 4)) for k in
         ["gol_attesi", "assist_attesi", "rigori_attesi", "quota_rigori", "amm_attese",
          "minuti_presenza", "quota_titolare", "gol_subiti_attesi", "p_clean_sheet",
-         "partite_osservate", "giornate_perse", "p_voto_sano", "punti_giornata_sano"]
+         "calendario_attacco", "partite_osservate", "giornate_perse", "p_voto_sano",
+         "punti_giornata_sano"]
         if k in r}), axis=1)
     righe_p = pd.DataFrame({
         "versione": versione, "fc_id": pr["fc_id"], "calcolata": adesso,
@@ -76,7 +91,11 @@ def run(verbose: bool = True) -> pd.DataFrame:
         "valore": pr["valore"], "prezzo_atteso": pr["prezzo_atteso"],
         "affare": pr["affare"], "fattore_tifo": pr["fattore_tifo"],
     })
-    for t, d in (("proiezioni", righe_p), ("valutazioni", righe_v)):
+    righe_g = pd.DataFrame({
+        "versione": versione, "fc_id": pg["fc_id"], "giornata": pg["giornata"],
+        "avversario": pg["avversario"], "casa": pg["casa"], "punti": pg["punti"],
+    })
+    for t, d in (("proiezioni", righe_p), ("valutazioni", righe_v), ("proiezioni_giornata", righe_g)):
         con.register("_t", d)
         con.execute(f"INSERT INTO {t} SELECT * FROM _t")
         con.unregister("_t")

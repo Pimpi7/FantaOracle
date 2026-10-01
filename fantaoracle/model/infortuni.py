@@ -33,19 +33,26 @@ GIORNATE_SQUALIFICA = 1
 def calendario_squadre(partite: pd.DataFrame, stagione: str) -> pd.DataFrame:
     """Partite della stagione per squadra, con il numero di giornata.
 
-    Understat non scrive la giornata: la k-esima partita di una squadra in ordine
-    di data e' la sua k-esima giornata. Un recupero sposta la data, non il
-    numero, ed e' l'approssimazione che serve qui.
+    Se `partite` ha la giornata del calendario ufficiale (data/ref, vedi
+    calendario.py) si usa quella. Altrimenti, perche' Understat non la scrive,
+    la k-esima partita di una squadra in ordine di data e' la sua k-esima
+    giornata: un recupero sposta la data, non il numero, ed e'
+    l'approssimazione che basta.
     """
     p = partite[partite["stagione"] == stagione]
+    ufficiale = "giornata" in p.columns and len(p) > 0 and p["giornata"].notna().all()
+    cols = ["data", "giocata"] + (["giornata"] if ufficiale else [])
     lati = pd.concat([
-        p[["data", "giocata"]].assign(squadra=p["casa"]),
-        p[["data", "giocata"]].assign(squadra=p["trasferta"]),
+        p[cols].assign(squadra=p["casa"]),
+        p[cols].assign(squadra=p["trasferta"]),
     ], ignore_index=True)
     lati["data"] = pd.to_datetime(lati["data"])
     lati = lati.sort_values(["squadra", "data"])
-    lati["giornata"] = lati.groupby("squadra").cumcount() + 1
-    return lati.reset_index(drop=True)
+    if ufficiale:
+        lati["giornata"] = lati["giornata"].astype(int)
+    else:
+        lati["giornata"] = lati.groupby("squadra").cumcount() + 1
+    return lati[["data", "giocata", "squadra", "giornata"]].reset_index(drop=True)
 
 
 def rientri(indisponibili: pd.DataFrame, squadra_di: pd.Series,
@@ -108,6 +115,27 @@ def applica_rientri(pr: pd.DataFrame, perse: pd.DataFrame) -> pd.DataFrame:
     for c in ("punti_giornata", "punti_stagione", "punti_stagione_fv"):
         if c in out:
             out[c] = out[c] * quota
+    return out
+
+
+def azzera_giornate_perse(pg: pd.DataFrame, perse: pd.DataFrame) -> pd.DataFrame:
+    """Punti partita per partita (`calendario.punti_per_giornata`): zero nelle
+    giornate che il giocatore salta.
+
+    E' la stessa sottrazione di `applica_rientri`, fatta dove succede invece che
+    spalmata sulla stagione: la media resta la stessa, ma la griglia di
+    alternanza sa *quali* giornate deve coprire il compagno.
+    """
+    if pg.empty or perse.empty:
+        return pg
+    fermi = perse[perse["giornate_perse"] > 0].set_index("fc_id")
+    out = pg.copy()
+    g_rientro = out["fc_id"].map(fermi["giornata_rientro"])
+    fine = out["fc_id"].map(fermi["fine_stagione"]).fillna(False).astype(bool)
+    # `rientri` scrive la giornata di rientro per infortuni e squalifiche; chi
+    # rientra oltre l'ultima giornata e' fuori fino alla fine.
+    fuori = fine | (g_rientro.notna() & (out["giornata"] < g_rientro))
+    out.loc[fuori, "punti"] = 0.0
     return out
 
 

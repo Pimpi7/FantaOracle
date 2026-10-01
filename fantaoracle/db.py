@@ -26,6 +26,7 @@ Schema in breve:
     storico_infortuni  giocatore x stop, dalla 23/24 (Transfermarkt): base della propensione
     probabili          snapshot probabili formazioni (per il tool formazione)
     proiezioni         output del modello, per versione
+    proiezioni_giornata  portieri e attaccanti partita per partita, per versione
     valutazioni        valore, prezzo atteso, affare, per versione
     rose_lega          chi ha comprato chi e a quanto (asta e avversari)
     log_ingest         esito di ogni build con i controlli di qualita'
@@ -175,6 +176,17 @@ CREATE TABLE IF NOT EXISTS log_ingest (
     eseguito TIMESTAMP, passo VARCHAR, righe INTEGER, esito VARCHAR,
     dettagli JSON
 );
+
+-- Punti attesi partita per partita di portieri e attaccanti: la base della
+-- griglia di alternanza e del costruttore che sceglie chi schierare ogni turno.
+CREATE TABLE IF NOT EXISTS proiezioni_giornata (
+    versione VARCHAR, fc_id INTEGER, giornata INTEGER,
+    avversario VARCHAR, casa BOOLEAN,
+    punti DOUBLE            -- contributo atteso in quella partita (include p_voto)
+);
+
+-- Aggiunte dopo la prima versione: un database gia' creato le riceve qui.
+ALTER TABLE partite ADD COLUMN IF NOT EXISTS giornata INTEGER;
 """
 
 # Colonne aggiunte dopo la prima versione dello schema: un database gia' creato
@@ -262,6 +274,20 @@ def _partite() -> pd.DataFrame:
     fd = fd[["stagione", "casa", "trasferta"] + [q for q in quote if q in fd.columns]]
 
     out = us.merge(fd, on=["stagione", "casa", "trasferta"], how="left")
+
+    # Numero di giornata dal calendario ufficiale (Understat ha solo le date):
+    # serve alla griglia di alternanza e ai punti per giornata. Solo le stagioni
+    # che hanno il file in data/ref; le altre restano senza.
+    from .model.calendario import carica_calendario
+    pezzi = []
+    for stagione in out["stagione"].unique():
+        cal = carica_calendario(stagione)
+        if cal is not None:
+            pezzi.append(cal.assign(stagione=stagione))
+    if pezzi:
+        out = out.merge(pd.concat(pezzi), on=["stagione", "casa", "trasferta"], how="left")
+    else:
+        out["giornata"] = None
     return out
 
 
@@ -514,6 +540,12 @@ def controlli(con) -> dict:
 
     residue = q("""SELECT count(*) FROM partite WHERE stagione = '2026-27' AND NOT giocata""")
     problemi_info = {"partite_residue_2026_27": residue}
+
+    # Ogni partita della stagione in corso deve avere la sua giornata: una
+    # partita senza numero sparirebbe dalla griglia di alternanza.
+    senza = q("""SELECT count(*) FROM partite WHERE stagione = '2026-27' AND giornata IS NULL""")
+    if senza:
+        problemi["partite_senza_giornata_2026_27"] = senza
 
     return {"problemi": problemi, "info": problemi_info}
 

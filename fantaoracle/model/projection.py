@@ -17,6 +17,9 @@ piu' adatta:
     malus attesi     ammonizioni, espulsioni, autogol (tassi con shrinkage)
     portieri         gol subiti e imbattibilita' dal rating difensivo della
                      squadra sulle partite che restano
+    calendario       portieri e attaccanti partita per partita, con la
+                     difficolta' dell'avversario (modello + griglia FantaLab):
+                     vedi calendario.py
 
 Le penalizzazioni di shrinkage sono il cuore del modello: 5 giornate di stagione
 corrente sono poche, e senza shrinkage chi ha segnato 3 gol in 5 partite
@@ -34,6 +37,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
+
+from .calendario import forza_avversari, medie_squadra, partite_residue
 
 GIORNATE = 38
 RUOLI = ["P", "D", "C", "A"]
@@ -68,6 +73,13 @@ class Parametri:
     # Scarto medio fra fantavoto reale e previsto quando il giocatore gioca.
     # Quasi nullo per D e C; per i portieri il voto previsto era alto.
     correzione_fm: dict = field(default_factory=lambda: {"P": -0.30, "D": -0.04, "C": -0.07, "A": -0.15})
+    # Calendario degli attaccanti: gol, assist e rigori attesi seguono la difesa
+    # dell'avversario di ogni partita (vedi calendario.py). I portieri il calendario
+    # l'hanno sempre avuto, attraverso gol subiti e porta inviolata.
+    calendario_attaccanti: bool = True
+    # Quanto pesa la fascia FantaLab dell'avversario rispetto al rating del modello
+    # (media geometrica: 0 = solo modello, 1 = solo FantaLab).
+    peso_fantalab: float = 0.5
 
 
 def _stagioni_indietro(stagione: str, corrente: str) -> int:
@@ -120,27 +132,13 @@ def rating_squadre(partite: pd.DataFrame, fino_a: pd.Timestamp, corrente: str,
 
 def attese_calendario(partite: pd.DataFrame, rating: pd.DataFrame, corrente: str,
                       dopo: pd.Timestamp) -> pd.DataFrame:
-    """Gol subiti attesi e probabilita' di clean sheet medi sulle partite residue."""
-    res = partite[(partite["stagione"] == corrente) & (partite["data"] > dopo)]
-    media = rating.attrs["media_gol"]
-    r = rating.set_index("squadra")
-    vantaggio = 1.08                                # fattore campo
+    """Gol subiti attesi e probabilita' di clean sheet medi sulle partite residue.
 
-    righe = []
-    for _, m in res.iterrows():
-        if m["casa"] not in r.index or m["trasferta"] not in r.index:
-            continue
-        lam_c = media * vantaggio * r.at[m["casa"], "attacco"] * r.at[m["trasferta"], "difesa"]
-        lam_t = media / vantaggio * r.at[m["trasferta"], "attacco"] * r.at[m["casa"], "difesa"]
-        righe += [{"squadra": m["casa"], "gs": lam_t, "gf": lam_c},
-                  {"squadra": m["trasferta"], "gs": lam_c, "gf": lam_t}]
-    c = pd.DataFrame(righe)
-    c["cs"] = np.exp(-c["gs"])
-    out = c.groupby("squadra").agg(gol_subiti_attesi=("gs", "mean"),
-                                   gol_fatti_attesi=("gf", "mean"),
-                                   p_clean_sheet=("cs", "mean"),
-                                   partite_residue=("gs", "size")).reset_index()
-    return out
+    Solo modello, senza FantaLab: la versione partita per partita, con la fascia
+    FantaLab dell'avversario, e' `calendario.partite_residue`.
+    """
+    fix = partite_residue(partite, rating, corrente, dopo)
+    return medie_squadra(fix).reset_index()
 
 
 # --- proiezione per giocatore ------------------------------------------------------
@@ -153,15 +151,22 @@ def _tasso(num, den, prior, k):
 def proietta(voti: pd.DataFrame, stat: pd.DataFrame, partite: pd.DataFrame,
              anagrafica: pd.DataFrame, corrente: str, giornata: int,
              usa_stat_correnti: bool = True, p: Parametri | None = None,
-             con_rating: bool = False):
+             con_rating: bool = False, fantalab: pd.DataFrame | None = None,
+             con_partite: bool = False):
     """Proiezione per i giocatori di `anagrafica` (fc_id, nome, squadra, ruolo).
 
     Usa solo i voti fino a (`corrente`, `giornata`). Con usa_stat_correnti=False
     ignora le statistiche Understat della stagione corrente, che sono aggregati a
     fine periodo e nel backtest guarderebbero il futuro.
 
+    `fantalab` e' la classificazione degli avversari (`calendario.carica_fantalab`):
+    se c'e', la difficolta' di ogni partita mescola il rating del modello con la
+    fascia FantaLab dell'avversario.
+
     Con con_rating=True restituisce anche il rating delle squadre usato per il
-    calendario residuo.
+    calendario residuo; con con_partite=True anche le partite residue, una riga
+    per squadra e partita (`calendario.partite_residue`), che servono ai punti per
+    giornata.
     """
     p = p or Parametri()
 
@@ -294,17 +299,29 @@ def proietta(voti: pd.DataFrame, stat: pd.DataFrame, partite: pd.DataFrame,
     base["autogol_attesi"] = prior_ruolo("autogol")
 
     # --- composizione ------------------------------------------------------------
-    base["bonus_attesi"] = (3 * base["gol_attesi"] + base["assist_attesi"]
+    # Bonus offensivi contro un avversario medio: il calendario li moltiplica dopo.
+    base["bonus_neutri"] = (3 * base["gol_attesi"] + base["assist_attesi"]
                             + valore_rigore * base["rigori_attesi"])
+    base["bonus_attesi"] = base["bonus_neutri"]
     base["malus_attesi"] = (0.5 * base["amm_attese"] + base["esp_attese"]
                             + 2 * base["autogol_attesi"])
 
-    # Portieri: gol subiti e imbattibilita' dal calendario residuo.
+    # Calendario residuo, partita per partita: portieri (gol subiti, porta
+    # inviolata) e attaccanti (difesa dell'avversario).
     partite_ok = partite.copy()
     fino_a = _data_fine_giornata(partite_ok, corrente, giornata)
     rating = rating_squadre(partite_ok, fino_a, corrente, sorted(base["squadra"].dropna().unique()), p)
-    cal_sq = attese_calendario(partite_ok, rating, corrente, fino_a).set_index("squadra")
-    base = base.join(cal_sq, on="squadra")
+    avversari = forza_avversari(rating, fantalab, p.peso_fantalab)
+    fix = partite_residue(partite_ok, rating, corrente, fino_a, avversari)
+    base = base.join(medie_squadra(fix), on="squadra")
+
+    if p.calendario_attaccanti:
+        att = base["ruolo"] == "A"
+        cal = base["calendario_attacco"].fillna(1.0)
+        for c in ("gol_attesi", "assist_attesi", "rigori_attesi", "bonus_attesi"):
+            base.loc[att, c] = base.loc[att, c] * cal[att]
+    else:
+        base["calendario_attacco"] = 1.0
 
     por = base["ruolo"] == "P"
     base["rigori_parati_attesi"] = np.where(por, _tasso(agg["rp"], agg["n"], prior_ruolo("rp"), 30.0), 0.0)
@@ -329,6 +346,11 @@ def proietta(voti: pd.DataFrame, stat: pd.DataFrame, partite: pd.DataFrame,
     base["partite_osservate"] = agg["n_raw"]
 
     out = base.reset_index()
+    if not p.calendario_attaccanti:
+        # Senza calendario gli attaccanti valgono uguale contro chiunque.
+        fix = fix.assign(molt=1.0)
+    if con_partite:
+        return out, rating, fix
     return (out, rating) if con_rating else out
 
 
