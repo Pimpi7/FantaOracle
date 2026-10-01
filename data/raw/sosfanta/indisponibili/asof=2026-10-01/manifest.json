@@ -1,0 +1,15 @@
+{
+  "fonte": "sosfanta",
+  "dataset": "indisponibili",
+  "asof": "2026-10-01",
+  "scaricato_il": "2026-10-01T17:41:37",
+  "righe": 65,
+  "colonne": [
+    "squadra",
+    "tipo",
+    "nome",
+    "testo",
+    "giornata"
+  ],
+  "url": "https://www.sosfanta.com/indisponibili-e-squalificati/tabella-indisponibili-seriea-fantacalcio-asta-infortunati-tempi-recupero-squalificati-diffidati/"
+}

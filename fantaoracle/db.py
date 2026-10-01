@@ -22,7 +22,8 @@ Schema in breve:
     partite            calendario completo con xG, quote, gol attesi
     stat_avanzate      giocatore x stagione: minuti, xG, npxG, xA, tiri
     quotazioni         serie storica QI, QA, FVM
-    indisponibili      snapshot infortuni/squalifiche con data di rientro
+    indisponibili      chi e' fermo adesso: giornata (SosFanta) e data (Transfermarkt) di rientro
+    storico_infortuni  giocatore x stop, dalla 23/24 (Transfermarkt): base della propensione
     probabili          snapshot probabili formazioni (per il tool formazione)
     proiezioni         output del modello, per versione
     valutazioni        valore, prezzo atteso, affare, per versione
@@ -118,7 +119,14 @@ CREATE TABLE IF NOT EXISTS quotazioni (
 );
 
 CREATE TABLE IF NOT EXISTS indisponibili (
-    fc_id INTEGER, rilevato DATE, motivo VARCHAR, rientro DATE, fonte VARCHAR
+    fc_id INTEGER, rilevato DATE, motivo VARCHAR, rientro DATE, fonte VARCHAR,
+    tipo VARCHAR,           -- infortunato | squalificato | diffidato | acciaccato
+    giornata INTEGER        -- giornata di rientro scritta da SosFanta
+);
+
+CREATE TABLE IF NOT EXISTS storico_infortuni (
+    fc_id INTEGER, stagione VARCHAR, testo VARCHAR, dal DATE, al DATE,
+    giorni INTEGER, partite_perse INTEGER, rilevato DATE
 );
 
 CREATE TABLE IF NOT EXISTS fasce (
@@ -169,15 +177,24 @@ CREATE TABLE IF NOT EXISTS log_ingest (
 );
 """
 
+# Colonne aggiunte dopo la prima versione dello schema: un database gia' creato
+# le riceve qui, senza doverlo cancellare (rose_lega e override vivono li').
+MIGRAZIONI = [
+    "ALTER TABLE indisponibili ADD COLUMN IF NOT EXISTS tipo VARCHAR",
+    "ALTER TABLE indisponibili ADD COLUMN IF NOT EXISTS giornata INTEGER",
+]
+
 # Tabelle derivate dagli snapshot: svuotate e ricaricate a ogni build.
 DERIVATE = ["squadre", "giocatori", "alias", "voti", "partite", "stat_avanzate",
-            "quotazioni", "indisponibili", "fasce"]
+            "quotazioni", "indisponibili", "storico_infortuni", "fasce"]
 
 
 def connetti(read_only: bool = False) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect(str(DB_PATH), read_only=read_only)
     if not read_only:
         con.execute(SCHEMA)
+        for m in MIGRAZIONI:
+            con.execute(m)
     return con
 
 
@@ -312,24 +329,112 @@ def _quotazioni() -> pd.DataFrame:
     return q[["fc_id", "rilevato", "qi", "qa", "fvm1000", "pct_giocate"]]
 
 
-def _indisponibili(giocatori: pd.DataFrame) -> pd.DataFrame:
-    try:
-        ind = read_snapshot("virgilio", "indisponibili")
-    except FileNotFoundError:
-        return pd.DataFrame(columns=["fc_id", "rilevato", "motivo", "rientro", "fonte"])
+def _aggancia(fonte_df: pd.DataFrame, cand: pd.DataFrame, fonte: str) -> pd.DataFrame:
+    """Righe di `fonte_df` (nome, squadra, ...) con il loro fc_id.
+
+    Blocking per squadra come per Understat: si confronta un nome solo con la
+    rosa del suo club nel listone. Chi non aggancia resta fuori, chi e' ambiguo
+    anche: un infortunio attribuito all'uomo sbagliato costa crediti veri.
+    """
+    if fonte_df.empty:
+        return fonte_df.assign(fc_id=pd.Series(dtype="int64"))
+    rep = match_players(fonte_df[["nome", "squadra"]].drop_duplicates(), cand,
+                        fonte_left=fonte, soglia=82.0)
+    if rep.matched.empty:
+        return fonte_df.iloc[0:0].assign(fc_id=pd.Series(dtype="int64"))
+    m = rep.matched.merge(cand.rename(columns={"nome": "nome_canonico",
+                                               "squadra": "squadra_canonica"}),
+                          on=["nome_canonico", "squadra_canonica"])
+    m = m.drop_duplicates("fc_id")
+    return fonte_df.merge(m[["nome_fonte", "squadra_fonte", "fc_id"]],
+                          left_on=["nome", "squadra"],
+                          right_on=["nome_fonte", "squadra_fonte"]
+                          ).drop(columns=["nome_fonte", "squadra_fonte"])
+
+
+VUOTA_IND = ["fc_id", "rilevato", "motivo", "rientro", "fonte", "tipo", "giornata"]
+
+
+def _infortuni(giocatori: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
+    """Indisponibili di oggi e storico infortuni, agganciati agli fc_id.
+
+    Le due fonti si completano invece di sovrapporsi:
+
+    - **SosFanta** e' la fonte principale di chi e' fermo: scrive la giornata di
+      rientro ed e' aggiornata a ogni turno.
+    - **Transfermarkt** aggiunge la data di "probabile ritorno" a chi SosFanta
+      lascia senza giornata, e chi SosFanta non elenca. Un fermo che c'e' solo
+      su Transfermarkt e senza data e' di solito un acciacco di giornata: entra
+      come `acciaccato`, che il tool mostra ma il modello non sconta. Uno con la
+      data gia' passata e' una pagina non aggiornata, e non entra.
+
+    Lo storico viene solo da Transfermarkt, agganciato tramite le rose.
+    """
     cand = giocatori[giocatori["nel_listone"]][["fc_id", "nome", "squadra"]]
-    rep = match_players(ind[["nome", "squadra", "motivo", "rientro"]], cand,
-                        fonte_left="virgilio", soglia=82.0)
-    m = rep.matched.merge(ind.rename(columns={"nome": "nome_fonte",
-                                              "squadra": "squadra_fonte"}),
-                          on=["nome_fonte", "squadra_fonte"])
-    m = m.merge(cand.rename(columns={"nome": "nome_canonico",
-                                     "squadra": "squadra_canonica"}),
-                on=["nome_canonico", "squadra_canonica"])
-    return pd.DataFrame({
-        "fc_id": m["fc_id"], "rilevato": pd.Timestamp(ind.attrs.get("asof")).date(),
-        "motivo": m["motivo"], "rientro": m["rientro"], "fonte": "virgilio",
-    })
+    info: dict = {}
+
+    try:
+        sos = read_snapshot("sosfanta", "indisponibili")
+        rilevato_sos = pd.Timestamp(sos.attrs["asof"]).date()
+        sos = _aggancia(sos, cand, "sosfanta")
+        info["sosfanta"] = f"{len(sos)} agganciati"
+    except FileNotFoundError:
+        sos, rilevato_sos = pd.DataFrame(columns=["fc_id", "tipo", "testo", "giornata"]), None
+
+    try:
+        rose = read_snapshot("transfermarkt", "rose")
+        rilevato_tm = pd.Timestamp(rose.attrs["asof"]).date()
+        rose = _aggancia(rose, cand, "transfermarkt")
+        info["transfermarkt"] = f"{rose['fc_id'].nunique()}/{len(cand)} del listone"
+    except FileNotFoundError:
+        rose, rilevato_tm = pd.DataFrame(columns=["fc_id", "tm_id", "infortunio", "rientro"]), None
+
+    # Un uomo, una riga: il tipo piu' grave se SosFanta lo elenca due volte.
+    gravita = {"infortunato": 0, "squalificato": 1, "diffidato": 2}
+    sos = (sos.assign(_g=sos["tipo"].map(gravita)).sort_values("_g")
+              .drop_duplicates("fc_id").drop(columns="_g"))
+    fermi_tm = rose[rose["infortunio"].notna()].set_index("fc_id")
+
+    righe = []
+    for r in sos.itertuples(index=False):
+        tm = fermi_tm["rientro"].get(r.fc_id) if r.tipo == "infortunato" else None
+        tm = None if tm is None or pd.isna(tm) else tm
+        righe.append({"fc_id": r.fc_id, "rilevato": rilevato_sos, "motivo": r.testo,
+                      "rientro": tm, "fonte": "sosfanta" + ("+transfermarkt" if tm else ""),
+                      "tipo": r.tipo,
+                      "giornata": None if pd.isna(r.giornata) else int(r.giornata)})
+    gia = set(sos["fc_id"])
+    for fc_id, r in fermi_tm.iterrows():
+        if fc_id in gia:
+            continue
+        rientro = None if pd.isna(r["rientro"]) else r["rientro"]
+        if rientro is not None and rilevato_tm is not None and rientro < rilevato_tm:
+            continue
+        righe.append({"fc_id": fc_id, "rilevato": rilevato_tm, "motivo": r["infortunio"],
+                      "rientro": rientro, "fonte": "transfermarkt",
+                      "tipo": "infortunato" if rientro is not None else "acciaccato",
+                      "giornata": None})
+    ind = pd.DataFrame(righe, columns=VUOTA_IND)
+
+    try:
+        st = read_snapshot("transfermarkt", "infortuni")
+        rilevato_st = pd.Timestamp(st.attrs["asof"]).date()
+        st = st.merge(rose[["tm_id", "fc_id"]].drop_duplicates("tm_id"), on="tm_id")
+        storico = pd.DataFrame({
+            "fc_id": st["fc_id"], "stagione": st["stagione"], "testo": st["testo"],
+            "dal": st["dal"], "al": st["al"], "giorni": st["giorni"],
+            "partite_perse": st["partite_perse"],
+            "rilevato": rilevato_st,
+        })
+    except FileNotFoundError:
+        storico = pd.DataFrame(columns=["fc_id", "stagione", "testo", "dal", "al", "giorni",
+                                        "partite_perse", "rilevato"])
+
+    alias = pd.DataFrame({
+        "fonte": "transfermarkt", "chiave": rose["tm_id"].astype(str), "anno": 2026,
+        "fc_id": rose["fc_id"], "score": None, "metodo": "rosa",
+    }) if len(rose) else pd.DataFrame()
+    return ind, storico, alias, info
 
 
 def abbina_fasce(fasce: pd.DataFrame, cand: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
@@ -427,14 +532,17 @@ def build(verbose: bool = True) -> dict:
     _carica(con, "voti", v)
     _carica(con, "partite", _partite())
     alias, stat, copertura = _stat_avanzate(v)
-    _carica(con, "alias", alias)
+    ind, storico, alias_tm, info_inf = _infortuni(giocatori)
+    _carica(con, "alias", pd.concat([alias, alias_tm], ignore_index=True))
     _carica(con, "stat_avanzate", stat)
     _carica(con, "quotazioni", _quotazioni())
-    _carica(con, "indisponibili", _indisponibili(giocatori))
+    _carica(con, "indisponibili", ind)
+    _carica(con, "storico_infortuni", storico)
     _carica(con, "fasce", _fasce(giocatori))
 
     esito = controlli(con)
     esito["copertura_understat"] = copertura
+    esito["infortuni"] = info_inf
     conteggi = {t: con.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in DERIVATE}
     esito["conteggi"] = conteggi
     _log(con, "build", sum(conteggi.values()),
@@ -444,6 +552,7 @@ def build(verbose: bool = True) -> dict:
     if verbose:
         print("  righe:", conteggi)
         print("  copertura Understat (giocatori con 5+ voti):", copertura)
+        print("  infortuni:", info_inf or "nessuno snapshot")
         print("  controlli:", esito["problemi"] or "tutti superati", "|", esito["info"])
     return esito
 

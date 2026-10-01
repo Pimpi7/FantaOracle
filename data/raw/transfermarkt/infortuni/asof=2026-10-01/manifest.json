@@ -1,0 +1,17 @@
+{
+  "fonte": "transfermarkt",
+  "dataset": "infortuni",
+  "asof": "2026-10-01",
+  "scaricato_il": "2026-10-01T17:43:02",
+  "righe": 2174,
+  "colonne": [
+    "tm_id",
+    "stagione",
+    "testo",
+    "dal",
+    "al",
+    "giorni",
+    "partite_perse"
+  ],
+  "prima_stagione": "23/24"
+}

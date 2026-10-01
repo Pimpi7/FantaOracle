@@ -47,15 +47,22 @@ def giornate_giocate() -> int:
     return int(corr["giocata"].sum() // 10)
 
 
-def cmd_ingest(args) -> int:
-    from .ingest import fantacalcio_it, footballdata, sosfanta, understat
+def _squadre_correnti() -> set[str]:
+    """Le venti squadre del listone, per riconoscere le intestazioni delle fonti."""
+    from .resolve.normalize import normalize_team
+    from .store import read_snapshot
+    return set(read_snapshot("fantacalcio_it", "listone")["squadra_slug"].map(normalize_team))
 
-    fonti = ["understat", "footballdata", "listone", "voti", "sosfanta"] if args.fonte == "all" \
-        else [args.fonte]
-    # Le fasce sono un'etichetta in piu' accanto alle stime, non un dato da cui
-    # dipende il modello: se SOS Fanta cambia pagina o non risponde, l'aggiornamento
-    # di tutto il resto deve andare avanti (il tool mostra l'ultima fascia salvata).
-    facoltative = {"sosfanta"}
+
+def cmd_ingest(args) -> int:
+    from .ingest import fantacalcio_it, footballdata, infortuni, sosfanta, understat
+
+    fonti = ["understat", "footballdata", "listone", "voti", "sosfanta", "infortuni"] \
+        if args.fonte == "all" else [args.fonte]
+    # Fasce e infortuni sono un complemento delle stime: se SOS Fanta o
+    # Transfermarkt cambiano pagina o non rispondono, l'aggiornamento di tutto il
+    # resto deve andare avanti (il database usa l'ultimo snapshot buono).
+    facoltative = {"sosfanta", "infortuni"}
     errori = 0
     for f in fonti:
         print(f"[{f}]")
@@ -75,6 +82,8 @@ def cmd_ingest(args) -> int:
                     fantacalcio_it.ingest_voti(stagioni)
             elif f == "sosfanta":
                 sosfanta.ingest()
+            elif f == "infortuni":
+                infortuni.ingest(_squadre_correnti(), completo=args.completo)
         except Exception as e:                                  # noqa: BLE001
             if f in facoltative:
                 print(f"  saltato (fonte facoltativa): {type(e).__name__}: {e}")
@@ -118,7 +127,8 @@ def main(argv=None) -> int:
     sub.add_parser("status").set_defaults(func=cmd_status)
     s = sub.add_parser("ingest")
     s.add_argument("--fonte", default="all",
-                   choices=["all", "understat", "footballdata", "listone", "voti", "sosfanta"])
+                   choices=["all", "understat", "footballdata", "listone", "voti", "sosfanta",
+                            "infortuni"])
     s.add_argument("--completo", action="store_true",
                    help="riscarica anche le stagioni concluse")
     s.set_defaults(func=cmd_ingest)

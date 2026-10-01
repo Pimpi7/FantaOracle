@@ -1,0 +1,16 @@
+{
+  "fonte": "transfermarkt",
+  "dataset": "rose",
+  "asof": "2026-10-01",
+  "scaricato_il": "2026-10-01T17:42:22",
+  "righe": 581,
+  "colonne": [
+    "tm_id",
+    "tm_slug",
+    "nome",
+    "squadra",
+    "infortunio",
+    "rientro"
+  ],
+  "url": "https://www.transfermarkt.it/serie-a/startseite/wettbewerb/IT1/saison_id/2026"
+}
