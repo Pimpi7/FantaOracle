@@ -277,11 +277,25 @@ function filtrati() {
   return l;
 }
 
-// Fascia della guida all'asta di SOS Fanta. Le ultime tre sono avvertimenti, non
-// livelli di qualita': le si distingue dal colore.
-const FASCE_NEGATIVE = new Set(["Infortunati", "A rischio", "Da evitare"]);
-const nomeFascia = (g) => (g.fa == null ? "–" : META.fasce[g.fa]);
-const fasciaNegativa = (g) => g.fa != null && FASCE_NEGATIVE.has(META.fasce[g.fa]);
+// Fascia della guida all'asta di SOS Fanta, in una pill col suo colore: [tonalita', quanta
+// saturazione (1 = piena), colore del testo se la pill e' piena]. Dall'oro dei top ai verdi e
+// azzurri delle fasce alte, ai blu spenti di chi costa poco; viola per i jolly, rosa per le
+// scommesse, arancio e rosso per i rischi. Una fascia nuova di SOS Fanta resta grigia.
+const FASCIA_STILE = {
+  "Super top": [45, 1, "#2b2200"], "Top": [45, 1], "Semitop": [92, 1], "Sotto ai semitop": [145, 1],
+  "Fascia alta": [172, 1], "Fascia media": [200, 1], "Sopra ai low cost": [222, 1],
+  "Low cost 1ª fascia": [238, 0.6], "Low cost 2ª fascia": [246, 0.35], "Leghe numerose": [210, 0.12],
+  "Jolly 1ª fascia": [268, 1], "Jolly 2ª fascia": [280, 1], "Jolly 3ª fascia": [292, 1], "Jolly 4ª fascia": [304, 1],
+  "Possibili sorprese": [322, 1], "Scommesse": [345, 1], "A rischio": [24, 1], "Da evitare": [2, 1, "#fff"],
+};
+function pillFascia(g) {
+  if (g.fa == null) return '<span class="fp-no" title="La guida di SOS Fanta non classifica questo giocatore">–</span>';
+  const nome = META.fasce[g.fa], [h, k, pieno] = FASCIA_STILE[nome] || [210, 0.12];
+  const titolo = g.fi
+    ? "Fascia stimata da noi: SOS Fanta lo segna fra gli infortunati, quindi la ricaviamo confrontandolo con i giocatori dello stesso ruolo per prezzo e punti attesi"
+    : "Fascia secondo la guida all'asta di SOS Fanta";
+  return `<span class="fp${pieno ? " solid" : ""}${g.fi ? " est" : ""}" style="--h:${h};--k:${k}${pieno ? `;--sfg:${pieno}` : ""}" title="${titolo}">${esc(nome)}</span>`;
+}
 
 function tag(g) {
   let t = "";
@@ -311,7 +325,7 @@ function renderListone() {
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
       <td class="l"><span class="role ${g.r}">${g.r}</span></td>
       <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}${obj}${own}</td>
-      <td class="l fa hide-s${fasciaNegativa(g) ? " neg" : ""}">${esc(nomeFascia(g))}</td>
+      <td class="l fa hide-s">${pillFascia(g)}</td>
       <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
       <td class="big">${fmt(g.pg, 2)}</td>
       <td class="hide-s">${fmt(g.fm, 2)}</td>

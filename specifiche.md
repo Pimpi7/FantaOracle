@@ -23,7 +23,7 @@ fantamedia mostra il nostro punteggio:
 
 | Colonna | Significato |
 |---|---|
-| Fascia | La fascia della Guida all'Asta di SOS Fanta (Super top, Top, Semitop… fino a Da evitare, passando per Infortunati e A rischio). È l'opinione della redazione, non entra nel modello. Vuota se la guida non classifica il giocatore; nascosta da telefono. |
+| Fascia | La fascia della Guida all'Asta di SOS Fanta (Super top, Top, Semitop… fino a Da evitare, passando per Infortunati e A rischio). È l'opinione della redazione, non entra nel modello. Vuota se la guida non classifica il giocatore; nascosta da telefono. Ogni fascia ha il suo colore. |
 | **Pt/g** | Punti attesi a giornata: probabilità di prendere voto × fantavoto atteso. Per portieri e difensori include la quota del modificatore difesa. |
 | FM att. | Fantavoto atteso quando gioca |
 | Pres. | Probabilità di prendere voto in una giornata |
@@ -31,6 +31,18 @@ fantamedia mostra il nostro punteggio:
 | **Prezzo** | Quanto costerà presumibilmente nella nostra asta |
 | **Affare** | Valore meno prezzo |
 | QA | Quotazione attuale Fantacalcio.it |
+
+**Fasce stimate.** SOS Fanta mette alcuni giocatori fra gli *Infortunati*, che è uno stato e
+non un livello. Per non lasciarli fuori dal confronto se ne stima la fascia
+([`model/fasce.py`](fantaoracle/model/fasce.py)): si cercano, dentro lo stesso ruolo, i sette
+giocatori classificati più vicini per FVM, quotazione iniziale e punti attesi, e si prende la
+mediana pesata delle loro fasce. Si usa solo la scala di qualità, da *Super top* a *Leghe
+numerose*; i jolly, le scommesse e i rischi sono giudizi di convenienza e non si inferiscono.
+Nascondendo la fascia a ciascuno dei 253 giocatori classificati e ricostruendola, la fascia esatta
+esce nel 39% dei casi, entro un gradino nell'81%, con un errore medio di 0,86 gradini (indovinare
+sempre la mediana del ruolo sbaglia di 2,2). È una stima: nel tool la pill è tratteggiata e porta
+una ~. Quotazioni e FVM di un infortunato possono già essere scontati, quindi la stima tende a
+essere prudente per i campioni.
 
 `RIG` segnala i rigoristi, `TIFO` i giocatori con prezzo maggiorato perché in
 lega ci sono molti tifosi di quella squadra. Un clic sul nome apre la scheda: da
