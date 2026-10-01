@@ -244,6 +244,9 @@ function ottimizza() {
 // --- rendering del listone -----------------------------------------------------------
 function confronta(a, b) {
   const k = S.sort.k, d = S.sort.dir, x = a[k], y = b[k];
+  // Fascia: l'indice 0 e' la migliore, e chi non ha fascia sta sempre in fondo,
+  // qualunque sia il verso dell'ordinamento.
+  if (k === "fa") return x == null || y == null ? (x == null) - (y == null) : d * (x - y);
   if (typeof x === "string") return d * x.localeCompare(y);
   return d * ((x ?? -1e9) - (y ?? -1e9));
 }
@@ -274,6 +277,12 @@ function filtrati() {
   return l;
 }
 
+// Fascia della guida all'asta di SOS Fanta. Le ultime tre sono avvertimenti, non
+// livelli di qualita': le si distingue dal colore.
+const FASCE_NEGATIVE = new Set(["Infortunati", "A rischio", "Da evitare"]);
+const nomeFascia = (g) => (g.fa == null ? "–" : META.fasce[g.fa]);
+const fasciaNegativa = (g) => g.fa != null && FASCE_NEGATIVE.has(META.fasce[g.fa]);
+
 function tag(g) {
   let t = "";
   if ((g.qrig || 0) >= 0.4) t += '<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">RIG</span>';
@@ -302,6 +311,7 @@ function renderListone() {
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
       <td class="l"><span class="role ${g.r}">${g.r}</span></td>
       <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}${obj}${own}</td>
+      <td class="l fa hide-s${fasciaNegativa(g) ? " neg" : ""}">${esc(nomeFascia(g))}</td>
       <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
       <td class="big">${fmt(g.pg, 2)}</td>
       <td class="hide-s">${fmt(g.fm, 2)}</td>
@@ -312,7 +322,7 @@ function renderListone() {
       <td class="${aff > 0 ? "pos" : aff < 0 ? "neg" : ""}">${segno(aff)}</td>
       <td class="act">${azioni}</td></tr>`);
   }
-  $("#rows").innerHTML = out.join("") || '<tr><td colspan="12" class="l loading">Nessun giocatore con questi filtri.</td></tr>';
+  $("#rows").innerHTML = out.join("") || '<tr><td colspan="13" class="l loading">Nessun giocatore con questi filtri.</td></tr>';
   document.querySelectorAll("th[data-k]").forEach((th) => {
     th.classList.toggle("sorted", th.dataset.k === S.sort.k);
     th.classList.toggle("asc", th.dataset.k === S.sort.k && S.sort.dir === 1);
@@ -1269,7 +1279,7 @@ $("#pmax").addEventListener("input", (e) => { S.f.pmax = +e.target.value || null
 document.querySelector("thead").addEventListener("click", (e) => {
   const th = e.target.closest("th[data-k]"); if (!th) return;
   const k = th.dataset.k;
-  S.sort = { k, dir: S.sort.k === k ? -S.sort.dir : (k === "nome" || k === "sq" ? 1 : -1) };
+  S.sort = { k, dir: S.sort.k === k ? -S.sort.dir : (k === "nome" || k === "sq" || k === "fa" ? 1 : -1) };
   renderListone();
 });
 
@@ -1330,5 +1340,5 @@ fetch("data.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status);
   aggiorna();
 }).catch((err) => {
   $("#meta").textContent = "Impossibile caricare data.json: " + err.message + ". Rigenera i dati con `make export`.";
-  $("#rows").innerHTML = '<tr><td colspan="12" class="l loading">Dati non disponibili.</td></tr>';
+  $("#rows").innerHTML = '<tr><td colspan="13" class="l loading">Dati non disponibili.</td></tr>';
 });

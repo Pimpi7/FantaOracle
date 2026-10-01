@@ -23,6 +23,7 @@ fantamedia mostra il nostro punteggio:
 
 | Colonna | Significato |
 |---|---|
+| Fascia | La fascia della Guida all'Asta di SOS Fanta (Super top, Top, Semitop… fino a Da evitare, passando per Infortunati e A rischio). È l'opinione della redazione, non entra nel modello. Vuota se la guida non classifica il giocatore; nascosta da telefono. |
 | **Pt/g** | Punti attesi a giornata: probabilità di prendere voto × fantavoto atteso. Per portieri e difensori include la quota del modificatore difesa. |
 | FM att. | Fantavoto atteso quando gioca |
 | Pres. | Probabilità di prendere voto in una giornata |
@@ -109,7 +110,7 @@ Comandi singoli:
 | Comando | Cosa fa |
 |---|---|
 | `python -m fantaoracle status` | regole da confermare, snapshot raccolti, stato del database |
-| `python -m fantaoracle ingest` | raccolta da tutte le fonti (`--fonte voti`, `--completo`) |
+| `python -m fantaoracle ingest` | raccolta da tutte le fonti (`--fonte voti`, `--completo`). Le fasce di SOS Fanta sono facoltative: se la pagina cambia o non risponde, l'aggiornamento del resto prosegue |
 | `python -m fantaoracle db` | ricostruisce `data/fantaoracle.duckdb` dagli snapshot |
 | `python -m fantaoracle model` | proiezioni e valutazioni, scritte nel database |
 | `python -m fantaoracle export` | `web/data.json` e `web/index.html` |
@@ -143,6 +144,7 @@ ogni aggiornamento senza aggiungere nulla di non ricostruibile.
 | Fantacalcio.it, quotazioni | listone con quotazione iniziale, attuale e FVM | HTML pubblico |
 | Understat | xG, npxG, xA, tiri, minuti; storico xG delle squadre; calendario completo | API JSON |
 | football-data.co.uk | risultati, quote 1X2 e Over/Under | CSV |
+| SOS Fanta, Guida all'Asta | fascia di ogni giocatore, per ruolo, aggiornata dalla redazione | HTML pubblico |
 
 FBref non è usato: da febbraio 2026 non pubblica più xG e xA.
 
@@ -166,6 +168,7 @@ fonti ci arrivano attraverso la tabella `alias`.
 | `stat_avanzate` | giocatore × stagione: minuti, xG, npxG, xA, tiri, rigori stimati |
 | `quotazioni` | serie storica di QI, QA, FVM |
 | `proiezioni`, `valutazioni` | output del modello, con versione (`v1-data-giornata`) |
+| `fasce` | fascia SOS Fanta per giocatore (`fascia`, `ordine`, `posizione`), abbinata al listone dentro il ruolo |
 | `indisponibili`, `probabili` | pronte per infortuni e probabili formazioni |
 | `rose_lega`, `override_manuali` | stato della lega; il rebuild non le tocca |
 | `log_ingest` | esito di ogni build con i controlli di qualità |
