@@ -9,6 +9,7 @@ import pandas as pd
 
 from ..config import load_league
 from ..db import connetti, tabella
+from .infortuni import applica_rientri, calendario_squadre, rientri
 from .projection import proietta
 from .valuation import prezzo_atteso, valore
 
@@ -38,6 +39,13 @@ def run(verbose: bool = True) -> pd.DataFrame:
         QUALIFY row_number() OVER (PARTITION BY fc_id ORDER BY rilevato DESC) = 1""")
 
     pr, rating = proietta(voti, stat, partite, anag, STAGIONE, g, con_rating=True)
+
+    # Chi e' fermo adesso: le giornate che salta escono dai punti attesi, e
+    # quindi dal valore. Il backtest non passa di qui (non ci sono snapshot
+    # degli indisponibili di allora), e la proiezione da sano resta accanto.
+    ind = tabella("SELECT * FROM indisponibili")
+    perse = rientri(ind, anag.set_index("fc_id")["squadra"], calendario_squadre(partite, STAGIONE))
+    pr = applica_rientri(pr, perse)
     pr = pr.merge(anag[["fc_id", "nome"]], on="fc_id").merge(quot, on="fc_id", how="left")
     pr = prezzo_atteso(valore(pr, cfg), cfg)
 
@@ -51,7 +59,8 @@ def run(verbose: bool = True) -> pd.DataFrame:
         k: (None if pd.isna(r[k]) else round(float(r[k]), 4)) for k in
         ["gol_attesi", "assist_attesi", "rigori_attesi", "quota_rigori", "amm_attese",
          "minuti_presenza", "quota_titolare", "gol_subiti_attesi", "p_clean_sheet",
-         "partite_osservate"] if k in r}), axis=1)
+         "partite_osservate", "giornate_perse", "p_voto_sano", "punti_giornata_sano"]
+        if k in r}), axis=1)
     righe_p = pd.DataFrame({
         "versione": versione, "fc_id": pr["fc_id"], "calcolata": adesso,
         "giornate_residue": pr["giornate_residue"], "p_voto": pr["p_voto"],
@@ -76,6 +85,9 @@ def run(verbose: bool = True) -> pd.DataFrame:
     pr.attrs["versione"] = versione
     pr.attrs["giornata"] = g
     if verbose:
+        fermi = perse[perse["giornate_perse"] > 0]
+        print(f"  indisponibili: {len(fermi)} saltano almeno una giornata, "
+              f"{int(fermi['giornate_perse'].sum())} giornate-giocatore in tutto")
         print(f"  {versione}: {len(pr)} giocatori proiettati su {int(pr['giornate_residue'].max())} "
               f"giornate; scala FVM {pr.attrs.get('scala_fvm', 0):.3f}")
     return pr
