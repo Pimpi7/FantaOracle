@@ -312,6 +312,37 @@ details.help p { margin: 8px 0 0; color: var(--ink-2); max-width: 65ch; }
 .dialog textarea { width: 100%; min-height: 160px; padding: 8px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-size: 12px; }
 .loading { padding: 40px 0; color: var(--ink-2); }
 
+/* --- griglia di alternanza (scheda di portieri e attaccanti) ---
+   Fasce FantaLab dell'avversario: verde facile, giallo media, rosso difficile. */
+:root { --fa-f: #c9ecc9; --fa-f-fg: #12471f; --fa-m: #f9e39a; --fa-m-fg: #553c00; --fa-d: #f5c0ba; --fa-d-fg: #6f140d; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --fa-f: #1f4a2a; --fa-f-fg: #c8f0d1; --fa-m: #4d3f12; --fa-m-fg: #ffe7a0; --fa-d: #5a201c; --fa-d-fg: #ffd2cc; }
+}
+:root[data-theme="dark"] { --fa-f: #1f4a2a; --fa-f-fg: #c8f0d1; --fa-m: #4d3f12; --fa-m-fg: #ffe7a0; --fa-d: #5a201c; --fa-d-fg: #ffd2cc; }
+.dialog.larga { width: min(760px, 100%); }
+.alternanza { margin: 4px 0 14px; display: grid; gap: 8px; }
+.alternanza .nota { margin: 0; }
+.griglia-box { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); }
+.griglia { display: grid; grid-template-columns: minmax(84px, max-content) repeat(var(--n), 26px); gap: 2px; padding: 6px; width: max-content; }
+.griglia .nome { position: sticky; left: -6px; z-index: 1; background: var(--paper); padding: 0 8px 0 6px; margin-left: -6px;
+  font-size: 12px; font-weight: 700; line-height: 24px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.griglia .gi { font-size: 10px; color: var(--ink-2); text-align: center; line-height: 14px; }
+.griglia .c { height: 24px; border-radius: 4px; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; letter-spacing: -0.02em; background: var(--tint); color: var(--ink-2); }
+.c.fl-f { background: var(--fa-f); color: var(--fa-f-fg); }
+.c.fl-m { background: var(--fa-m); color: var(--fa-m-fg); }
+.c.fl-d { background: var(--fa-d); color: var(--fa-d-fg); }
+.griglia .c.off { opacity: 0.3; }
+.griglia .c.out { opacity: 1; background: repeating-linear-gradient(135deg, var(--tint) 0 4px, var(--rule) 4px 8px); color: var(--ink-2); text-decoration: line-through; }
+.griglia .c.vuota { background: none; border: 1px dashed var(--rule); }
+.legenda i.c { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin: 0 3px 0 6px; }
+.legenda i.c:first-child { margin-left: 0; }
+table.compagni td { padding: 4px 6px; }
+table.compagni td.nm { max-width: 170px; }
+table.compagni tr.gruppo td { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-2); padding-top: 10px; border-bottom: 1px solid var(--rule); }
+table.compagni tr.sel td { background: var(--tint); }
+table.compagni button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.nota.reparto { margin: 8px 6px 2px; border-left-color: var(--r-c); }
+
 /* --- modalita' asta --- */
 /* il bottone e' un pallone: pill bianca con le cuciture, e un pallone vero appoggiato a destra */
 /* Il pallone sta nella curva destra del bottone: altezza interna del bottone (40 - 2x2 di bordo = 36 px)

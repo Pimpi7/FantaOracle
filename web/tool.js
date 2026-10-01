@@ -62,12 +62,72 @@ function cr(val, max) {
 const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * INFL * (1 + S.margine)));
 
 // --- ottimizzatore ----------------------------------------------------------------
+// Portieri e attaccanti hanno i punti attesi partita per partita (g.v, allineati a
+// META.giornate_cal): per loro la gerarchia si rifa' ogni giornata, perche' ogni turno
+// schieri chi ha la partita migliore. E' cosi' che l'alternanza della griglia entra
+// nella rosa: due portieri con calendari complementari valgono piu' della somma dei
+// loro Pt/g pesati. Con un calendario piatto il conto torna identico a quello di stagione.
+let NG = 0;                                   // giornate con i punti partita per partita
+const PER_GIORNATA = { P: false, D: false, C: false, A: false };
+let SCR = new Float64Array(16);
+
 // Forza di un ruolo: somma pesata dei punti a giornata, ordinati dal migliore.
-function forzaRuolo(punti, r) {
-  const s = punti.slice().sort((a, b) => b - a), w = PESI[r];
+function forzaRuolo(gs, r) {
+  const w = PESI[r], n = gs.length;
+  if (!PER_GIORNATA[r]) {
+    const s = gs.map((g) => g.pg).sort((a, b) => b - a);
+    let t = 0;
+    for (let i = 0; i < s.length; i++) t += (w[i] || 0) * s[i];
+    return t;
+  }
+  if (!n) return 0;
+  if (SCR.length < n) SCR = new Float64Array(n);
+  const m = Math.min(n, w.length);
   let t = 0;
-  for (let i = 0; i < s.length; i++) t += (w[i] || 0) * s[i];
-  return t;
+  for (let k = 0; k < NG; k++) {
+    // ordinamento per inserzione, dal migliore: i giocatori di un ruolo sono al massimo 6
+    for (let i = 0; i < n; i++) {
+      const x = gs[i].v[k];
+      let j = i - 1;
+      while (j >= 0 && SCR[j] < x) { SCR[j + 1] = SCR[j]; j--; }
+      SCR[j + 1] = x;
+    }
+    for (let i = 0; i < m; i++) t += w[i] * SCR[i];
+  }
+  return t / NG;
+}
+
+// Per valutare in fretta "quanto rende aggiungere g a questo reparto": il reparto si ordina
+// una volta per giornata, poi ogni candidato costa una ricerca della sua posizione.
+// Inserendo x al posto j la forza cresce di w[j]*x + somma_{i>=j} (w[i+1]-w[i]) * s[i].
+function reparto(gs, r) {
+  const base = forzaRuolo(gs, r);
+  if (!PER_GIORNATA[r]) return { r, gs, base };
+  const w = PESI[r], n = gs.length, B = new Float64Array(NG * n), C = new Float64Array(NG * (n + 1));
+  for (let k = 0; k < NG; k++) {
+    const o = k * n;
+    for (let i = 0; i < n; i++) {
+      const x = gs[i].v[k];
+      let j = i - 1;
+      while (j >= 0 && B[o + j] < x) { B[o + j + 1] = B[o + j]; j--; }
+      B[o + j + 1] = x;
+    }
+    const q = k * (n + 1);
+    for (let i = n - 1; i >= 0; i--) C[q + i] = ((w[i + 1] || 0) - (w[i] || 0)) * B[o + i] + C[q + i + 1];
+  }
+  return { r, gs, base, n, B, C };
+}
+function guadagno(rep, g) {
+  if (!rep.B) { rep.gs.push(g); const d = forzaRuolo(rep.gs, rep.r) - rep.base; rep.gs.pop(); return d; }
+  const w = PESI[rep.r], n = rep.n, B = rep.B, C = rep.C;
+  let t = 0;
+  for (let k = 0; k < NG; k++) {
+    const x = g.v[k], o = k * n;
+    let j = 0;
+    while (j < n && B[o + j] >= x) j++;
+    t += (w[j] || 0) * x + C[k * (n + 1) + j];
+  }
+  return t / NG;
 }
 
 function contaSquadre(ids) {
@@ -90,7 +150,7 @@ function ottimizzaCon(extra) {
   const speso = scelti.reduce((a, x) => a + x.p, 0);
   const B = cred - speso;
   const liberi = {}, base = {};
-  for (const r of RUOLI) { base[r] = scelti.filter((x) => x.g.r === r).map((x) => x.g.pg); liberi[r] = slot[r] - base[r].length; }
+  for (const r of RUOLI) { base[r] = scelti.filter((x) => x.g.r === r).map((x) => x.g); liberi[r] = slot[r] - base[r].length; }
   const nLiberi = RUOLI.reduce((a, r) => a + Math.max(0, liberi[r]), 0);
   const esclusi = new Set([...Object.keys(F).map(Number), ...Object.keys(S.presi).map(Number)]);
   const cand = DATA.giocatori.filter((g) => !esclusi.has(g.id)).map((g) => ({ g, p: prezzoAtteso(g) }));
@@ -115,7 +175,8 @@ function ottimizzaCon(extra) {
 
   function greedy(lambda) {
     const pts = {}; for (const r of RUOLI) pts[r] = base[r].slice();
-    const f = {}; for (const r of RUOLI) f[r] = forzaRuolo(pts[r], r);
+    const f = {}, rep = {};
+    for (const r of RUOLI) { rep[r] = reparto(pts[r], r); f[r] = rep[r].base; }
     const lib = { ...liberi }, sq = { ...sq0 }, usati = new Set(), lista = [];
     const costoR = { P: 0, D: 0, C: 0, A: 0 };
     let costo = 0;
@@ -126,15 +187,14 @@ function ottimizzaCon(extra) {
         const g = c.g;
         if (lib[g.r] <= 0 || usati.has(g.id) || c.p > disp || !ok(sq, g)) continue;
         if (c.p > limR[g.r] - costoR[g.r] - (lib[g.r] - 1)) continue;
-        pts[g.r].push(g.pg);
-        const gain = forzaRuolo(pts[g.r], g.r) - f[g.r];
-        pts[g.r].pop();
+        const gain = guadagno(rep[g.r], g);
         const net = gain - lambda * c.p;
         if (net > bestNet) { bestNet = net; best = c; bestGain = gain; }
       }
       if (!best) return null;
       const g = best.g;
-      usati.add(g.id); lista.push(best); pts[g.r].push(g.pg); f[g.r] += bestGain;
+      usati.add(g.id); lista.push(best); pts[g.r].push(g); f[g.r] += bestGain;
+      rep[g.r] = reparto(pts[g.r], g.r);
       lib[g.r]--; costo += best.p; costoR[g.r] += best.p;
       if (!(S.esenzioneP && g.r === "P")) sq[g.sq] = (sq[g.sq] || 0) + 1;
     }
@@ -155,21 +215,19 @@ function ottimizzaCon(extra) {
     let mig = null, migD = 1e-6;
     for (let i = 0; i < best.lista.length; i++) {
       const s = best.lista[i], r = s.g.r;
-      const senza = best.pts[r].slice(); senza.splice(senza.indexOf(s.g.pg), 1);
-      const f0 = forzaRuolo(best.pts[r], r);
+      const senza = best.pts[r].slice(); senza.splice(senza.indexOf(s.g), 1);
+      const rs = reparto(senza, r), f0 = forzaRuolo(best.pts[r], r) - rs.base;
       for (const c of cand) {
         if (c.g.r !== r || inRosa.has(c.g.id)) continue;
         if (best.costo - s.p + c.p > B || best.costoR[r] - s.p + c.p > limR[r]) continue;
         if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sq[c.g.sq] || 0) >= S.tetto) continue;
-        senza.push(c.g.pg);
-        const d = forzaRuolo(senza, r) - f0;
-        senza.pop();
+        const d = guadagno(rs, c.g) - f0;
         if (d > migD) { migD = d; mig = { i, c }; }
       }
     }
     if (!mig) break;
     const s = best.lista[mig.i], r = s.g.r;
-    best.pts[r].splice(best.pts[r].indexOf(s.g.pg), 1); best.pts[r].push(mig.c.g.pg);
+    best.pts[r].splice(best.pts[r].indexOf(s.g), 1); best.pts[r].push(mig.c.g);
     inRosa.delete(s.g.id); inRosa.add(mig.c.g.id);
     best.costo += mig.c.p - s.p; best.costoR[r] += mig.c.p - s.p; best.lista[mig.i] = mig.c; best.forza += migD;
   }
@@ -179,22 +237,176 @@ function ottimizzaCon(extra) {
   const sqTot = contaSquadre([...Object.keys(F), ...best.lista.map((c) => c.g.id)]);
   for (const s of best.lista) {
     const r = s.g.r;
-    const senza = best.pts[r].slice(); senza.splice(senza.indexOf(s.g.pg), 1);
-    const f0 = forzaRuolo(best.pts[r], r);
+    const senza = best.pts[r].slice(); senza.splice(senza.indexOf(s.g), 1);
+    const rs = reparto(senza, r), f0 = forzaRuolo(best.pts[r], r) - rs.base;
     const opz = [];
     for (const c of cand) {
       if (c.g.r !== r || inRosa.has(c.g.id)) continue;
       if (best.costo - s.p + c.p > B || best.costoR[r] - s.p + c.p > limR[r]) continue;
       if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sqTot[c.g.sq] || 0) >= S.tetto) continue;
-      senza.push(c.g.pg);
-      opz.push({ c, d: forzaRuolo(senza, r) - f0 });
-      senza.pop();
+      opz.push({ c, d: guadagno(rs, c.g) - f0 });
     }
     opz.sort((a, b) => b.d - a.d);
     alt[s.g.id] = opz.slice(0, 5);
   }
 
   return { ids: inRosa, lista: best.lista, forza: best.forza, costo: best.costo, errore: null, alt };
+}
+
+// --- calendario e alternanza (la griglia di FantaLab) ----------------------------------------
+// Ogni avversario e' facile, medio o difficile, separatamente per chi lo affronta da
+// portiere e da attaccante (DATA.fantalab). Un abbinamento e' buono se ogni giornata
+// almeno uno dei tuoi ha una partita comoda: lo si misura in fasce, come FantaLab, e in
+// punti, schierando ogni turno chi ne fa di piu'.
+const FASCIA_CL = { facile: "fl-f", media: "fl-m", difficile: "fl-d" };
+const PESO_FASCIA = { facile: 0, media: 50, difficile: 100 };
+let CAL = {};                                   // squadra -> per giornata { gi, avv, casa } o null
+let SCHEDA = { id: null, abb: null };           // scheda aperta e compagno mostrato nella griglia
+
+function preparaGiornate() {
+  const gc = META.giornate_cal || [];
+  NG = gc.length;
+  const pos = new Map(gc.map((gi, i) => [gi, i]));
+  CAL = {};
+  for (const [sq, partite] of Object.entries(DATA.calendario || {})) {
+    const riga = Array(NG).fill(null);
+    for (const [gi, avv, casa] of partite) if (pos.has(gi)) riga[pos.get(gi)] = { gi, avv, casa: !!casa };
+    CAL[sq] = riga;
+  }
+  for (const r of ["P", "A"]) PER_GIORNATA[r] = NG > 0 && DATA.giocatori.some((g) => g.r === r && g.pgg);
+  for (const g of DATA.giocatori) {
+    if (!PER_GIORNATA[g.r]) continue;
+    // una giornata senza partita (gia' giocata) non porta punti
+    g.v = g.pgg ? Float64Array.from(g.pgg, (x) => x ?? 0) : new Float64Array(NG).fill(g.pg);
+  }
+}
+
+const sigla = (sq) => sq.slice(0, 3).toUpperCase();
+const fasciaFL = (avv, r) => DATA.fantalab?.[r]?.[avv] || null;
+
+// Un gruppo di giocatori dello stesso ruolo che si alternano in un posto: ogni giornata gioca
+// chi ha piu' punti attesi. pg e' la media del migliore di giornata; le fasce contano la
+// migliore fra le partite del gruppo, e il voto e' quello che stampa FantaLab (100 meno la
+// media dei pesi: facile 0, media 50, difficile 100).
+function abbinamento(gs, r) {
+  const conta = { facile: 0, media: 0, difficile: 0 };
+  let tot = 0, n = 0;
+  for (let k = 0; k < NG; k++) {
+    let best = 0, fb = null;
+    for (const g of gs) {
+      if (g.v[k] > best) best = g.v[k];
+      const c = CAL[g.sq]?.[k], f = c && fasciaFL(c.avv, r);
+      if (f && (fb === null || PESO_FASCIA[f] < PESO_FASCIA[fb])) fb = f;
+    }
+    tot += best;
+    if (fb) { conta[fb]++; n++; }
+  }
+  const peso = conta.media * 50 + conta.difficile * 100;
+  return { pg: NG ? tot / NG : 0, ...conta, partite: n, voto: n ? Math.round(100 - peso / n) : 0 };
+}
+
+// I compagni di alternanza di un portiere o di un attaccante, dal piu' utile: quanti punti a
+// giornata aggiunge ciascuno rispetto a schierare sempre lui (a pari punti, il voto FantaLab
+// piu' alto). Fuori chi e' della stessa squadra (stesso calendario), chi e' escluso o gia'
+// preso da altri, e le riserve: chi prende voto meno di una volta su tre non si alterna con
+// nessuno. Quelli gia' nella tua rosa restano comunque.
+const PRESENZE_MIN = 0.35;
+function compagni(g) {
+  const solo = abbinamento([g], g.r).pg, m = mia();
+  return DATA.giocatori
+    .filter((q) => q.r === g.r && q.v && q.id !== g.id && q.sq !== g.sq &&
+      (m[q.id] != null || (!S.presi[q.id] && (q.pv ?? 0) >= PRESENZE_MIN)))
+    .map((q) => {
+      const a = abbinamento([g, q], g.r), mio = m[q.id] != null;
+      return { q, a, d: a.pg - solo, p: mio ? +m[q.id] : prezzoAtteso(q), mio };
+    })
+    // al centesimo, come si leggono: sotto, decide il calendario
+    .sort((x, y) => Math.round(y.d * 100) - Math.round(x.d * 100) || y.a.voto - x.a.voto || y.d - x.d);
+}
+
+// La griglia: una riga per giocatore, una casella per giornata con l'avversario, colorata
+// con la sua fascia. Con due giocatori si sbiadisce chi resta in panchina quella giornata.
+function griglia(g, q) {
+  const righe = q ? [g, q] : [g];
+  let h = `<div class="griglia" style="--n:${NG}"><span class="nome"></span>${META.giornate_cal.map((gi) => `<span class="gi">${gi}</span>`).join("")}`;
+  for (const x of righe) {
+    h += `<span class="nome" title="${esc(x.nome)}">${esc(x.nome)}</span>`;
+    const y = q ? (x === g ? q : g) : null;
+    for (let k = 0; k < NG; k++) {
+      const c = CAL[x.sq]?.[k];
+      if (!c) { h += `<span class="c vuota" title="Partita gia' giocata"></span>`; continue; }
+      const f = fasciaFL(c.avv, g.r);
+      const gioca = !y || x.v[k] > y.v[k] || (x.v[k] === y.v[k] && x === g);
+      // infortunato o squalificato in quella giornata: i suoi punti sono gia' zero
+      const out = fuori(x) && (x.inf.fs || (x.inf.g != null && c.gi < x.inf.g));
+      const t = `${c.gi}ª giornata: ${nomeSq(c.avv)} ${c.casa ? "in casa" : "fuori"} · ${f || "fascia ignota"} · `
+        + (out ? `${x.inf.t === "squalificato" ? "squalificato" : "infortunato"}${x.inf.m ? ` (${x.inf.m})` : ""}` : `${fmt(x.v[k], 2)} pt attesi`);
+      h += `<span class="c ${f ? FASCIA_CL[f] : ""}${gioca && !out ? "" : " off"}${out ? " out" : ""}" title="${esc(t)}">${c.casa ? sigla(c.avv) : sigla(c.avv).toLowerCase()}</span>`;
+    }
+  }
+  return h + "</div>";
+}
+
+function sezioneAlternanza(g) {
+  if (!PER_GIORNATA[g.r] || !g.v) return "";
+  const lista = compagni(g);
+  const miei = lista.filter((c) => c.mio), altri = lista.filter((c) => !c.mio);
+  const top = altri.slice(0, 5);
+  const soglia = Math.max(2, Math.round(META.crediti / 100));
+  const low = altri.filter((c) => c.p <= soglia && !top.includes(c)).slice(0, 3);
+  const fissato = BY_ID.get(SCHEDA.abb);
+  const scelto = (fissato && fissato.r === g.r && fissato.sq !== g.sq && fissato.v ? fissato : null)
+    || (miei[0] || top[0])?.q || null;
+  const io = abbinamento([g], g.r);
+  const gc = META.giornate_cal;
+  const riga = (c) => `<tr data-riga="${c.q.id}" class="${c.q === scelto ? "sel" : ""}">
+      <td class="l nm"><button data-open="${c.q.id}">${esc(c.q.nome)}</button>${c.mio ? '<span class="tag own">IN ROSA</span>' : ""}</td>
+      <td class="l sq hide-s">${esc(nomeSq(c.q.sq))}</td>
+      <td>${c.a.facile}/${c.a.partite}</td>
+      <td class="hide-s">${c.a.voto}</td>
+      <td class="big">+${fmt(c.d, 2)}</td>
+      <td>${c.p}</td>
+      <td><button class="btn small" data-abb="${c.q.id}" aria-pressed="${c.q === scelto}">Griglia</button></td></tr>`;
+  const gruppo = (titolo, l) => (l.length ? `<tr class="gruppo"><td class="l" colspan="7">${titolo}</td></tr>${l.map(riga).join("")}` : "");
+  const chi = g.r === "P" ? "portiere" : "attaccante";
+  return `<div class="alternanza">
+    <div class="lbl">Calendario e abbinamenti · ${gc[0]}ª–${gc[gc.length - 1]}ª giornata</div>
+    <p class="nota">Da solo: <b>${io.facile}</b> partite facili, ${io.media} medie, ${io.difficile} difficili · voto FantaLab <b>${io.voto}</b>${g.r === "A" && g.cal ? ` · calendario ${g.cal >= 1 ? "+" : "−"}${fmt(Math.abs(g.cal - 1) * 100, 0)}% sui gol attesi rispetto a uno medio` : ""}.</p>
+    <div class="griglia-box" id="griglia-abb">${griglia(g, scelto)}</div>
+    <p class="nota legenda"><i class="c fl-f"></i>facile <i class="c fl-m"></i>media <i class="c fl-d"></i>difficile, dalla griglia FantaLab${DATA.fantalab?.letto_il ? ` (letta il ${DATA.fantalab.letto_il.split("-").reverse().join("/")})` : ""}. Maiuscolo in casa, minuscolo fuori; sbiadita la giornata in cui giochi l'altro, barrata quella che salta per infortunio o squalifica.</p>
+    ${lista.length ? `<div style="overflow-x:auto"><table class="compagni">
+      <thead><tr><th class="l">Da alternare con</th><th class="l hide-s">Squadra</th><th title="Giornate in cui almeno uno dei due ha una partita facile">Facili</th><th class="hide-s" title="Voto FantaLab dell'abbinamento, 0-100">Voto</th><th title="Punti a giornata in piu' schierando ogni turno chi ha la partita migliore">+Pt/g</th><th title="Prezzo atteso, o pagato se e' gia' tuo">Cr</th><th></th></tr></thead>
+      <tbody>${gruppo("Gia' nella tua rosa", miei)}${gruppo("I migliori", top)}${gruppo(`Low cost, fino a ${soglia} crediti`, low)}</tbody>
+    </table></div>
+    <p class="nota">+Pt/g: quanto rende in piu' la coppia se ogni giornata schieri il ${chi} con la partita migliore, rispetto a ${esc(g.nome)} sempre in campo. Il costruttore della rosa fa lo stesso conto su tutto il reparto.</p>` : ""}
+  </div>`;
+}
+
+// Sotto portieri e attaccanti della rosa: quanto copre il reparto, giornata per giornata.
+function notaReparto(r, gs) {
+  if (!PER_GIORNATA[r] || gs.length < 2 || gs.some((g) => !g.v)) return "";
+  if (r === "P") {
+    const a = abbinamento(gs, "P");
+    const primo = gs.reduce((x, y) => (y.pg > x.pg ? y : x));
+    return `<p class="nota reparto">Alternanza: in <b>${a.facile}/${a.partite}</b> giornate almeno un portiere affronta una squadra facile (voto FantaLab ${a.voto}). Schierando ogni turno chi ha la partita migliore fai <b>${fmt(a.pg, 2)}</b> pt/g, ${fmt(a.pg - primo.pg, 2)} in piu' che con ${esc(primo.nome)} sempre in campo.</p>`;
+  }
+  // Attaccanti: quanti hanno una partita facile ogni giornata.
+  let facili = 0, dueOPiu = 0;
+  for (let k = 0; k < NG; k++) {
+    const n = gs.filter((g) => { const c = CAL[g.sq]?.[k]; return c && fasciaFL(c.avv, "A") === "facile"; }).length;
+    facili += n; if (n >= 2) dueOPiu++;
+  }
+  return `<p class="nota reparto">Alternanza: in media <b>${fmt(facili / NG, 1)}</b> attaccanti su ${gs.length} con una partita facile a giornata; almeno due in <b>${dueOPiu}/${NG}</b> giornate. Il costruttore conta i punti giornata per giornata, quindi premia chi si copre a vicenda.</p>`;
+}
+
+function mostraAbbinamento(id) {
+  const g = BY_ID.get(SCHEDA.id), q = BY_ID.get(id);
+  if (!g || !q) return;
+  SCHEDA.abb = id;
+  const box = document.getElementById("griglia-abb");
+  if (box) box.innerHTML = griglia(g, q);
+  document.querySelectorAll("table.compagni tr[data-riga]").forEach((tr) => tr.classList.toggle("sel", +tr.dataset.riga === id));
+  document.querySelectorAll("table.compagni [data-abb]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.abb === id)));
 }
 
 // Quanti slot per ruolo riempire a 1 credito nella modalita' "top + 1 credito":
@@ -562,13 +774,14 @@ function renderRosa() {
       </div>`;
     }
     for (let i = 0; i < vuoti; i++) h += `<div class="slot"><span class="role ${r}">${r}</span><span class="empty">slot libero</span></div>`;
-    h += `</div>`;
+    h += notaReparto(r, [...miei, ...sug].map((x) => x.g)) + `</div>`;
   }
 
   h += `<div class="card"><details class="help"><summary>Come leggere i numeri</summary>
     <p><b>Pt/g</b> sono i punti attesi a giornata: probabilita' di prendere voto per fantavoto atteso, sulle ${META.giornate_residue} giornate che restano. Per portieri e difensori include la quota del modificatore difesa.</p>
     <p><b>Valore</b> e' quanto vale il giocatore per noi in crediti, rispetto a chi potresti prendere al suo posto. <b>Prezzo</b> e' quanto costera' presumibilmente nella nostra asta, tarato sui ${META.crediti * META.n_squadre} crediti della lega e maggiorato per Roma e Lazio. <b>Affare</b> e' la differenza.</p>
     <p>I suggerimenti evidenziati completano la rosa massimizzando la forza dell'undici schierabile: i titolari pesano pieno, le riserve in base a quanto giocheranno. Usano il prezzo atteso piu' il margine scelto, e rispettano il tetto per squadra.</p>
+    <p><b>Alternanza.</b> Per portieri e attaccanti i punti sono stimati partita per partita, con la difficolta' dell'avversario: il rating del modello mescolato alla fascia della griglia FantaLab (facile, media, difficile). Il costruttore rifa' la gerarchia ogni giornata, schierando chi ha la partita migliore: due portieri con calendari che si coprono valgono piu' dei loro Pt/g presi da soli. Nella scheda di ogni portiere e attaccante trovi la sua griglia e i compagni con cui si alterna meglio.</p>
     <p><b>Strategia.</b> Omogenea distribuisce i crediti dove rendono di piu' su tutta la rosa. Top + 1 credito riserva gli ultimi slot a giocatori da 1 credito (terzo portiere, ultimi tre difensori, ultimi tre centrocampisti, ultimi due attaccanti), scegliendo i migliori fra quelli che dovrebbero costare il minimo, e concentra il resto del budget sui titolari piu' forti.</p>
     <p><b>Budget per ruolo.</b> In automatico l'algoritmo divide i crediti fra i ruoli. In manuale fissi tu quanti crediti dare a portieri, difensori, centrocampisti e attaccanti (giocatori gia' scelti compresi) e il tool trova la rosa migliore dentro quei limiti.</p>
     <p>Sulle due stagioni passate il punteggio ordina i giocatori meglio della fantamedia e dei punti delle prime giornate, ma di poco. Le stelle offensive costano molto piu' di quanto il modello le valuta: e' un'indicazione, non una regola. Se vuoi una stella, sceglila e lascia che il tool ricostruisca il resto.</p>
@@ -731,10 +944,11 @@ function campo(tutti) {
 }
 // --- scheda giocatore e dialoghi ----------------------------------------------------------
 function chiudi() { $("#overlay").hidden = true; $("#overlay").innerHTML = ""; }
-function apri(html) { const o = $("#overlay"); o.innerHTML = `<div class="dialog" role="dialog" aria-modal="true">${html}</div>`; o.hidden = false; const f = o.querySelector("input, button"); if (f) f.focus(); }
+function apri(html, cls = "") { const o = $("#overlay"); o.innerHTML = `<div class="dialog ${cls}" role="dialog" aria-modal="true">${html}</div>`; o.hidden = false; const f = o.querySelector("input, button"); if (f) f.focus(); }
 
 function scheda(id) {
   const g = BY_ID.get(id); if (!g) return;
+  if (SCHEDA.id !== id) SCHEDA = { id, abb: null };
   const por = g.r === "P";
   const righe = por ? [
     ["Voto atteso", fmt(g.va, 2)],
@@ -768,6 +982,7 @@ function scheda(id) {
     </div>
     ${ul ? `<div class="lbl">Fantavoti di questa stagione</div><div class="spark">${ul}</div>` : ""}
     ${schedaInfortuni(g)}
+    ${sezioneAlternanza(g)}
     <div style="overflow-x:auto"><table>
       <thead><tr><th class="l">Stagione</th><th class="l">Squadra</th><th>Pres.</th><th>Media</th><th>FM</th><th>Gol</th><th>Ass.</th></tr></thead>
       <tbody>${g.st.slice().reverse().map((s) => `<tr><td class="l">${s[0]}</td><td class="l sq">${esc(nomeSq(s[1]))}</td><td>${s[2]}</td><td>${fmt(s[3], 2)}</td><td>${fmt(s[4], 2)}</td><td>${s[5]}</td><td>${s[6]}</td></tr>`).join("") || '<tr><td colspan="7" class="l">Nessuna presenza in Serie A negli ultimi tre anni.</td></tr>'}</tbody>
@@ -776,7 +991,7 @@ function scheda(id) {
       ? (OWNER.has(g.id) ? `<span class="lbl">Preso da ${esc(S.asta.squadre[OWNER.get(g.id)].nome)} a ${S.asta.squadre[OWNER.get(g.id)].rosa[g.id]} crediti</span>` : `<button class="btn primary" data-chiama="${g.id}">Chiama all'asta</button>`)
       : `<button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti fra i disponibili" : "Escludi"}</button>
       <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>`}
-    </div>`);
+    </div>`, PER_GIORNATA[g.r] && g.v ? "larga" : "");
 }
 
 function chiediPrezzo(id) {
@@ -993,8 +1208,17 @@ function calcolaSpinta(id) {
   const senza = ottimizza();
   S.presi = presi;
   const f0 = senza.errore ? -Infinity : senza.forza;
-  const rosa = mia();
-  const forzaA = (x) => { rosa[id] = x; const s = ottimizza(); delete rosa[id]; return s.errore ? -Infinity : s.forza; };
+  const rosa = mia(), provate = new Map();
+  const forzaA = (x) => {
+    if (!provate.has(x)) { rosa[id] = x; const s = ottimizza(); delete rosa[id]; provate.set(x, s.errore ? -Infinity : s.forza); }
+    // L'ottimizzatore e' un'euristica: a prezzi vicini puo' trovare rose un po' diverse. Ma una
+    // rosa trovata pagandolo di piu' resta valida pagandolo di meno, quindi la forza "con lui"
+    // a un prezzo e' almeno la migliore trovata a un prezzo uguale o piu' alto.
+    let f = -Infinity;
+    for (const [y, v] of provate) if (y >= x && v > f) f = v;
+    return f;
+  };
+  forzaA(Math.min(prezzoAtteso(g), me.maxOff));
   if (forzaA(1) < f0 - 1e-9) return { max: 0, motivo: "anche a 1 credito la rosa migliore senza di lui e' piu' forte" };
   let lo = 1, hi = me.maxOff, best = 1;
   while (lo <= hi) {
@@ -1312,6 +1536,7 @@ document.addEventListener("click", (e) => {
   const d = t.dataset;
   if (d.close !== undefined) return chiudi();
   if (d.open) return scheda(+d.open);
+  if (d.abb) return mostraAbbinamento(+d.abb);
   if (d.chiama) { chiudi(); return chiama(+d.chiama); }
   if (d.squadra !== undefined) { S.asta.scelta = +d.squadra; return renderChiamato(); }
   if (d.occ) { chiudi(); return chiama(+d.occ); }
@@ -1442,6 +1667,7 @@ fetch("data.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status);
   DATA = d; META = d.meta; BY_ID = new Map(d.giocatori.map((g) => [g.id, g]));
   carica();
   for (const g of d.giocatori) { g.pa0 = g.pa; g.val0 = g.val; g.aff0 = g.aff; }
+  preparaGiornate();
   LEGA0 = { n: META.n_squadre, cr: META.crediti };
   applicaLega();
   if (inAsta()) vista("asta");
