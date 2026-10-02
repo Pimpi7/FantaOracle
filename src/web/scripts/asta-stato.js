@@ -9,7 +9,6 @@ const TITOLARI_8 = { P: 8, D: 32, C: 28, A: 20 };      // titolari tipici del ru
 const TITOLARI_LEGA = () => Object.fromEntries(RUOLI.map((r) => [r, Math.round(TITOLARI_8[r] * META.n_squadre / 8)]));
 let OWNER = new Map();                                  // id giocatore -> indice squadra
 let SOGLIA = {};                                        // pt/g dell'ultimo titolare della lega per ruolo
-let SPINTA = { chiave: null, val: null };
 
 const MAXOFF0 = () => META.crediti - (RUOLI.reduce((a, r) => a + META.slot[r], 0) - 1);
 
@@ -85,7 +84,7 @@ function sincronizzaAsta() {
   // Un tavolo che paga caro resta caro finche' i rivali cercano titolari: quando i buoni rimasti
   // sono piu' dei posti che i rivali devono ancora riempire, il rincaro si spegne in proporzione.
   const fase = perRuolo() ? ORDINE_RUOLI.find((r) => aperti[r] > 0) || null : null;
-  const oltreMinimo = (r, f) => resti[r].reduce((a, pa) => a + Math.max(0, pa * f - 1), 0);
+  const oltreMinimo = (r, f) => resti[r].reduce((a, pa) => a + Math.max(0, pa - 1) * f, 0);
   FATT = Object.fromEntries(RUOLI.map((r) => [r, INFL]));
   let futuri = [];
   if (fase) {
@@ -106,7 +105,7 @@ function sincronizzaAsta() {
   // intaccare i crediti che le servono, in media, per riempire i ruoli dopo (e tenendo 1 credito
   // per ogni altro slot del ruolo). Nell'ultimo ruolo coincide con l'offerta massima.
   const medio = {};
-  for (const r of RUOLI) medio[r] = aperti[r] ? resti[r].reduce((a, pa) => a + Math.max(1, pa * FATT[r]), 0) / aperti[r] : 0;
+  for (const r of RUOLI) medio[r] = aperti[r] ? resti[r].reduce((a, pa) => a + prezzoMercato(pa, FATT[r]), 0) / aperti[r] : 0;
   const comodo = st.map((t) => {
     if (!fase) return t.maxOff;
     if (t.liberi[fase] <= 0 || t.maxOff < 1) return 0;

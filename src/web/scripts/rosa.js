@@ -63,10 +63,11 @@ function renderRosa() {
         `<button data-piano="${p}" aria-pressed="${S.piano === p}">Piano ${p}</button>`).join("")}</div>`}
     </div>
     <div class="row" style="margin-top:10px"><div class="bar" style="flex:1">${segs.join("")}</div></div>
-    <div class="legend">${RUOLI.map((r) => `<span>${NOMI_RUOLO[r]} <b>${spesaR(r)}</b>${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""}</span>`).join("")}
+    <div class="legend">${RUOLI.map((r) => `<span>${NOMI_RUOLO[r]} <b>${spesaR(r)}</b>${budgetVincola() ? ` / ${S.budgetRuolo[r]}` : ""}</span>`).join("")}
       <span>Totale <b>${tot}</b> / ${META.crediti}</span>
       <span>Forza attesa <b>${fmt(SUGG.forza + 0, 1)}</b> pt/g</span></div>
     ${SUGG.errore ? `<p class="alert">${esc(SUGG.errore)}</p>` : ""}
+    ${SUGG.nota ? `<p class="nota">${esc(SUGG.nota)}</p>` : ""}
     <div class="row lega" style="margin-top:10px">
       <span class="lbl">Lega</span>
       <label class="bud"><span class="lbl">Squadre</span><input id="nsq" type="number" min="${LEGA_LIM.n[0]}" max="${LEGA_LIM.n[1]}" value="${META.n_squadre}" ${inAsta() ? "disabled" : ""} aria-label="Numero di squadre"></label>
@@ -81,14 +82,14 @@ function renderRosa() {
         <button data-modo="top" aria-pressed="${S.modo === "top"}" title="Ultimi slot a 1 credito (1 P, 3 D, 3 C, 2 A) e il resto sui migliori">Top + 1 cr</button>
       </div>
     </div>
-    <div class="row" style="margin-top:10px">
+    ${inAsta() ? `<p class="nota" style="margin-top:10px">In asta i crediti per ruolo seguono come va: se un ruolo ti costa di più, il tool lo toglie ai ruoli dopo e rifà i suggerimenti${S.budgetRuolo ? ". Il tuo budget per ruolo manuale vale solo per costruire il piano" : ""}.</p>` : `<div class="row" style="margin-top:10px">
       <span class="lbl">Budget per ruolo</span>
       <div class="seg mini" role="group" aria-label="Budget per ruolo">
         <button data-bud="auto" aria-pressed="${!S.budgetRuolo}" title="L'algoritmo divide i crediti fra i ruoli">Automatico</button>
         <button data-bud="man" aria-pressed="${!!S.budgetRuolo}" title="Decidi tu quanti crediti per ruolo">Manuale</button>
       </div>
-    </div>
-    ${S.budgetRuolo ? `<div class="row budgets" style="margin-top:8px">${RUOLI.map((r) => `
+    </div>`}
+    ${budgetVincola() ? `<div class="row budgets" style="margin-top:8px">${RUOLI.map((r) => `
       <label class="bud"><span class="role ${r}">${r}</span><input id="bud-${r}" type="number" min="0" max="${META.crediti}" value="${S.budgetRuolo[r]}" aria-label="Crediti ${NOMI_RUOLO[r].toLowerCase()}"></label>`).join("")}
       <span class="lbl ${RUOLI.reduce((a, r) => a + (+S.budgetRuolo[r] || 0), 0) > META.crediti ? "alert" : ""}">Somma ${RUOLI.reduce((a, r) => a + (+S.budgetRuolo[r] || 0), 0)} / ${META.crediti}</span></div>` : ""}
     <div class="row" style="margin-top:10px">
@@ -116,7 +117,7 @@ function renderRosa() {
     // con il prezzo che gli avevi dato, finche' non lo prendi tu (o te lo prende un altro).
     const obj = inAsta() ? (S.asta.obiettivi || []).map((id) => BY_ID.get(id)).filter((g) => g && g.r === r && !(g.id in m)).sort((a, b) => b.pg - a.pg) : [];
     h += `<div class="card"><div class="ruolo-h"><span class="role ${r}">${r}</span><h3>${NOMI_RUOLO[r]}</h3>
-      <span class="conti"><span class="cnt">${miei.length} ${inAsta() ? "presi" : "scelti"}</span>${obj.length ? `<span class="cnt piano">${obj.length} nel piano · ${obj.reduce((a, g) => a + prezzoPiano(g), 0)} cr</span>` : ""}<span class="cnt sugg">${sug.length} suggeriti</span><span class="cnt tot">${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></span></div>`;
+      <span class="conti"><span class="cnt">${miei.length} ${inAsta() ? "presi" : "scelti"}</span>${obj.length ? `<span class="cnt piano">${obj.length} nel piano · ${obj.reduce((a, g) => a + prezzoPiano(g), 0)} cr</span>` : ""}<span class="cnt sugg">${sug.length} suggeriti</span><span class="cnt tot">${spesaR(r)}${budgetVincola() ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></span></div>`;
     // con un piano di partenza i tre gruppi (presi, piano, suggeriti) hanno un'etichetta ciascuno
     const grp = (cl, t) => (obj.length ? `<div class="grp ${cl}">${t}</div>` : "");
     if (miei.length) h += grp("", "Presi");
@@ -132,9 +133,11 @@ function renderRosa() {
       const per = OWNER.has(g.id) ? S.asta.squadre[OWNER.get(g.id)] : null;
       const pz = prezzoPiano(g);
       h += `<div class="slot obj${per ? " preso" : ""}"><span class="role ${r}">${r}</span>
-        <span class="who">${dotFascia(g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${g.id}"><b>${esc(g.nome)}</b></button>${tagSalute(g)}<small>${esc(nomeSq(g.sq))}</small></span>
+        <span class="who">${dotFascia(g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${g.id}"><b>${esc(g.nome)}</b></button>${tagSalute(g)}<small>${esc(nomeSq(g.sq))}</small>${per ? "" : SUGG.ids.has(g.id)
+          ? '<span class="tag piano" title="Con i crediti e i prezzi di adesso il tool lo consiglia ancora">ANCORA CONSIGLIATO</span>'
+          : '<span class="tag fuori" title="Con i crediti e i prezzi di adesso la rosa migliore non lo comprende più: guarda i suggeriti qui sotto">ORA MEGLIO ALTRI</span>'}</span>
         <span class="num"><b>${fmt(g.pg, 2)}</b> pt/g</span>
-        <span class="num"><b>${pz}</b> cr<small class="lbl"> nel piano</small></span>
+        <span class="num"><b>${pz}</b> cr<small class="lbl"> nel piano</small>${per ? "" : `<br><small class="lbl" title="Prezzo atteso adesso, con il mercato di questa asta">adesso <b>${prezzoAtteso(g)}</b></small>`}</span>
         ${per ? `<span class="lbl">preso da ${esc(per.nome)}</span>` : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`}</div>`;
     }
     if (sug.length) h += grp("sugg", "Suggeriti dal tool");

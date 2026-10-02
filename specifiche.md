@@ -149,7 +149,10 @@ Due strategie:
 manuale fissi tu i crediti di portieri, difensori, centrocampisti e attaccanti
 (giocatori già scelti compresi) e il tool trova la rosa più forte dentro quei
 limiti. Non spende un credito se non c'è un giocatore che valga di più: il
-residuo per ruolo resta visibile.
+residuo per ruolo resta visibile. Il budget manuale serve a costruire il piano:
+**in asta non vincola**. Lì i crediti per ruolo seguono come va (un ruolo pagato
+caro si prende i crediti dei ruoli dopo, uno pagato poco li libera) e i controlli
+del budget per ruolo non compaiono.
 
 Tre piani (A, B, C) salvati nel browser, esportabili e reimportabili come testo.
 
@@ -161,9 +164,24 @@ nessuno, e chi comincia). Da lì la testata diventa la fascia scura
 "In asta" e compare la sezione **Asta**.
 
 La pagina è su due colonne che scorrono ognuna per conto suo: a sinistra il
-giocatore chiamato e sotto l'andamento del mercato; a destra le squadre, le
-occasioni e gli ultimi acquisti. Su telefono si impilano in quest'ordine. Nel
-dettaglio:
+giocatore chiamato, sotto "Cosa fare adesso" e poi l'andamento del mercato; a
+destra le squadre, le occasioni e gli ultimi acquisti. Su telefono si impilano in
+quest'ordine. Nel dettaglio:
+
+- **Cosa fare adesso**, sotto il giocatore chiamato. È il consiglio che segue
+  l'asta: si rifà a ogni acquisto, di chiunque, a partire dalla rosa reale e dai
+  crediti rimasti. Un riquadro per ruolo dice quanti crediti la rosa migliore
+  ancora possibile mette in quel ruolo (*da spendere*, con gli slot liberi),
+  quanti ne hai già spesi e il confronto con il piano di partenza (*piano 165 →
+  ora 224*: i crediti che il piano dava al ruolo, e quelli che gli vanno adesso
+  fra spesi e da spendere). Sotto, i giocatori da puntare nel ruolo in corso (o,
+  se lì hai finito, nel prossimo in cui hai posto; nell'asta libera i più cari
+  di tutti i ruoli): punti a giornata, prezzo atteso di adesso, il **tetto** (lo
+  stesso "fin dove spingerti" del giocatore chiamato) e l'alternativa se sfuma.
+  I tetti costano una decina di ottimizzazioni l'uno: si calcolano in sottofondo,
+  uno alla volta, fermandosi mentre si scrive nella ricerca; valgono finché lo
+  stato dell'asta non cambia e li riusa il riquadro del giocatore chiamato, che
+  per un consigliato ha quindi il limite già pronto.
 
 - **Tabellone** (la fascia in alto): giocatori assegnati sul totale con una barra per ruolo, ultimo acquisto, rivale con l'offerta massima più alta, da quanto dura l'asta; a destra crediti, offerta massima, rosa e slot liberi per ruolo della tua squadra.
 - **Giocatore chiamato**: la ricerca mostra i liberi che corrispondono, con
@@ -256,7 +274,10 @@ dettaglio:
   l'ultimo.
 
 Durante l'asta "La mia rosa" è la rosa reale: i tuoi acquisti al prezzo pagato,
-gli acquisti degli altri esclusi dai suggerimenti. I prezzi attesi dei giocatori
+gli acquisti degli altri esclusi dai suggerimenti. Il piano da cui sei partito
+resta sotto ogni ruolo con il prezzo che gli avevi dato, ma non è fermo: accanto
+c'è il prezzo atteso di adesso e un'etichetta che dice se, con i crediti e i
+prezzi di adesso, il tool lo consiglia ancora o se ora preferisce altri. I prezzi attesi dei giocatori
 rimasti seguono il mercato (vedi sotto). Lo stato è salvato
 nel browser a ogni acquisto ed è esportabile. Per uscire: **Sospendi** lascia tutto
 com'è e il pulsante diventa "Riprendi l'asta", che rientra direttamente
@@ -282,11 +303,17 @@ ruoli. Nell'asta per ruolo ogni ruolo ha il suo:
 - *ultimo ruolo*: i crediti avanzati non servono più a niente, quindi il conto
   dei crediti rimasti pesa quanto il termometro (media geometrica dei due).
 
-Ogni fattore sta fra 0,4 e 2,5. Il **budget di ruolo** di una squadra è quanto può
+Ogni fattore sta fra 0,4 e 2,5 e agisce sulla parte del prezzo sopra il credito
+minimo, come il conto da cui nasce: prezzo atteso = 1 + (prezzo di partenza − 1) ×
+fattore, poi il margine. Chi vale 1 credito resta a 1 anche quando il tavolo ha
+tanti crediti (prima saliva a 2 o 3, e con pochi crediti per slot la rosa non si
+chiudeva più). Il **budget di ruolo** di una squadra è quanto può
 mettere su un giocatore del ruolo in corso tenendosi, per ogni slot dei ruoli
 dopo, il costo medio atteso di quello slot, e 1 credito per ogni altro slot del
 ruolo in corso; nell'ultimo ruolo coincide con l'offerta massima. È una stima di
-comodo, non un tetto: chi vuole un giocatore può intaccare la riserva.
+comodo, non un tetto: chi vuole un giocatore può intaccare la riserva. Per la tua
+squadra, nella tabella, al posto della stima c'è il tuo piano di adesso: quello
+che la rosa migliore mette ancora nel ruolo in corso.
 
 ---
 
@@ -604,6 +631,15 @@ identico a quello di stagione; con calendari complementari la coppia vale di pi�
 Per non rallentare l'ottimizzatore, ogni reparto si ordina una volta per giornata
 e il guadagno di un candidato costa solo la ricerca della sua posizione: sulla
 rosa vuota resta intorno ai 90 ms.
+
+**In asta l'ottimizzatore risponde sempre.** Se ai prezzi attesi di adesso la
+rosa non si chiude (pochi crediti per gli slot che restano), ripiega nell'ordine
+sui prezzi di partenza, poi sul credito minimo per tutti, poi anche oltre il
+tetto per squadra, e lo scrive in una nota accanto ai suggeriti. Resta senza
+risposta solo se i crediti sono meno degli slot, cosa che in asta non può
+succedere (le offerte oltre il massimo sono rifiutate). Se una rosa di confronto
+non c'è, "fin dove spingerti" dice che il limite non è calcolabile invece di dare
+un numero.
 
 Il calcolo di "fin dove spingerti" all'asta tiene conto che l'ottimizzatore è
 un'euristica: una rosa trovata pagando un giocatore di più resta valida pagandolo

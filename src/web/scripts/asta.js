@@ -156,10 +156,15 @@ function renderAsta() {
       : perRuolo() && !fase ? "" : `<p class="lbl">Nessuna per ora. Compaiono quando un giocatore buono può costare molto meno del previsto: chi lo vuole ha finito il budget${perRuolo() ? ", oppure nessun rivale lo vuole più da titolare" : ""}. Li vedrai qui dalla fascia più alta, con il prezzo realistico.</p>`}`;
 
   // --- squadre ---
+  // Il budget di ruolo dei rivali e' una stima (crediti meno la spesa media dei ruoli dopo). Per
+  // te c'e' di meglio: quanto mette nel ruolo in corso la rosa migliore che puoi ancora fare.
+  const mioRuolo = fase && me.liberi[fase] > 0 && !SUGG.errore
+    ? Math.max(1, Math.min(me.maxOff, SUGG.lista.filter((c) => c.g.r === fase).reduce((a, c) => a + c.p, 0) - (me.liberi[fase] - 1)))
+    : MERC.comodo[S.asta.io];
   $("#squadre").innerHTML = `<h2>Squadre</h2><div style="overflow-x:auto"><table class="sq">
     <thead><tr><th class="l">Squadra</th><th>Crediti</th><th title="Offerta massima possibile adesso">Max</th>${fase && conBudgetDiRuolo(fase) ? `<th title="Budget di ruolo: quanto può mettere su un giocatore del ruolo in corso senza intaccare i crediti per i ruoli dopo">Ruolo</th>` : ""}<th class="l" title="Slot liberi per ruolo">Liberi ${RUOLI.map((r) => `<span class="lr ${r}">${r}</span>`).join("·")}</th><th></th></tr></thead>
     <tbody>${st.map((t) => `<tr class="${t.i === S.asta.io ? "io" : ""}">
-      <td class="l">${esc(t.nome)}${chi === t.i ? '<span class="tag turno" title="Tocca a questa squadra chiamare">CHIAMA</span>' : ""}</td><td>${cr(t.crediti, META.crediti)}</td><td>${cr(t.maxOff, MAXOFF0())}</td>${fase && conBudgetDiRuolo(fase) ? `<td>${t.liberi[fase] > 0 ? MERC.comodo[t.i] : "–"}</td>` : ""}
+      <td class="l">${esc(t.nome)}${chi === t.i ? '<span class="tag turno" title="Tocca a questa squadra chiamare">CHIAMA</span>' : ""}</td><td>${cr(t.crediti, META.crediti)}</td><td>${cr(t.maxOff, MAXOFF0())}</td>${fase && conBudgetDiRuolo(fase) ? `<td${t.i === S.asta.io ? ' title="Per te vale il tuo piano di adesso: quello che la rosa migliore mette ancora in questo ruolo, tenendo 1 credito per gli altri slot del ruolo"' : ""}>${t.liberi[fase] > 0 ? (t.i === S.asta.io ? mioRuolo : MERC.comodo[t.i]) : "–"}</td>` : ""}
       <td class="l lib">${RUOLI.map((r) => `<span class="lr ${r}${t.liberi[r] <= 0 ? " zero" : ""}" title="${NOMI_RUOLO[r]} liberi">${t.liberi[r]}</span>`).join(" · ")}</td>
       <td><button class="btn small" data-vedi="${t.i}">${S.asta.aperta === t.i ? "Chiudi" : "Rosa"}</button></td></tr>
       ${S.asta.aperta === t.i ? `<tr><td colspan="6" class="l" style="white-space:normal">${RUOLI.map((r) => {
@@ -178,6 +183,7 @@ function renderAsta() {
     ${S.asta.log.length ? `<div class="row" style="margin-top:8px"><button class="btn small" id="annulla-ultimo">Annulla l'ultimo</button></div>` : ""}`;
 
   renderGiro();
+  renderConsigli();
   renderMercato();
   renderChiamato();
 }

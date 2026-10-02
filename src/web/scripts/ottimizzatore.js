@@ -81,9 +81,27 @@ function contaSquadre(ids) {
 }
 
 // Completa la rosa rispettando budget, slot per ruolo, 1 credito minimo per
-// slot e tetto per squadra. Greedy su guadagno - lambda * prezzo per piu'
-// valori di lambda, poi ricerca locale per scambi migliorativi.
+// slot e tetto per squadra. In asta non deve mai restare senza una risposta: se ai prezzi
+// attesi di adesso la rosa non si chiude (pochi crediti per gli slot che restano), si ripiega
+// sui prezzi di partenza e poi sul minimo, e lo si dice in `nota`.
 function ottimizzaCon(extra) {
+  const res = risolvi(extra, prezzoAtteso);
+  if (!res.irrisolta) return res;
+  const ripieghi = [
+    [(g) => Math.max(1, Math.round(g.pa)), "Ai prezzi attesi di adesso i tuoi crediti non bastano per tutti gli slot: i suggeriti sono contati al prezzo di partenza."],
+    [() => 1, "Ti resta circa un credito per slot: i suggeriti sono i migliori che puoi sperare di prendere al minimo."],
+    [() => 1, "Ti resta circa un credito per slot: i suggeriti sono i migliori che puoi sperare di prendere al minimo, anche oltre il tetto per squadra.", true],
+  ];
+  for (const [prezzo, nota, senzaTetto] of ripieghi) {
+    const r = risolvi(extra, prezzo, senzaTetto);
+    if (!r.irrisolta) return { ...r, nota };
+  }
+  return res;
+}
+
+// Greedy su guadagno - lambda * prezzo per piu' valori di lambda, poi ricerca locale per
+// scambi migliorativi. `prezzo(g)` e' il prezzo a cui si conta ogni candidato.
+function risolvi(extra, prezzo, senzaTetto) {
   const F = { ...mia(), ...extra };
   const cred = META.crediti, slot = META.slot;
   const scelti = Object.entries(F).map(([id, p]) => ({ g: BY_ID.get(+id), p: +p })).filter((x) => x.g);
@@ -93,16 +111,17 @@ function ottimizzaCon(extra) {
   for (const r of RUOLI) { base[r] = scelti.filter((x) => x.g.r === r).map((x) => x.g); liberi[r] = slot[r] - base[r].length; }
   const nLiberi = RUOLI.reduce((a, r) => a + Math.max(0, liberi[r]), 0);
   const esclusi = new Set([...Object.keys(F).map(Number), ...Object.keys(S.presi).map(Number)]);
-  const cand = DATA.giocatori.filter((g) => !esclusi.has(g.id)).map((g) => ({ g, p: prezzoAtteso(g) }));
+  const cand = DATA.giocatori.filter((g) => !esclusi.has(g.id)).map((g) => ({ g, p: prezzo(g) }));
   const sq0 = contaSquadre(Object.keys(F));
-  // Budget per ruolo (modalita' manuale): tetto di spesa per ciascun ruolo,
-  // compresi i giocatori gia' scelti.
-  const limR = {};
+  // Budget per ruolo (modalita' manuale): tetto di spesa per ciascun ruolo, compresi i
+  // giocatori gia' scelti. Vale per costruire il piano: in asta non vincola (budgetVincola).
+  const limR = {}, vincola = budgetVincola();
   for (const r of RUOLI) {
     const spesi = Object.entries(F).filter(([id]) => BY_ID.get(+id)?.r === r).reduce((a, [, pz]) => a + +pz, 0);
-    limR[r] = S.budgetRuolo ? (+S.budgetRuolo[r] || 0) - spesi : Infinity;
+    limR[r] = vincola ? (+S.budgetRuolo[r] || 0) - spesi : Infinity;
   }
-  const ok = (sq, g) => (S.esenzioneP && g.r === "P") || (sq[g.sq] || 0) < S.tetto;
+  const tetto = senzaTetto ? Infinity : S.tetto;
+  const ok = (sq, g) => (S.esenzioneP && g.r === "P") || (sq[g.sq] || 0) < tetto;
 
   const errore = RUOLI.filter((r) => liberi[r] < 0).map((r) => `troppi ${NOMI_RUOLO[r].toLowerCase()} (${base[r].length}/${slot[r]})`);
   if (errore.length) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: "Rosa non valida: " + errore.join(", "), alt: {} };
@@ -146,7 +165,7 @@ function ottimizzaCon(extra) {
     const s = greedy(lambda);
     if (s && (!best || s.forza > best.forza)) best = s;
   }
-  if (!best) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: "Nessuna rosa possibile con questi vincoli.", alt: {} };
+  if (!best) return { ids: new Set(), lista: [], forza: 0, costo: 0, errore: "Nessuna rosa possibile con questi vincoli.", alt: {}, irrisolta: true };
 
   // Ricerca locale: scambio di un suggerito con un non scelto dello stesso ruolo.
   const inRosa = new Set(best.lista.map((c) => c.g.id));
@@ -160,7 +179,7 @@ function ottimizzaCon(extra) {
       for (const c of cand) {
         if (c.g.r !== r || inRosa.has(c.g.id)) continue;
         if (best.costo - s.p + c.p > B || best.costoR[r] - s.p + c.p > limR[r]) continue;
-        if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sq[c.g.sq] || 0) >= S.tetto) continue;
+        if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sq[c.g.sq] || 0) >= tetto) continue;
         const d = guadagno(rs, c.g) - f0;
         if (d > migD) { migD = d; mig = { i, c }; }
       }
@@ -183,7 +202,7 @@ function ottimizzaCon(extra) {
     for (const c of cand) {
       if (c.g.r !== r || inRosa.has(c.g.id)) continue;
       if (best.costo - s.p + c.p > B || best.costoR[r] - s.p + c.p > limR[r]) continue;
-      if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sqTot[c.g.sq] || 0) >= S.tetto) continue;
+      if (c.g.sq !== s.g.sq && !(S.esenzioneP && r === "P") && (sqTot[c.g.sq] || 0) >= tetto) continue;
       opz.push({ c, d: guadagno(rs, c.g) - f0 });
     }
     opz.sort((a, b) => b.d - a.d);

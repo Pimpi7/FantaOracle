@@ -76,4 +76,11 @@ function cr(val, max) {
   const f = Math.max(0, Math.min(1, max > 0 ? val / max : 0));
   return `<span class="cr" style="color:hsl(${Math.round(f * 128)} var(--cs) var(--cl))">${val}</span>`;
 }
-const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * (FATT[g.r] ?? 1) * (1 + S.margine)));
+// Il fattore di mercato agisce sulla parte del prezzo sopra il credito minimo: e' cosi' che si
+// calcola (crediti spendibili oltre il minimo contro la domanda oltre il minimo). Chi vale 1
+// credito resta a 1 anche quando il tavolo ha tanti crediti: nessuno rilancia su di lui.
+const prezzoMercato = (pa, f) => 1 + Math.max(0, pa - 1) * f;
+const prezzoAtteso = (g) => Math.max(1, Math.round(prezzoMercato(g.pa, FATT[g.r] ?? 1) * (1 + S.margine)));
+// Il budget per ruolo scelto a mano serve a costruire il piano prima dell'asta. In asta i crediti
+// seguono come va: un ruolo pagato caro si prende i crediti dei ruoli dopo, uno pagato poco li libera.
+const budgetVincola = () => !!S.budgetRuolo && !inAsta();

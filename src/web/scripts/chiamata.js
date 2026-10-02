@@ -23,7 +23,9 @@ function calcolaSpinta(id) {
   S.presi = { ...presi, [id]: true };
   const senza = ottimizza();
   S.presi = presi;
-  const f0 = senza.errore ? -Infinity : senza.forza;
+  // Senza una rosa di confronto il limite non si puo' calcolare: meglio dirlo che dare un numero.
+  if (senza.errore) return { max: null, motivo: senza.errore };
+  const f0 = senza.forza;
   const rosa = mia(), provate = new Map();
   const forzaA = (x) => {
     if (!provate.has(x)) { rosa[id] = x; const s = ottimizza(); delete rosa[id]; provate.set(x, s.errore ? -Infinity : s.forza); }
@@ -49,11 +51,12 @@ function calcolaSpinta(id) {
 function spintaDentro(val, pa, tetto) {
   const testo = (icona, etichetta, riga) => `<span class="sp-t"><span class="box-l">${ico(icona)}<span>${etichetta}</span></span>${riga ? `<span class="box-s">${riga}</span>` : ""}</span>`;
   if (!val) return `<b>…</b>${testo("martello", "calcolo fin dove spingerti", "")}`;
+  if (val.max == null) return `<b>–</b>${testo("allerta", "limite non calcolabile", esc(val.motivo))}`;
   if (!val.max) return `<b>Lascialo</b>${testo("no", "non conviene", esc(val.motivo))}`;
   return `<b>${val.max}</b>${testo("martello", "crediti: spingiti fino a qui", `<span class="esito">${
     val.max >= tetto ? "è tutto quello che puoi offrire" : val.max >= pa ? "copre il prezzo atteso" : "sotto il prezzo atteso: può andare oltre"}</span>`)}`;
 }
-const spintaClasse = (val) => `box spinta${val && !val.max ? " ko" : ""}`;
+const spintaClasse = (val) => `box spinta${val && val.max === 0 ? " ko" : val && val.max == null ? " ignoto" : ""}`;
 
 // Il giocatore chiamato: la scheda in versione da asta, con gli stessi riquadri. In alto quello
 // che serve nei secondi della chiamata (fin dove spingerti, quanto vale, come sta), sotto le
@@ -66,9 +69,8 @@ function renderChiamato() {
     return;
   }
   const g = BY_ID.get(id), st = statoSquadre(), me = st[S.asta.io];
-  const chiave = `${id}|${S.asta.log.length}|${S.margine}|${S.modo}|${S.tetto}|${JSON.stringify(S.budgetRuolo)}`;
   const pa = prezzoAtteso(g), diff = Math.round(g.val ?? 0) - pa;
-  const pronta = SPINTA.chiave === chiave ? SPINTA.val : null;
+  const pronta = tetti().val.get(id) || null;      // gia' calcolato se era fra i consigliati
   const liberi = DATA.giocatori.filter((x) => x.r === g.r && !OWNER.has(x.id));
   const pos = 1 + liberi.filter((x) => x.pg > g.pg).length;
 
@@ -143,9 +145,12 @@ function renderChiamato() {
   if (!pronta) {
     setTimeout(() => {
       if (S.asta.chiamato !== id) return;
-      SPINTA = { chiave, val: calcolaSpinta(id) };
-      const el = $("#spinta");
-      if (el) { el.className = spintaClasse(SPINTA.val); el.title = SPINTA.val.motivo; el.innerHTML = spintaDentro(SPINTA.val, pa, me.maxOff); }
+      const T = tetti();
+      if (!T.val.has(id)) T.val.set(id, calcolaSpinta(id));
+      const val = T.val.get(id), el = $("#spinta");
+      if (el) { el.className = spintaClasse(val); el.title = val.motivo; el.innerHTML = spintaDentro(val, pa, me.maxOff); }
+      const cella = document.querySelector(`#adesso [data-tetto="${id}"]`);
+      if (cella) cella.innerHTML = testoTetto(val);
     }, 30);
   }
 }

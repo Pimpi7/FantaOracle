@@ -809,6 +809,25 @@ svg.merc { display: block; max-width: 100%; touch-action: pan-y; }
 .box.spinta .esito { font-weight: 700; }
 .box.spinta.ko { background: var(--fa-d); color: var(--fa-d-fg); border-color: transparent; }
 .box.spinta.ko > b { font-size: 28px; line-height: 1.05; }
+/* --- cosa fare adesso: i crediti ruolo per ruolo e i giocatori da puntare, rifatti a ogni acquisto --- */
+#adesso { border-left: 4px solid var(--live); }
+.cons-testa { margin: -4px 0 10px; }
+.boxes.ruoli-ora { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ruoli-ora .box { padding: 7px 8px 8px; }
+.ruoli-ora .box > b { font-size: 26px; }
+.ruoli-ora .box .role { width: 16px; height: 16px; font-size: 10.5px; flex: none; }
+.ruoli-ora .box.in-corso { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.ruoli-ora .box.fatto { background: var(--tint); }
+.ruoli-ora .box.fatto > b { color: var(--ink-2); }
+.ruoli-ora .box-s b { color: var(--ink); }
+.cons-t { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 14px 0 4px; font: 700 17px/1.1 var(--font-display); letter-spacing: 0.02em; text-transform: uppercase; }
+.cons-t .lbl { font: 400 12px/1.3 var(--font-body); letter-spacing: 0; text-transform: none; }
+.occ.cons .ic.nome { width: auto; height: auto; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.occ.cons .ic.nome:hover b { text-decoration: underline; }
+.occ.cons .tag { margin-left: 6px; }
+.tag.piano { color: var(--pi); background: var(--pi-bg); box-shadow: inset 0 0 0 1px var(--pi); }
+.tag.fuori { color: var(--ink-2); background: var(--tint); box-shadow: inset 0 0 0 1px var(--rule); }
+.box.spinta.ignoto { background: var(--tint); color: var(--ink); border-color: var(--rule); }
 .tris { display: flex; gap: 2px; height: 6px; margin-top: 3px; border-radius: 3px; overflow: hidden; }
 .tris i { display: block; min-width: 2px; }
 .tris .f { background: var(--go); } .tris .m { background: var(--warn); } .tris .d { background: var(--bad); }
@@ -874,6 +893,7 @@ h3 .fd { width: 13px; height: 13px; margin: 0 8px 0 4px; vertical-align: 5px; }
    nelle occasioni nome e bottone sulla prima riga e i numeri sotto */
 @media (max-width: 600px) {
   .boxes.fase-box { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .boxes.ruoli-ora { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .boxes.merc-box { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .boxes.merc-box.gen { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .merc-box .box.ora { grid-column: 1 / -1; }
