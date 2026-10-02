@@ -702,6 +702,8 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .fasce-libere b { margin-left: 4px; }
 .occ .who { display: grid; gap: 1px; white-space: normal; overflow: visible; }
 .occ-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nome-occ { border: 0; background: none; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.nome-occ:hover { text-decoration: underline; }
 .occ-n .fd { margin: 0 7px 0 2px; }
 .occ-f { font-size: 11.5px; color: var(--ink-2); }
 

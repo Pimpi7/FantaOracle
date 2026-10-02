@@ -156,7 +156,7 @@ function renderAsta() {
   // La riga di un giocatore, uguale per le occasioni e per i migliori rimasti; `num` e' il suo blocco di numeri.
   const rigaOcc = (g, num) => `<div class="occ">
         <span class="role ${g.r}">${g.r}</span>
-        <span class="who"><span class="occ-n">${dotFascia(g)}<b>${esc(g.nome)}</b><small>${esc(nomeSq(g.sq))}</small></span>
+        <span class="who"><span class="occ-n">${dotFascia(g)}<button class="nome-occ" data-open="${g.id}" title="Apri la scheda"><b>${esc(g.nome)}</b></button><small>${esc(nomeSq(g.sq))}</small></span>
           <span class="occ-f">${g.fa == null ? "senza fascia" : esc(META.fasce[g.fa]) + (g.fi ? ", stimata" : "")}${!inFasciaAlta(g) && g.pg >= SOGLIA[g.r] ? ", da titolare per i nostri punti" : ""}</span></span>
         <span class="num">${num}</span>
         <button class="btn small" data-occ="${g.id}">Chiama</button></div>`;
