@@ -65,11 +65,23 @@ Portieri e attaccanti li sceglie **giornata per giornata**: ogni turno conta chi
 Le impostazioni che puoi cambiare:
 
 - **Strategia**: *Omogenea* distribuisce i crediti dove rendono di più; *Top + 1 cr* chiude gli ultimi slot con giocatori da un credito e concentra il budget sui titolari.
-- **Budget per ruolo**: automatico, oppure fissi tu quanti crediti dare a portieri, difensori, centrocampisti e attaccanti.
+- **Budget per ruolo**: *Automatico* lascia decidere all'algoritmo, *Manuale* lo decidi tu (vedi sotto).
 - **Lega**: numero di squadre e crediti a squadra. Se non sono 8 e 500, valori e prezzi vengono ricalcolati per la tua lega (le proiezioni in punti non cambiano).
 - **Margine sui prezzi**: quanto prudente essere sulle stime di prezzo.
 - **Max per squadra** e **blocco portieri**: quanti giocatori della stessa squadra reale accettare, con i portieri che possono fare eccezione.
 - **Piani A, B, C**: tre rose alternative salvate nel browser, esportabili come testo per passarle da un dispositivo all'altro.
+
+#### 🛠️ La modalità manuale: la tua strategia, i nostri numeri
+
+Se l'asta l'hai già in testa, non devi seguire la divisione dei crediti che propone il tool. In **Budget per ruolo** passa da *Automatico* a *Manuale*: compaiono quattro caselle, una per ruolo, già riempite con la divisione attuale (i giocatori che hai scelto più i suggeriti), e da lì le cambi come vuoi. Per esempio 30 ai portieri, 90 ai difensori, 150 ai centrocampisti e 230 agli attaccanti.
+
+- Accanto vedi la **somma** sui tuoi 500 crediti, in rosso se sfori.
+- I crediti dei giocatori che hai già messo in rosa contano nel budget del loro ruolo.
+- Il tool cerca la **rosa più forte dentro i tuoi limiti**. Se un ruolo non ha abbastanza crediti per gli slot che restano te lo dice. Se non c'è un giocatore che valga di più, non spende un credito solo per arrivare al tetto: per ogni ruolo vedi quanto spende su quanto gli hai dato.
+- Si combina con tutto il resto: **Top + 1 cr** per le riserve, il margine sui prezzi, i giocatori che aggiungi tu al prezzo che pensi di pagarli e quelli che escludi.
+- Vale anche **in asta**: suggerimenti e *fin dove spingerti* rispettano i tuoi budget di ruolo, mentre tabellone, andamento del mercato e occasioni ti seguono come sempre.
+
+Per tornare alla divisione dell'algoritmo basta rimettere *Automatico*.
 
 ### 4. Il giorno dell'asta: calcio d'inizio
 
