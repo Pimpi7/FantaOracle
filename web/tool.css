@@ -20,6 +20,7 @@
   --go: #1d7a4a; --warn: #a86a12; --bad: #b3261e;
   --r-p: #d9821b; --r-d: #2b8a4c; --r-c: #2d68b8; --r-a: #c53a2e;  /* colori di ruolo */
   --caldo: #b3261e; --freddo: #2d68b8;   /* grafico del mercato: sopra e sotto il prezzo previsto */
+  --celeste: #2f86c9;                     /* etichetta DELICATO */
   --merc-gen: #1f6bff; --merc: #f59e0b;   /* le medie dei due grafici: blu elettrico i crediti pagati, ambra i prezzi sul previsto */
   --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --font-body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -31,7 +32,7 @@
     --rule: #28342d; --tint: #1c2621; --mark: #e2c436; --mark-bg: #4a4012; --mark-fg: #fff3b8;
     --brand: #4fc473; --brand-fg: #0b1a10;
     --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
-    --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
+    --go: #4cc184; --warn: #e0a33c; --bad: #f07167; --celeste: #6cbcf0;
     --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
     --caldo: #e8604f; --freddo: #5b93e6; --merc-gen: #4d8dff; --merc: #fbbf24;
     color-scheme: dark;
@@ -42,7 +43,7 @@
   --rule: #28342d; --tint: #1c2621; --mark: #e2c436; --mark-bg: #4a4012; --mark-fg: #fff3b8;
   --brand: #4fc473; --brand-fg: #0b1a10;
   --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
-  --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
+  --go: #4cc184; --warn: #e0a33c; --bad: #f07167; --celeste: #6cbcf0;
   --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
   --caldo: #e8604f; --freddo: #5b93e6; --merc-gen: #4d8dff; --merc: #fbbf24;
   color-scheme: dark;
@@ -249,7 +250,9 @@ td.big { font-weight: 700; }
 .tag.out { color: #fff; background: #c5302a; box-shadow: none; cursor: help; }
 .tag.dubbio, .tag.diff { color: #3a2a00; background: #f7c948; box-shadow: none; cursor: help; }
 .tag.fragile { color: var(--bad); cursor: help; }
-.tag.rischio { color: #fff; background: #3b8fd0; box-shadow: none; cursor: help; text-shadow: 0 1px 1px rgb(0 0 0 / 0.25); }
+/* delicato e' l'unico avviso solo bordato (insieme a fragile): celeste, col cerotto dello stesso colore */
+.tag.rischio { color: var(--celeste); cursor: help; }
+.tag .segno.pallone { width: 1em; height: 1em; margin: 0 0.3em 0 -0.05em; transform: scale(1.12); }
 td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .ic { width: 26px; height: 26px; display: inline-grid; place-items: center; border: 1px solid var(--rule); background: var(--sheet); border-radius: 5px; font-weight: 700; line-height: 1; }
 .ic:hover { border-color: var(--ink); }
