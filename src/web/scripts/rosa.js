@@ -19,6 +19,17 @@ function renderBudget() {
     <div class="stat"><b>${n}/${tot}</b><small>${a ? '<span class="solo-desk">La tua </span>rosa' : "Giocatori"}</small></div>${liberi}`;
 }
 
+// Il prezzo che avevi dato a un obiettivo nel piano da cui sei partito. Le aste avviate prima che
+// il prezzo fosse salvato lo ritrovano nel piano (A, B o C) che ha esattamente quegli obiettivi.
+function prezzoPiano(g) {
+  const sal = (S.asta.obiettiviPrezzi || {})[g.id];
+  if (sal != null) return +sal;
+  const ob = new Set((S.asta.obiettivi || []).map(String));
+  const stesso = Object.values(S.piani).find((pi) => { const k = Object.keys(pi); return k.length === ob.size && k.every((x) => ob.has(x)); });
+  const qualcuno = stesso || Object.values(S.piani).find((pi) => g.id in pi);
+  return qualcuno && qualcuno[g.id] != null ? +qualcuno[g.id] : prezzoAtteso(g);
+}
+
 function renderRosa() {
   const m = mia();
   const scelti = Object.entries(m).map(([id, p]) => ({ g: BY_ID.get(+id), p: +p })).filter((x) => x.g);
@@ -105,7 +116,7 @@ function renderRosa() {
     // con il prezzo che gli avevi dato, finche' non lo prendi tu (o te lo prende un altro).
     const obj = inAsta() ? (S.asta.obiettivi || []).map((id) => BY_ID.get(id)).filter((g) => g && g.r === r && !(g.id in m)).sort((a, b) => b.pg - a.pg) : [];
     h += `<div class="card"><div class="ruolo-h"><span class="role ${r}">${r}</span><h3>${NOMI_RUOLO[r]}</h3>
-      <span class="lbl">${miei.length} ${inAsta() ? "presi" : "scelti"}${obj.length ? ` · ${obj.length} nel piano` : ""} · ${sug.length} suggeriti · ${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></div>`;
+      <span class="lbl">${miei.length} ${inAsta() ? "presi" : "scelti"}${obj.length ? ` · ${obj.length} nel piano (${obj.reduce((a, g) => a + prezzoPiano(g), 0)} cr)` : ""} · ${sug.length} suggeriti · ${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></div>`;
     for (const x of miei) {
       h += `<div class="slot"><span class="role ${r}">${r}</span>
         <span class="who">${dotFascia(x.g)}<b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
@@ -115,9 +126,9 @@ function renderRosa() {
     }
     for (const g of obj) {
       const per = OWNER.has(g.id) ? S.asta.squadre[OWNER.get(g.id)] : null;
-      const pz = (S.asta.obiettiviPrezzi || {})[g.id] ?? prezzoAtteso(g);
+      const pz = prezzoPiano(g);
       h += `<div class="slot obj${per ? " preso" : ""}"><span class="role ${r}">${r}</span>
-        <span class="who">${dotFascia(g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${g.id}"><b>${esc(g.nome)}</b></button>${tagSalute(g)}<small>${esc(nomeSq(g.sq))}</small><span class="tag obj" title="Era nel piano da cui sei partito">OBIETTIVO</span></span>
+        <span class="who">${dotFascia(g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${g.id}"><b>${esc(g.nome)}</b></button>${tagSalute(g)}<small>${esc(nomeSq(g.sq))}</small></span>
         <span class="num"><b>${fmt(g.pg, 2)}</b> pt/g</span>
         <span class="num"><b>${pz}</b> cr<small class="lbl"> nel piano</small></span>
         ${per ? `<span class="lbl">preso da ${esc(per.nome)}</span>` : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`}</div>`;
