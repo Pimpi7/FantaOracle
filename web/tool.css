@@ -20,7 +20,7 @@
   --go: #1d7a4a; --warn: #a86a12; --bad: #b3261e;
   --r-p: #d9821b; --r-d: #2b8a4c; --r-c: #2d68b8; --r-a: #c53a2e;  /* colori di ruolo */
   --caldo: #b3261e; --freddo: #2d68b8;   /* grafico del mercato: sopra e sotto il prezzo previsto */
-  --merc: #8b3dff;                        /* la media dei prezzi sul previsto: viola acceso (quella dei crediti e' il giallo dell'asta) */
+  --merc-gen: #1f6bff; --merc: #f59e0b;   /* le medie dei due grafici: blu elettrico i crediti pagati, ambra i prezzi sul previsto */
   --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --font-body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --radius: 6px;
@@ -33,7 +33,7 @@
     --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
     --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
     --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
-    --caldo: #e8604f; --freddo: #5b93e6; --merc: #b57bff;
+    --caldo: #e8604f; --freddo: #5b93e6; --merc-gen: #4d8dff; --merc: #fbbf24;
     color-scheme: dark;
   }
 }
@@ -44,7 +44,7 @@
   --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
   --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
   --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
-  --caldo: #e8604f; --freddo: #5b93e6; --merc: #b57bff;
+  --caldo: #e8604f; --freddo: #5b93e6; --merc-gen: #4d8dff; --merc: #fbbf24;
   color-scheme: dark;
 }
 
@@ -650,8 +650,8 @@ button.box, .comp { font: inherit; cursor: pointer; }
    il previsto: un riquadro per il momento e uno per ruolo, e una colonna per acquisto dalla riga
    del 100% (sopra, pagato piu' del previsto; sotto, meno). Le colonne sono neutre in tutti e due:
    il colore e' delle medie e dei tratti dei ruoli sotto l'asse. */
-/* la media: gialla (il giallo dell'asta) nell'andamento generale, viola nel confronto con il previsto */
-#mercato { --linea: var(--live); }
+/* la media: blu elettrico nell'andamento generale, ambra nel confronto con il previsto */
+#mercato { --linea: var(--merc-gen); }
 #merc-previsto { --linea: var(--merc); }
 .boxes.merc-box.gen { grid-template-columns: minmax(150px, 1.7fr) repeat(3, minmax(84px, 1fr)); }
 .merc-box.gen .box.ora .barra { margin: 4px 0 5px; }

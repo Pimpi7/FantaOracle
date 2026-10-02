@@ -1499,7 +1499,7 @@ function renderMercato() {
       sub: `${barra(spesi / totCr)}${intero(spesi)} su ${intero(totCr)} · assegnato il ${pct(ass / totSlot)} dei giocatori` }),
     box({ v: ass ? fmt(spesi / ass, 1) : "–", l: "crediti a giocatore, finora", title: "Quanto è costato in media ogni giocatore assegnato fin qui" }),
     box({ v: N ? fmt(acq[N - 1].c, 1) : "–", l: N ? `crediti a giocatore, ultimi ${Math.min(N, FINESTRA)}` : "crediti a giocatore, ultimi acquisti", cls: "adesso",
-      title: "È dove arriva la linea gialla del grafico" }),
+      title: "È dove arriva la linea blu del grafico" }),
     box({ v: intero(restano), l: `crediti ancora da spendere`, sub: liberi ? `${fmt(restano / liberi, 1)} a slot · ${liberi} slot liberi` : "rose complete" }),
   ];
   let h = `<h2>Andamento del mercato</h2><div class="boxes merc-box gen">${generale.join("")}</div>`;
