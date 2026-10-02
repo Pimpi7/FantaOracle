@@ -2021,6 +2021,7 @@ function calcioDInizio(btn) {
   const vx = Math.min(v, Math.max(0, (x0 - L - r - 8) / Tf));     // non esce dal bordo sinistro
   const xF = x0 - L - vx * Tf;
   const Ts = 0.06, Tc = 0.72;                                     // schiacciamento e rimbalzo
+  const SFUMA = 0.86;                                             // da qui il pallone svanisce
   const T = Tr + Tf + Ts + Tc;
   const Cx = innerWidth / 2, Cy = innerHeight / 2;
   const smax = Math.max(innerWidth, innerHeight) / d * 1.6;
@@ -2051,12 +2052,17 @@ function calcioDInizio(btn) {
     // al centro in modo regolare, invece di restare fermo e scattare al centro solo alla fine
     const X = (xF - Cx) * (1 - u) * (1 - u);
     const Y = (yF - Cy) - gz * Tc * t + 0.5 * gz * t * t;         // culmine esattamente al centro
-    const op = u < 0.86 ? 1 : Math.max(0, 1 - (u - 0.86) / 0.14);
+    const op = u < SFUMA ? 1 : Math.max(0, 1 - (u - SFUMA) / (1 - SFUMA));
     push(t0 + t, Cx + X * s, Cy + Y * s, rotF - 10 - 260 * u, s, s, op);
   }
   const anim = volo.animate(frames, { duration: T * 1000, fill: "forwards" });
-  // il setup (o l'asta sospesa) si apre mentre il pallone arriva addosso, prima che sparisca del tutto
-  setTimeout(() => avvioAsta(), (T - 0.2) * 1000);
+  // il setup (o l'asta sospesa) si apre quando il pallone, arrivato addosso, e' a meta' della
+  // dissolvenza: prima lo coprirebbe ancora pieno, dopo resterebbe un istante di schermo vuoto.
+  // Si guarda l'animazione fotogramma per fotogramma invece di un timer: su una pagina carica il
+  // pallone parte in ritardo o perde fotogrammi, e un timer aprirebbe il setup fuori tempo.
+  const apriA = (t0 + Tc * (1 + SFUMA) / 2) * 1000;
+  const aspetta = () => (anim.currentTime >= apriA || anim.playState === "finished" ? avvioAsta() : requestAnimationFrame(aspetta));
+  requestAnimationFrame(aspetta);
   anim.finished.finally(() => {
     volo.remove();
     orig.style.opacity = "";
