@@ -585,7 +585,7 @@ button.box, .comp { font: inherit; cursor: pointer; }
   .live .dot { animation: batte 1.2s ease-in-out infinite; }
   @keyframes batte { 50% { opacity: 0.25; } }
   /* in asta il pallino in fondo alla media pulsa: l'alone si allarga e svanisce */
-  .merc.live .alone { animation: alone-merc 1.6s ease-out infinite; }
+  .merc.in-asta .alone { animation: alone-merc 1.6s ease-out infinite; }
   @keyframes alone-merc { from { transform: scale(0.6); opacity: 0.55; } to { transform: scale(2.4); opacity: 0; } }
   :root[data-asta] .top.entra::after { content: ""; position: absolute; left: 0; bottom: 0; height: 8px; width: 100%; background: var(--stage-fg); transform-origin: left; animation: accende 0.9s ease-out forwards; }
   @keyframes accende { from { transform: scaleX(0); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
@@ -645,8 +645,28 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .occ-f { font-size: 11.5px; color: var(--ink-2); }
 
 /* --- andamento del mercato ---
-   Un riquadro per il momento e uno per ruolo, poi il grafico: una colonna per acquisto dalla riga
-   del 100% (rossa sopra, pagato piu' del previsto; blu sotto), e la media degli ultimi acquisti. */
+   Sopra l'andamento generale: i crediti usciti dal tavolo e una colonna per acquisto, alta quanto
+   i crediti pagati, con la media degli ultimi. Sotto, in un pannello che si apre, il confronto con
+   il previsto: un riquadro per il momento e uno per ruolo, e una colonna per acquisto dalla riga
+   del 100% (rossa sopra, pagato piu' del previsto; blu sotto). */
+.boxes.merc-box.gen { grid-template-columns: minmax(150px, 1.7fr) repeat(3, minmax(84px, 1fr)); }
+.merc-box.gen .box.ora .barra { margin: 4px 0 5px; }
+.merc-box.gen .box.adesso { border-color: var(--merc); box-shadow: inset 0 0 0 1px var(--merc); }   /* e' il valore della linea */
+.merc .pagato { fill: color-mix(in srgb, var(--ink) 42%, var(--sheet)); }
+.merc .pagato.oltre { fill: color-mix(in srgb, var(--ink) 70%, var(--sheet)); }
+.merc .t-oltre { font-size: 10.5px; font-weight: 700; text-anchor: middle; fill: var(--ink); }
+.merc-leg .k.pagato { background: color-mix(in srgb, var(--ink) 42%, var(--sheet)); }
+.merc-apri { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 12px; width: 100%;
+  margin-top: 12px; padding: 9px 40px 9px 10px; font: inherit; text-align: left; color: var(--ink); cursor: pointer;
+  background: var(--sheet); border: 1px solid var(--ink-2); border-radius: 8px; }
+.merc-apri:hover, .merc-apri[aria-expanded="true"] { border-color: var(--ink); }
+.merc-apri .ma-t { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.merc-apri .ma-t svg { width: 15px; height: 15px; }
+.merc-apri .ma-v { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+.merc-apri .ma-v b { font-family: var(--font-display); font-size: 19px; color: var(--ink); margin-right: 4px; }
+.merc-apri .ma-v.caldo b { color: var(--caldo); } .merc-apri .ma-v.freddo b { color: var(--freddo); }
+.merc-apri .box-chev { top: 50%; margin-top: -11px; }
+.merc-in { padding-top: 10px; }
 .boxes.merc-box { grid-template-columns: minmax(118px, 1.5fr) repeat(4, minmax(64px, 1fr)); gap: 6px; }
 .merc-box .box { padding: 7px 8px 8px; }
 .merc-box .box > b { font-size: 22px; }
@@ -794,6 +814,7 @@ h3 .fd { width: 13px; height: 13px; margin: 0 8px 0 4px; vertical-align: 5px; }
 @media (max-width: 600px) {
   .boxes.fase-box { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .boxes.merc-box { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .boxes.merc-box.gen { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .merc-box .box.ora { grid-column: 1 / -1; }
   table.sq td, table.sq th { padding: 6px 4px; }
   table.sq .tag { margin-left: 3px; padding: 1px 3px; }
