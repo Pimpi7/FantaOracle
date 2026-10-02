@@ -696,10 +696,14 @@ src/
     data.json                 giocatori, proiezioni, valutazioni e regole della lega
   tools/
     pallone.py              genera l'SVG del pallone del bottone Modalità asta
+    archivia_asta.py        storicizza un'asta esportata dal tool in data/aste/<data>/
+    scraping_grafico_asta.js  legge dal sito il grafico "Andamento del mercato" di un'asta
 data/raw/                   snapshot in Parquet
 data/ref/                   tabelle curate a mano: override dei nomi, calendario
                             ufficiale con le giornate, fasce FantaLab
-tests/                      111 test
+data/aste/<data>/           le aste concluse: export del tool, acquisti in ordine, rose
+                            finali, riepiloghi per squadra e per ruolo, grafico del mercato
+tests/                      i test (pytest; quello dell'asta gira dove c'è Node)
 ```
 
 Due moduli preparano il terreno per il tool formazione e non sono ancora usati
