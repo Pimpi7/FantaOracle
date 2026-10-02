@@ -91,8 +91,11 @@ gol attesi. Poi i compagni con cui alternarlo meglio, un riquadro a testa: i
 **+Pt/g**, cioè i punti a giornata in più se ogni turno schieri chi ha la partita
 migliore invece di lui sempre in campo, le giornate in cui almeno uno dei due ha
 una partita facile, il voto FantaLab della coppia (0–100) e il prezzo. In
-evidenza chi hai già in rosa, i tre migliori e due low cost (fino a 5 crediti su
-500); *Tutti i compagni* apre la tabella completa. Toccare un compagno mette la
+evidenza chi hai già in rosa, i tre migliori, due low cost (fino a 5 crediti su
+500) e il compagno con il **voto FantaLab più alto**, anche quando in punti rende
+poco (nel modello il portiere migliore spesso gioca sempre lui, ma FantaLab
+consiglia comunque la coppia che copre più giornate); *Tutti i compagni* apre la
+tabella completa, con anche i cinque migliori per voto FantaLab. Toccare un compagno mette la
 coppia nella griglia: una casella per giornata con l'avversario, verde, gialla o
 rossa secondo la fascia della griglia di
 [FantaLab](https://app.fantalab.it/griglia-portieri) (facile, media, difficile),

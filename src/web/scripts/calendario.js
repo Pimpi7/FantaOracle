@@ -136,14 +136,24 @@ function sezioneAlternanza(g) {
   }
 
   // I compagni in evidenza: chi hai gia' in rosa, i tre migliori, due da pochi crediti.
+  // E chi ha il voto FantaLab piu' alto con questo giocatore, anche se in punti rende poco: e' il
+  // compagno che FantaLab consiglia, e va visto anche quando il modello lo mette piu' in basso.
+  const perVoto = [...altri].sort((x, y) => y.a.voto - x.a.voto || Math.round(y.d * 100) - Math.round(x.d * 100) || y.d - x.d);
+  const mv = perVoto[0] || null;
   const carte = [...miei.slice(0, 2).map((c) => [c, "In rosa"]), ...top.slice(0, 3).map((c) => [c, ""]), ...low.slice(0, 2).map((c) => [c, "Low cost"])];
+  if (mv) {
+    const gia = carte.find(([c]) => c === mv);
+    if (gia) gia[1] = gia[1] ? `${gia[1]} · miglior voto FantaLab` : "Miglior voto FantaLab";
+    else carte.splice(miei.slice(0, 2).length + Math.min(3, top.length), 0, [mv, "Miglior voto FantaLab"]);
+  }
+  const perVotoTab = perVoto.filter((c) => !top.includes(c) && !low.includes(c)).slice(0, 5);
   const carta = ([c, nota]) => `<button type="button" class="comp" data-abb="${c.q.id}" aria-pressed="${c.q === scelto}" title="Metti ${esc(c.q.nome)} nella griglia accanto a ${esc(g.nome)}">
       <span class="comp-n">${esc(c.q.nome)}<small>${esc(nomeSq(c.q.sq))}</small></span>
       <b>+${fmt(c.d, 2)}<small>pt/g</small></b>
       <span class="comp-d"><span><i class="c fl-f"></i>${c.a.facile}/${c.a.partite}</span><span>voto ${c.a.voto}</span><span>${c.p} cr</span></span>
       ${nota ? `<span class="comp-t">${nota}</span>` : ""}</button>`;
   const riga = (c) => `<tr data-riga="${c.q.id}" class="${c.q === scelto ? "sel" : ""}">
-      <td class="l nm"><button data-open="${c.q.id}">${esc(c.q.nome)}</button>${c.mio ? '<span class="tag own">IN ROSA</span>' : ""}</td>
+      <td class="l nm"><button data-open="${c.q.id}">${esc(c.q.nome)}</button>${c.mio ? '<span class="tag own">IN ROSA</span>' : ""}${c === mv ? '<span class="tag own" title="Il voto FantaLab più alto per questo giocatore">MIGLIOR VOTO</span>' : ""}</td>
       <td class="l sq hide-s">${esc(nomeSq(c.q.sq))}</td>
       <td>${c.a.facile}/${c.a.partite}</td>
       <td class="hide-s">${c.a.voto}</td>
@@ -153,7 +163,7 @@ function sezioneAlternanza(g) {
   const gruppo = (titolo, l) => (l.length ? `<tr class="gruppo"><td class="l" colspan="7">${titolo}</td></tr>${l.map(riga).join("")}` : "");
   const tabella = lista.length ? pannello("pan-comp", `<div class="scorri"><table class="compagni">
       <thead><tr><th class="l">Da alternare con</th><th class="l hide-s">Squadra</th><th title="Giornate in cui almeno uno dei due ha una partita facile">Facili</th><th class="hide-s" title="Voto FantaLab dell'abbinamento, 0-100">Voto</th><th title="Punti a giornata in più schierando ogni turno chi ha la partita migliore">+Pt/g</th><th title="Prezzo atteso, o pagato se è già tuo">Cr</th><th></th></tr></thead>
-      <tbody>${gruppo("Già nella tua rosa", miei)}${gruppo("I migliori", top)}${gruppo(`Low cost, fino a ${soglia} crediti`, low)}</tbody>
+      <tbody>${gruppo("Già nella tua rosa", miei)}${gruppo("I migliori", top)}${gruppo("Migliori per voto FantaLab", perVotoTab)}${gruppo(`Low cost, fino a ${soglia} crediti`, low)}</tbody>
     </table></div>
     <p class="lbl">+Pt/g: quanto rende in più la coppia se ogni giornata schieri il ${chi} con la partita migliore, rispetto a ${esc(g.nome)} sempre in campo. Il costruttore della rosa fa lo stesso conto su tutto il reparto. Il nome apre la scheda del compagno.</p>`) : "";
 
