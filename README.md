@@ -98,7 +98,7 @@ Per tornare alla divisione dell'algoritmo basta rimettere *Automatico*.
 
 ### 4. Il giorno dell'asta: calcio d'inizio
 
-Premi il bottone col pallone in testata: il pallone rotola, ti viene incontro e apre il setup. **Modalità asta** trasforma il tool nel tuo assistente live. Dai un nome alle 8 squadre nell'ordine in cui siete seduti, scegli quale piano usare come lista obiettivi, il tipo di chiamata (**per ruolo**: prima tutti i portieri, poi difensori, centrocampisti e attaccanti; oppure libera) e il **giro** (orario o antiorario, e chi comincia), e parti.
+Premi il bottone col pallone in testata: il pallone rotola, ti viene incontro e apre il setup. **Modalità asta** trasforma il tool nel tuo assistente live. Dai un nome alle 8 squadre nell'ordine in cui siete seduti, scegli quale piano usare come lista obiettivi (restano segnati nel listone e sotto *La mia rosa*, con il prezzo che avevi dato, finché non li prendi o te li prende un altro), il tipo di chiamata (**per ruolo**: prima tutti i portieri, poi difensori, centrocampisti e attaccanti; oppure libera) e il **giro** (orario o antiorario, e chi comincia), e parti.
 
 ![Modalità asta](docs/img/asta.png)
 

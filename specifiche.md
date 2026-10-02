@@ -139,7 +139,7 @@ Tre piani (A, B, C) salvati nel browser, esportabili e reimportabili come testo.
 
 **Modalità asta.** Il bottone col pallone in testata avvia l'asta live (il pallone rotola sul bottone e apre il setup). Si danno i nomi
 alle 8 squadre, nell'ordine in cui siedono, e si sceglie da quale piano prendere gli
-obiettivi (restano segnati nel listone, le rose partono vuote), il tipo di chiamata
+obiettivi (restano segnati nel listone e, per ruolo, sotto *La mia rosa* con il prezzo che avevi dato; le rose partono vuote), il tipo di chiamata
 (per ruolo, nell'ordine P, D, C, A, oppure libera) e il giro (orario, antiorario o
 nessuno, e chi comincia). Da lì la testata diventa la fascia scura
 "In asta" e compare la sezione **Asta**.

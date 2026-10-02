@@ -281,6 +281,9 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .slot { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding: 6px 6px; border-radius: 5px; }
 .slot + .slot { border-top: 1px solid var(--tint); }
 .slot.sugg { background: var(--mark-bg); color: var(--mark-fg); }
+.slot.obj { background: color-mix(in srgb, var(--live) 13%, transparent); box-shadow: inset 3px 0 0 var(--live-edge); }
+.slot.obj.preso { opacity: 0.55; } .slot.obj.preso .who b { text-decoration: line-through; }
+.slot.obj .num small { font-weight: 400; opacity: 0.7; }
 .slot .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .slot .who b { font-weight: 700; }
 .slot .who small { color: inherit; opacity: 0.7; text-transform: capitalize; margin-left: 4px; }

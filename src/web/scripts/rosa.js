@@ -101,14 +101,26 @@ function renderRosa() {
     const miei = scelti.filter((x) => x.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
     const sug = SUGG.lista.filter((c) => c.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
     const vuoti = Math.max(0, META.slot[r] - miei.length - sug.length);
+    // In asta la rosa e' quella reale, che parte vuota: il piano da cui sei partito resta qui sotto,
+    // con il prezzo che gli avevi dato, finche' non lo prendi tu (o te lo prende un altro).
+    const obj = inAsta() ? (S.asta.obiettivi || []).map((id) => BY_ID.get(id)).filter((g) => g && g.r === r && !(g.id in m)).sort((a, b) => b.pg - a.pg) : [];
     h += `<div class="card"><div class="ruolo-h"><span class="role ${r}">${r}</span><h3>${NOMI_RUOLO[r]}</h3>
-      <span class="lbl">${miei.length} scelti · ${sug.length} suggeriti · ${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></div>`;
+      <span class="lbl">${miei.length} ${inAsta() ? "presi" : "scelti"}${obj.length ? ` · ${obj.length} nel piano` : ""} · ${sug.length} suggeriti · ${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></div>`;
     for (const x of miei) {
       h += `<div class="slot"><span class="role ${r}">${r}</span>
         <span class="who">${dotFascia(x.g)}<b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
         <span class="num"><b>${fmt(x.g.pg, 2)}</b> pt/g</span>
         <span class="num"><b>${x.p}</b> cr</span>
         <button class="ic" data-add="${x.g.id}" title="Togli dalla rosa" aria-label="Togli">−</button></div>`;
+    }
+    for (const g of obj) {
+      const per = OWNER.has(g.id) ? S.asta.squadre[OWNER.get(g.id)] : null;
+      const pz = (S.asta.obiettiviPrezzi || {})[g.id] ?? prezzoAtteso(g);
+      h += `<div class="slot obj${per ? " preso" : ""}"><span class="role ${r}">${r}</span>
+        <span class="who">${dotFascia(g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${g.id}"><b>${esc(g.nome)}</b></button>${tagSalute(g)}<small>${esc(nomeSq(g.sq))}</small><span class="tag obj" title="Era nel piano da cui sei partito">OBIETTIVO</span></span>
+        <span class="num"><b>${fmt(g.pg, 2)}</b> pt/g</span>
+        <span class="num"><b>${pz}</b> cr<small class="lbl"> nel piano</small></span>
+        ${per ? `<span class="lbl">preso da ${esc(per.nome)}</span>` : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`}</div>`;
     }
     for (const c of sug) {
       const aperta = S.aperte[c.g.id];

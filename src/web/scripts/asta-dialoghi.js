@@ -53,7 +53,7 @@ function dialogoAvvio() {
   $("#asta-ok").onclick = () => {
     const n = leggiNomi(), primo = +$("#av-primo").value;
     S.asta = { attiva: true, io: 0, inizio: new Date().toISOString(), squadre: n.map((nome) => ({ nome, rosa: {} })), log: [],
-               obiettivi: Object.keys(S.piani[piano]).map(Number), presiPiano: S.presi,
+               obiettivi: Object.keys(S.piani[piano]).map(Number), obiettiviPrezzi: { ...S.piani[piano] }, presiPiano: S.presi,
                chiamato: null, scelta: null, aperta: null, modo, giro: { verso, turno: primo } };
     chiudi();
     entraInAsta();
