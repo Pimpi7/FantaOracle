@@ -65,11 +65,24 @@ Portieri e attaccanti li sceglie **giornata per giornata**: ogni turno conta chi
 Le impostazioni che puoi cambiare:
 
 - **Strategia**: *Omogenea* distribuisce i crediti dove rendono di più; *Top + 1 cr* chiude gli ultimi slot con giocatori da un credito e concentra il budget sui titolari.
-- **Budget per ruolo**: *Automatico* lascia decidere all'algoritmo, *Manuale* lo decidi tu (vedi sotto).
+- **Budget per ruolo**: *Automatico* lascia decidere all'algoritmo, *Manuale* lo decidi tu (vedi le due sezioni qui sotto).
 - **Lega**: numero di squadre e crediti a squadra. Se non sono 8 e 500, valori e prezzi vengono ricalcolati per la tua lega (le proiezioni in punti non cambiano).
 - **Margine sui prezzi**: quanto prudente essere sulle stime di prezzo.
 - **Max per squadra** e **blocco portieri**: quanti giocatori della stessa squadra reale accettare, con i portieri che possono fare eccezione.
 - **Piani A, B, C**: tre rose alternative salvate nel browser, esportabili come testo per passarle da un dispositivo all'altro.
+
+#### 🤖 La modalità automatica: ci pensa l'algoritmo
+
+È la modalità di partenza. Non fissi niente: il tool decide da solo come dividere i crediti fra portieri, difensori, centrocampisti e attaccanti, guardando dove rendono di più.
+
+- **Cosa cerca**: la rosa con la **forza attesa** più alta, cioè i punti a giornata della squadra che schiererai. I titolari contano pieni, le riserve in proporzione a quanto giocheranno: il quinto difensore pesa più di altre riserve, perché il modificatore vuole la difesa a 4.
+- **Quanto spende**: usa il prezzo atteso di ogni giocatore più il margine che hai scelto, e lascia sempre almeno un credito per ogni slot ancora vuoto.
+- **Come ci arriva**: prova tante combinazioni, da quelle che spendono tutto sui big a quelle più parsimoniose, e tiene la più forte. Poi prova a scambiare i suggeriti uno alla volta con chi è rimasto fuori, finché trova un miglioramento.
+- **Portieri e attaccanti** li valuta giornata per giornata: due portieri con calendari che si coprono valgono più dei loro punti presi da soli.
+- **Rispetta sempre** la rosa 3-8-8-6, i crediti che ti restano e il tetto di giocatori per squadra reale.
+- **Si aggiorna da solo**: ricalcola tutto a ogni giocatore che aggiungi, togli o escludi e, in asta, a ogni acquisto, con i prezzi che seguono il mercato della serata.
+
+Sopra la rosa vedi come ha diviso i crediti, ruolo per ruolo, e la forza attesa che ne esce. Per ogni suggerito, con **Altri**, trovi i migliori scambi possibili. Con **Top + 1 cr** l'algoritmo riserva gli ultimi slot ai giocatori da un credito e concentra il resto sui titolari.
 
 #### 🛠️ La modalità manuale: la tua strategia, i nostri numeri
 
