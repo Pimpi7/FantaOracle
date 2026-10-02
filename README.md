@@ -103,7 +103,7 @@ Premi il bottone col pallone in testata: il pallone rotola, ti viene incontro e 
 - **Occasioni di fine ruolo**: per il ruolo in corso, quanti giocatori buoni restano liberi (in *Fascia alta* o più su per SOS Fanta, oppure da titolare per i nostri punti), quanti posti da titolare ci sono ancora da riempire e quanti liberi restano fascia per fascia. Se i buoni avanzano conviene aspettare, se mancano no. Sotto, **dalla fascia più alta**, i giocatori che puoi portare via a poco, con il prezzo realistico e il perché. Un giocatore lo vuole chi cerca ancora un titolare e chi, pur avendo i suoi, ci guadagnerebbe una fascia: è un'occasione quando loro hanno finito il budget, o quando non lo vuole più nessuno da titolare. Nell'ultimo ruolo, dove ognuno spende quello che gli resta, il tool conta gli slot dei rivali che hanno ancora crediti e ti dice chi resta a poco dopo che hanno comprato.
 - **Ultimi acquisti**, sotto le occasioni: quanto è stato pagato ognuno e lo scarto dal previsto, con il tasto per annullare l'ultimo.
 
-Puoi **sospendere** l'asta e riprenderla più tardi, oppure **chiuderla**: le rose finali restano salvate nel browser e ti viene data subito una copia di testo da conservare.
+Puoi **sospendere** l'asta e riprenderla più tardi da dove eri, senza rifare il setup, oppure **chiuderla**: le rose finali restano salvate nel browser e ti viene data subito una copia di testo da conservare.
 
 ### Da telefono
 

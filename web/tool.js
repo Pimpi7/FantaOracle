@@ -1917,7 +1917,7 @@ let inVolo = false;
 function calcioDInizio(btn) {
   const orig = btn.querySelector(".pallone");
   if (inVolo) return;
-  if (!orig || !window.matchMedia("(prefers-reduced-motion: no-preference)").matches || !Element.prototype.animate) return dialogoAvvio();
+  if (!orig || !window.matchMedia("(prefers-reduced-motion: no-preference)").matches || !Element.prototype.animate) return avvioAsta();
   inVolo = true;
   btn.classList.remove("pulse");                                 // misura il pallone fermo, non a meta' palleggio
   const b = orig.getBoundingClientRect(), k = btn.getBoundingClientRect();
@@ -1981,8 +1981,8 @@ function calcioDInizio(btn) {
     push(t0 + t, Cx + X * s, Cy + Y * s, rotF - 10 - 260 * u, s, s, op);
   }
   const anim = volo.animate(frames, { duration: T * 1000, fill: "forwards" });
-  // il setup si apre mentre il pallone arriva addosso, prima che sparisca del tutto
-  setTimeout(() => dialogoAvvio(), (T - 0.2) * 1000);
+  // il setup (o l'asta sospesa) si apre mentre il pallone arriva addosso, prima che sparisca del tutto
+  setTimeout(() => avvioAsta(), (T - 0.2) * 1000);
   anim.finished.finally(() => {
     volo.remove();
     orig.style.opacity = "";
@@ -1992,33 +1992,47 @@ function calcioDInizio(btn) {
   });
 }
 
+// Un'asta sospesa riparte da dove era, senza ripassare dal setup: squadre, giro e obiettivi ci
+// sono gia', e verso e turno si correggono dal riquadro del giocatore chiamato. Per un'asta nuova
+// si chiude quella in corso (Esci, Chiudi l'asta) e il pulsante torna a "Modalita' asta".
+function avvioAsta() {
+  if (!S.asta) return dialogoAvvio();
+  S.asta.attiva = true;
+  entraInAsta();
+}
+
+function entraInAsta() {
+  vista("asta");
+  aggiorna();
+  const top = document.querySelector(".top");
+  top.classList.remove("entra"); void top.offsetWidth; top.classList.add("entra");
+  $("#cerca-asta").focus();
+}
+
 function dialogoAvvio() {
-  const nomi = S.asta ? S.asta.squadre.map((t) => t.nome) : NOMI_DEFAULT.slice(0, META.n_squadre);
-  const modo0 = S.asta?.modo || "ruolo", verso0 = S.asta?.giro ? S.asta.giro.verso : 1;
-  const primo0 = S.asta?.giro ? ((S.asta.giro.turno % nomi.length) + nomi.length) % nomi.length : 0;
+  const nomi = NOMI_DEFAULT.slice(0, META.n_squadre);
   apri(`<h3>Modalità asta</h3>
     <p class="lbl">Da qui in poi la tua rosa è quella reale: registri ogni acquisto, tuo e degli altri, e il tool ricalcola suggerimenti, prezzi e occasioni.</p>
     <p class="lbl">Scrivi le squadre nell'ordine in cui siete seduti, in senso orario partendo da te: il giro delle chiamate segue quest'ordine.</p>
     <div class="nomi">${nomi.map((n, i) => `<label>${i === 0 ? "La tua squadra" : "Avversario " + i}<input id="nome-${i}" value="${esc(n)}" maxlength="24"></label>`).join("")}</div>
-    ${S.asta ? "" : `<div class="row"><span class="lbl">Obiettivi dal piano</span><div class="seg mini">${["A", "B", "C"].map((p) =>
+    <div class="row"><span class="lbl">Obiettivi dal piano</span><div class="seg mini">${["A", "B", "C"].map((p) =>
       `<button type="button" data-obj="${p}" aria-pressed="${S.piano === p}">Piano ${p} (${Object.keys(S.piani[p]).length})</button>`).join("")}</div></div>
-    <p class="lbl">I giocatori del piano scelto restano segnati come OBIETTIVO nel listone. Non sono acquisti: le rose partono vuote.</p>`}
+    <p class="lbl">I giocatori del piano scelto restano segnati come OBIETTIVO nel listone. Non sono acquisti: le rose partono vuote.</p>
     <div class="row"><span class="lbl">Chiamata</span><div class="seg mini" role="group" aria-label="Tipo di chiamata">
-      <button type="button" data-modo-asta="ruolo" aria-pressed="${modo0 === "ruolo"}" title="Prima tutti i portieri, poi difensori, centrocampisti e attaccanti">Per ruolo: P, D, C, A</button>
-      <button type="button" data-modo-asta="libero" aria-pressed="${modo0 === "libero"}" title="Ogni ruolo si può chiamare in qualsiasi momento">Libera</button></div></div>
+      <button type="button" data-modo-asta="ruolo" aria-pressed="true" title="Prima tutti i portieri, poi difensori, centrocampisti e attaccanti">Per ruolo: P, D, C, A</button>
+      <button type="button" data-modo-asta="libero" aria-pressed="false" title="Ogni ruolo si può chiamare in qualsiasi momento">Libera</button></div></div>
     <div class="row"><span class="lbl">Giro</span><div class="seg mini" role="group" aria-label="Verso del giro">
-      <button type="button" data-verso="1" aria-pressed="${verso0 === 1}">Orario</button>
-      <button type="button" data-verso="-1" aria-pressed="${verso0 === -1}">Antiorario</button>
-      <button type="button" data-verso="0" aria-pressed="${verso0 === 0}" title="Il tool non segue chi deve chiamare">Senza giro</button></div>
-      <label class="lbl" for="av-primo">${S.asta ? "tocca a" : "comincia"}</label>
-      <select id="av-primo" class="pill">${nomi.map((_, i) => `<option value="${i}" ${i === primo0 ? "selected" : ""}>${i === 0 ? "Tu" : "Avversario " + i}</option>`).join("")}</select></div>
+      <button type="button" data-verso="1" aria-pressed="true">Orario</button>
+      <button type="button" data-verso="-1" aria-pressed="false">Antiorario</button>
+      <button type="button" data-verso="0" aria-pressed="false" title="Il tool non segue chi deve chiamare">Senza giro</button></div>
+      <label class="lbl" for="av-primo">comincia</label>
+      <select id="av-primo" class="pill">${nomi.map((_, i) => `<option value="${i}">${i === 0 ? "Tu" : "Avversario " + i}</option>`).join("")}</select></div>
     <p class="lbl">Verso e turno si correggono anche dopo, dal riquadro del giocatore chiamato. Chi ha già riempito il ruolo in corso salta il turno.</p>
     <div class="actions">
       <button class="btn" data-close>Annulla</button>
-      ${S.asta ? `<button class="btn" id="asta-nuova">Nuova asta da zero</button>` : ""}
-      <button class="btn live-go" id="asta-ok">${S.asta ? "Riprendi l'asta" : "Avvia l'asta"}</button>
+      <button class="btn live-go" id="asta-ok">Avvia l'asta</button>
     </div>`);
-  let piano = S.piano, modo = modo0, verso = verso0;
+  let piano = S.piano, modo = "ruolo", verso = 1;
   const gruppo = (attr, scelto) => document.querySelectorAll(`.dialog [${attr}]`).forEach((b) => b.onclick = () => {
     scelto(b);
     document.querySelectorAll(`.dialog [${attr}]`).forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -2027,27 +2041,14 @@ function dialogoAvvio() {
   gruppo("data-modo-asta", (b) => { modo = b.dataset.modoAsta; });
   gruppo("data-verso", (b) => { verso = +b.dataset.verso; });
   const leggiNomi = () => nomi.map((n, i) => ($(`#nome-${i}`).value.trim() || n));
-  const parti = (nuova) => {
+  $("#asta-ok").onclick = () => {
     const n = leggiNomi(), primo = +$("#av-primo").value;
-    if (!S.asta || nuova) {
-      S.asta = { attiva: true, io: 0, inizio: new Date().toISOString(), squadre: n.map((nome) => ({ nome, rosa: {} })), log: [],
-                 obiettivi: Object.keys(S.piani[piano]).map(Number), presiPiano: S.presi,
-                 chiamato: null, scelta: null, aperta: null, modo, giro: { verso, turno: primo } };
-    } else {
-      S.asta.attiva = true;
-      S.asta.squadre.forEach((t, i) => { t.nome = n[i]; });
-      S.asta.modo = modo;
-      S.asta.giro = { verso, turno: primo !== primo0 ? primo : S.asta.giro ? S.asta.giro.turno : primo };
-    }
+    S.asta = { attiva: true, io: 0, inizio: new Date().toISOString(), squadre: n.map((nome) => ({ nome, rosa: {} })), log: [],
+               obiettivi: Object.keys(S.piani[piano]).map(Number), presiPiano: S.presi,
+               chiamato: null, scelta: null, aperta: null, modo, giro: { verso, turno: primo } };
     chiudi();
-    vista("asta");
-    aggiorna();
-    const top = document.querySelector(".top");
-    top.classList.remove("entra"); void top.offsetWidth; top.classList.add("entra");
-    $("#cerca-asta").focus();
+    entraInAsta();
   };
-  $("#asta-ok").onclick = () => parti(false);
-  if ($("#asta-nuova")) $("#asta-nuova").onclick = () => parti(true);
 }
 
 function dialogoChiusura() {

@@ -585,8 +585,8 @@ button.box, .comp { font: inherit; cursor: pointer; }
   .live .dot { animation: batte 1.2s ease-in-out infinite; }
   @keyframes batte { 50% { opacity: 0.25; } }
   /* in asta il pallino in fondo alla media pulsa: l'alone si allarga e svanisce */
-  .merc.live .alone { animation: pulsa 1.6s ease-out infinite; }
-  @keyframes pulsa { from { transform: scale(0.6); opacity: 0.55; } to { transform: scale(2.4); opacity: 0; } }
+  .merc.live .alone { animation: alone-merc 1.6s ease-out infinite; }
+  @keyframes alone-merc { from { transform: scale(0.6); opacity: 0.55; } to { transform: scale(2.4); opacity: 0; } }
   :root[data-asta] .top.entra::after { content: ""; position: absolute; left: 0; bottom: 0; height: 8px; width: 100%; background: var(--stage-fg); transform-origin: left; animation: accende 0.9s ease-out forwards; }
   @keyframes accende { from { transform: scaleX(0); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
 }
