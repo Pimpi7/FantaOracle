@@ -270,8 +270,8 @@ quest'ordine. Nel dettaglio:
     salire fino all'offerta del più ricco.
   - *nell'asta libera* vale la regola semplice: il rivale più ricco con uno slot
     libero nel ruolo, più uno.
-  **I migliori rimasti.** Quando in lega restano pochi slot nel ruolo (non più di
-  uno a squadra, in media) le occasioni sono poche o nessuna, perché nessun buono
+  **I migliori rimasti.** Quando in lega restano pochi slot nel ruolo (in media
+  non più di tre a squadra) le occasioni sono poche o nessuna, perché nessun buono
   costa il 25% in meno. Sotto compaiono allora i cinque giocatori liberi con più
   punti a giornata che non sono già fra le occasioni mostrate, a prezzo atteso
   pieno, con il budget del rivale più ricco (se ne ha almeno 1). Vale per il

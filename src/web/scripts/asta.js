@@ -122,10 +122,10 @@ function renderAsta() {
       occ.push({ g, pa, reale, n, maxRivali: daTitolare - 1, riserva: comeRiserva > daTitolare, senzaPosto,
         come: !rivali.length ? "solo" : !vogliono.length ? "riserva" : n && daTitolare >= comeRiserva ? "rivali" : "secco" });
     });
-    // Quando in lega restano pochi slot (in media meno di uno a squadra) le occasioni sono rare: nessun
+    // Quando in lega restano pochi slot (in media non piu' di tre a squadra) le occasioni sono rare: nessun
     // buono costa il 25% in meno. Si mostrano comunque i migliori ancora liberi, a prezzo pieno, con fin
     // dove arriva il rivale piu' ricco.
-    if (MERC.aperti[r] <= META.n_squadre) {
+    if (MERC.aperti[r] <= SLOT_RESTO * META.n_squadre) {
       resto.push({ r, aperti: MERC.aperti[r], fino: rivali.length ? Math.floor(piuRicco(rivali)) : null,
         lista: DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id) && g.pg > 0).sort((a, b) => b.pg - a.pg).slice(0, 6 + NMIGLIORI) });
     }

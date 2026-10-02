@@ -59,6 +59,7 @@ let INFL = 1, FATT = { P: 1, D: 1, C: 1, A: 1 }, MERC = null;
 let SPESA_RUOLO = { P: 0, D: 0, C: 0, A: 0 };      // spesa attesa della lega per ruolo, ai prezzi di partenza
 const ORDINE_RUOLI = ["P", "D", "C", "A"];         // l'ordine delle fasi nell'asta per ruolo
 const PESO_PARTENZA = 0.15;                        // quanto pesa il punto di partenza sul termometro di un ruolo
+const SLOT_RESTO = 3;                              // media di slot aperti a squadra, nel ruolo, sotto cui compaiono i migliori rimasti
 const NMIGLIORI = 5;                               // i migliori rimasti mostrati sotto le occasioni, a fine ruolo
 const FINESTRA = 6;                                // acquisti nella media mobile del grafico
 const limita = (x) => Math.min(2.5, Math.max(0.4, x));
