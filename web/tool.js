@@ -637,19 +637,28 @@ function tag(g) {
   return t + tagSalute(g);
 }
 
+// Come sta adesso, in un riquadro: verde se disponibile, rosso se salta giornate, giallo se e'
+// in dubbio. Con `largo` occupa due colonne e porta anche il motivo dello stop.
+function riquadroAdesso(g, largo) {
+  const i = g.inf;
+  if (!i) return box({ v: "Disponibile", l: "adesso", ic: "ok", tono: "ok", cls: "parola" });
+  const out = fuori(g), fermo = i.t === "infortunato" || i.t === "squalificato";
+  const v = i.fs ? "Stagione finita" : i.t === "squalificato" ? "Squalificato" : i.t === "diffidato" ? "Diffidato"
+    : i.t === "acciaccato" ? "Acciaccato" : out ? "Fuori" : "In dubbio";
+  const righe = [fermo && !i.fs ? rientro(i) : "", i.s > 0 ? `salta ${i.s} ${i.s === 1 ? "giornata" : "giornate"}` : "", largo ? i.m || "" : ""].filter(Boolean);
+  return box({ v, l: "adesso", ic: out ? "no" : "allerta", tono: out ? "ko" : "med", cls: "parola" + (largo ? " largo" : ""),
+    sub: righe.map(esc).join("<br>"), title: largo ? "" : titoloInf(g) });
+}
+
 // Sezione della scheda: come sta adesso, poi la propensione che viene dallo storico. L'elenco
 // degli stop resta chiuso: lo apre il riquadro che li conta.
 function sezioneInfortuni(g) {
   const fonti = META.infortuni || {}, i = g.inf, f = g.fr;
   const riquadri = [];
   let nota = "", elenco = "";
-  if (!i) riquadri.push(box({ v: "Disponibile", l: "adesso", ic: "ok", tono: "ok", cls: "parola" }));
-  else {
-    const out = fuori(g), fermo = i.t === "infortunato" || i.t === "squalificato";
-    const v = i.fs ? "Stagione finita" : i.t === "squalificato" ? "Squalificato" : i.t === "diffidato" ? "Diffidato"
-      : i.t === "acciaccato" ? "Acciaccato" : out ? "Fuori" : "In dubbio";
-    const righe = [fermo && !i.fs ? rientro(i) : "", i.s > 0 ? `salta ${i.s} ${i.s === 1 ? "giornata" : "giornate"}` : "", i.m || ""].filter(Boolean);
-    riquadri.push(box({ v, l: "adesso", ic: out ? "no" : "allerta", tono: out ? "ko" : "med", cls: "parola largo", sub: righe.map(esc).join("<br>") }));
+  riquadri.push(riquadroAdesso(g, true));
+  if (i) {
+    const fermo = i.t === "infortunato" || i.t === "squalificato";
     if (fermo && i.s > 0 && g.pgs != null) nota = `Da sano farebbe ${fmt(g.pgs, 2)} punti a giornata: le giornate che salta sono già tolte dai punti attesi e dal valore.`;
     if (i.t === "acciaccato") nota = "Segnalato solo da Transfermarkt, senza data di rientro: di solito è un acciacco di pochi giorni, i punti attesi non lo scontano.";
   }
@@ -1044,6 +1053,8 @@ const ICONE = {
   bersaglio: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12v.2" stroke-width="3"/>',
   giu: '<path d="M6 9l6 6 6-6"/>',
   uguale: '<path d="M5 9h14M5 15h14"/>',
+  martello: '<path d="M13 4l7 7-3 3-7-7z"/><path d="M11.5 11.5L4 19M13 20.5h8"/>',
+  cerca: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
 };
 const ico = (n) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONE[n] || ""}</svg>`;
 
@@ -1368,11 +1379,12 @@ function chiama(id) {
   if (OWNER.has(id)) return;
   S.asta.chiamato = id;
   S.asta.scelta = null;
-  $("#risultati").hidden = true;
   $("#cerca-asta").value = "";
+  chiudiRicerca();
   vista("asta");
   renderChiamato();
-  setTimeout(() => { const i = $("#prezzo-asta"); if (i) i.select(); }, 0);
+  // tutto il riquadro in vista, fino al bottone Aggiudicato, e il prezzo pronto da scrivere
+  setTimeout(() => { $("#chiamata").scrollIntoView({ block: "nearest" }); const i = $("#prezzo-asta"); if (i) i.select(); }, 0);
 }
 
 // Fin dove conviene spingersi: il prezzo massimo a cui la rosa migliore CON lui
@@ -1380,7 +1392,7 @@ function chiama(id) {
 // bisezione rifacendo l'ottimizzazione a ogni prezzo provato.
 function calcolaSpinta(id) {
   const g = BY_ID.get(id), me = statoSquadre()[S.asta.io];
-  if (me.liberi[g.r] <= 0) return { max: 0, motivo: `hai gia' tutti i ${NOMI_RUOLO[g.r].toLowerCase()}` };
+  if (me.liberi[g.r] <= 0) return { max: 0, motivo: `hai già tutti i ${NOMI_RUOLO[g.r].toLowerCase()}` };
   const presi = S.presi;
   S.presi = { ...presi, [id]: true };
   const senza = ottimizza();
@@ -1397,75 +1409,137 @@ function calcolaSpinta(id) {
     return f;
   };
   forzaA(Math.min(prezzoAtteso(g), me.maxOff));
-  if (forzaA(1) < f0 - 1e-9) return { max: 0, motivo: "anche a 1 credito la rosa migliore senza di lui e' piu' forte" };
+  if (forzaA(1) < f0 - 1e-9) return { max: 0, motivo: "anche a 1 credito, senza di lui la rosa è più forte" };
   let lo = 1, hi = me.maxOff, best = 1;
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
     if (forzaA(mid) >= f0 - 1e-9) { best = mid; lo = mid + 1; } else hi = mid - 1;
   }
-  return { max: best, motivo: best >= me.maxOff ? "e' la tua offerta massima: oltre non puoi" : "oltre, la rosa migliore senza di lui e' piu' forte" };
+  return { max: best, motivo: best >= me.maxOff ? "è la tua offerta massima" : "oltre, senza di lui la rosa è più forte" };
 }
 
+// Il riquadro "fin dove spingerti": il numero dell'asta. Giallo quando c'e' un limite a cui
+// arrivare, rosso quando conviene lasciarlo; sotto, perche' e se quel limite copre il prezzo atteso.
+function spintaDentro(val, pa, tetto) {
+  const testo = (icona, etichetta, riga) => `<span class="sp-t"><span class="box-l">${ico(icona)}<span>${etichetta}</span></span>${riga ? `<span class="box-s">${riga}</span>` : ""}</span>`;
+  if (!val) return `<b>…</b>${testo("martello", "calcolo fin dove spingerti", "")}`;
+  if (!val.max) return `<b>Lascialo</b>${testo("no", "non conviene", esc(val.motivo))}`;
+  return `<b>${val.max}</b>${testo("martello", "crediti: spingiti fino a qui", `<span class="esito">${
+    val.max >= tetto ? "è tutto quello che puoi offrire" : val.max >= pa ? "copre il prezzo atteso" : "sotto il prezzo atteso: può andare oltre"}</span>`)}`;
+}
+const spintaClasse = (val) => `box spinta${val && !val.max ? " ko" : ""}`;
+
+// Il giocatore chiamato: la scheda in versione da asta, con gli stessi riquadri. In alto quello
+// che serve nei secondi della chiamata (fin dove spingerti, quanto vale, come sta), sotto le
+// squadre: ogni riquadro dice quanto puo' ancora offrire e, toccandolo, segna chi l'ha preso.
 function renderChiamato() {
-  const box = $("#chiamato");
+  const box0 = $("#chiamato");
   const id = S.asta.chiamato;
   if (!id || OWNER.has(id)) {
-    box.innerHTML = `<p class="lbl" style="margin-top:10px">Scrivi il nome del giocatore chiamato: vedrai quanto vale per te, fin dove spingerti e chi puo' ancora contendertelo. Poi registri chi l'ha preso e a quanto.</p>`;
+    box0.innerHTML = `<p class="vuoto">${ico("cerca")}<span>Scrivi il nome del giocatore chiamato: vedi fin dove spingerti, quanto vale, come sta e chi può ancora contendertelo. Poi tocchi la squadra che l'ha preso e registri il prezzo.</span></p>`;
     return;
   }
   const g = BY_ID.get(id), st = statoSquadre(), me = st[S.asta.io];
   const chiave = `${id}|${S.asta.log.length}|${S.margine}|${S.modo}|${S.tetto}|${JSON.stringify(S.budgetRuolo)}`;
-  const pa = prezzoAtteso(g);
-  const rivali = st.filter((t) => t.i !== S.asta.io).map((t) => ({ t, ok: t.liberi[g.r] > 0 && t.maxOff >= 1 }));
-  const scelta = S.asta.scelta;
-  box.innerHTML = `<div class="chiamato">
-    <div class="row" style="justify-content:space-between;align-items:flex-end">
-      <div><h3><span class="role ${g.r}" style="vertical-align:5px">${g.r}</span> ${dotFascia(g)}${esc(g.nome)}${tag(g)}${S.asta.obiettivi.includes(id) ? '<span class="tag obj">OBIETTIVO</span>' : ""}</h3>
-        <div class="sub lbl" style="text-transform:capitalize">${esc(nomeSq(g.sq))}</div></div>
-      <button class="btn small" data-open="${id}">Scheda</button>
-    </div>
-    <div class="kv" style="margin:0">
-      <div><b>${fmt(g.pg, 2)}</b><small>punti a giornata</small></div>
-      <div><b>${fmt(g.val, 0)}</b><small>valore</small></div>
-      <div><b>${pa}</b><small>prezzo atteso ora</small></div>
-      <div><b>${cr(me.maxOff, MAXOFF0())}</b><small>la tua offerta massima</small></div>
-    </div>
-    <div class="spinta" id="spinta">${SPINTA.chiave === chiave
-      ? `<span>Spingiti fino a</span><b>${SPINTA.val.max}</b><span>crediti</span><span class="lbl">${SPINTA.val.motivo}</span>`
-      : `<span class="lbl">Calcolo fin dove spingerti…</span>`}</div>
-    <div><div class="lbl" style="margin-bottom:6px">Chi puo' ancora prenderlo, e al massimo a quanto</div>
-      <div class="conc">${rivali.map(({ t, ok }) => `<span class="${ok ? "" : "no"}" title="${ok ? "" : t.liberi[g.r] <= 0 ? "ruolo pieno" : "crediti finiti"}">${esc(t.nome)} ${ok ? cr(t.maxOff, MAXOFF0()) : "–"}</span>`).join("")}</div></div>
-    <div><div class="lbl" style="margin-bottom:6px">Chi l'ha preso</div>
-      <div class="chi">${st.map((t) => `<button data-squadra="${t.i}" aria-pressed="${scelta === t.i}" ${t.liberi[g.r] <= 0 ? "disabled" : ""}>${esc(t.nome)}</button>`).join("")}</div></div>
-    <form class="registra" id="fasta">
-      <label class="lbl" for="prezzo-asta">a</label>
-      <input id="prezzo-asta" type="number" min="1" max="${META.crediti}" value="${pa}">
-      <span class="lbl">crediti</span>
-      <button type="button" class="btn live-go" id="registra">Aggiudicato</button>
-      <span class="alert" id="err-asta" hidden></span>
-    </form>
+  const pa = prezzoAtteso(g), diff = Math.round(g.val ?? 0) - pa;
+  const pronta = SPINTA.chiave === chiave ? SPINTA.val : null;
+  const liberi = DATA.giocatori.filter((x) => x.r === g.r && !OWNER.has(x.id));
+  const pos = 1 + liberi.filter((x) => x.pg > g.pg).length;
+
+  const valore = [
+    `<div class="${spintaClasse(pronta)}" id="spinta" title="${pronta ? esc(pronta.motivo) : ""}">${spintaDentro(pronta, pa, me.maxOff)}</div>`,
+    box({ v: fmt(g.pg, 2), l: "punti a giornata", ic: "sale",
+      sub: g.pgs != null && Math.abs(g.pgs - g.pg) >= 0.005 ? `da sano ${fmt(g.pgs, 2)}` : "" }),
+    box({ v: fmt(g.val, 0), l: "valore in crediti", ic: "gemma" }),
+    box({ v: pa, l: "prezzo atteso ora", ic: "cartellino",
+      sub: `<span class="esito ${diff > 0 ? "ok" : diff < 0 ? "ko" : ""}" title="Valore meno prezzo atteso">affare ${segno(diff)}</span>` }),
+    me.liberi[g.r] > 0
+      ? box({ v: cr(me.maxOff, MAXOFF0()), l: "la tua offerta massima", ic: "persone" })
+      : box({ v: "Pieno", l: `hai già tutti i ${NOMI_RUOLO[g.r].toLowerCase()}`, ic: "no", tono: "ko", cls: "parola" }),
+  ];
+
+  const f = g.fr;
+  const [prop, tonoProp] = !f ? ["Senza storico", ""] : f.l === "alta" ? ["Fragile", "ko"] : f.l === "media" ? ["Delicato", "med"] : ["Bassa", "ok"];
+  const stato = [
+    riquadroAdesso(g, false),
+    box({ v: prop, l: f ? "propensione agli infortuni" : "infortuni", ic: "polso", tono: tonoProp, cls: "parola",
+      title: !f ? "Transfermarkt non lo ha nella rosa: storico infortuni non disponibile" : f.n ? titoloFr(g) : "Nessuno stop rilevante dalla 23/24" }),
+    box({ v: pct(g.pv), l: "prob. di voto", ic: "ok", sub: barra(g.pv, tonoQuota(g.pv)) }),
+    box({ v: pct(g.pt), l: "da titolare", ic: "orologio", sub: `${fmt(g.min, 0)}' a presenza` }),
+  ];
+  if (PER_GIORNATA[g.r] && g.v) {
+    const io = abbinamento([g], g.r);
+    stato.push(box({ v: `${io.facile}/${io.partite}`, l: "partite facili", ic: "calendario",
+      title: `${io.facile} facili, ${io.media} medie, ${io.difficile} difficili: voto FantaLab ${io.voto}`,
+      sub: `<span class="tris"><i class="f" style="flex:${io.facile}"></i><i class="m" style="flex:${io.media}"></i><i class="d" style="flex:${io.difficile}"></i></span>` }));
+    const mio = compagni(g).find((c) => c.mio);
+    if (mio) stato.push(box({ v: `+${fmt(mio.d, 2)}`, l: `pt/g alternandolo a ${esc(mio.q.nome)}`, ic: "persone", tono: "piu",
+      title: `Il compagno migliore fra quelli che hai già in rosa: in ${mio.a.facile} giornate su ${mio.a.partite} almeno uno dei due ha una partita facile` }));
+  }
+
+  const rivali = st.filter((t) => t.i !== S.asta.io && t.liberi[g.r] > 0 && t.maxOff >= 1);
+  const ricco = rivali.reduce((a, t) => (!a || t.maxOff > a.maxOff ? t : a), null);
+  const squadra = (t) => {
+    const pieno = t.liberi[g.r] <= 0, senza = !pieno && t.maxOff < 1, sonoIo = t.i === S.asta.io;
+    return `<button type="button" class="box sq${sonoIo ? " io" : ""}" data-squadra="${t.i}" aria-pressed="${S.asta.scelta === t.i}" ${pieno ? "disabled" : ""}
+        title="${pieno ? "Ha già tutti i " + NOMI_RUOLO[g.r].toLowerCase() : senza ? "Crediti finiti" : `Segna che l'ha preso ${esc(t.nome)}`}">
+      <span class="sq-n">${esc(t.nome)}</span>
+      <b>${pieno || senza ? "–" : cr(t.maxOff, MAXOFF0())}</b>
+      <span class="box-l"><span>${pieno ? "ruolo pieno" : senza ? "crediti finiti" : sonoIo ? "la tua offerta" : "offerta max"}</span></span></button>`;
+  };
+
+  box0.innerHTML = `<div class="chiamato r-${g.r}">
+    <header class="ch-top">
+      <div class="sch-chi">
+        <h3><span class="role ${g.r}">${g.r}</span>${dotFascia(g)}<span class="sch-nome">${esc(g.nome)}</span>${tag(g)}${S.asta.obiettivi.includes(id) ? '<span class="tag obj">OBIETTIVO</span>' : ""}</h3>
+        <div class="sch-meta"><span class="mt sq"><b>${esc(nomeSq(g.sq))}</b></span><span class="mt">Quotazione <b>${fmt(g.qa, 0)}</b></span><span class="mt">FVM <b>${fmt(g.fvm, 0)}</b></span>${g.fa == null ? "" : `<span class="mt">Fascia <b>${esc(META.fasce[g.fa])}</b>${g.fi ? ", stimata" : ""}</span>`}</div>
+      </div>
+      <button class="btn small" data-open="${id}" title="Apri la scheda completa">${ico("info")}Scheda</button>
+    </header>
+    ${sezione("ch-val", "martello", "Quanto vale", `${pos}° fra ${liberi.length === 1 ? "i liberi" : `i ${liberi.length} ${NOMI_RUOLO[g.r].toLowerCase()} liberi`}`,
+      `<div class="boxes valore">${valore.join("")}</div>
+      <div class="boxes stato">${stato.join("")}</div>`)}
+    ${sezione("ch-chi", "persone", "Chi lo prende", rivali.length
+        ? `${rivali.length} ${rivali.length === 1 ? "rivale può" : "rivali possono"} ancora offrire, il più ricco è ${esc(ricco.nome)}`
+        : "nessun rivale può più offrire",
+      `<div class="boxes squadre-asta" role="group" aria-label="Chi l'ha preso">${st.map(squadra).join("")}</div>
+      <form class="registra" id="fasta">
+        <label for="prezzo-asta">Preso a</label>
+        <input id="prezzo-asta" type="number" inputmode="numeric" min="1" max="${META.crediti}" value="${pa}">
+        <span class="lbl">crediti</span>
+        <button type="button" class="btn live-go" id="registra">${ico("martello")}Aggiudicato</button>
+        <span class="alert" id="err-asta" role="alert" hidden></span>
+      </form>`)}
   </div>`;
   $("#fasta").onsubmit = (e) => { e.preventDefault(); registraDaForm(); };
-  if (SPINTA.chiave !== chiave) {
+  if (!pronta) {
     setTimeout(() => {
       if (S.asta.chiamato !== id) return;
       SPINTA = { chiave, val: calcolaSpinta(id) };
       const el = $("#spinta");
-      if (el) el.innerHTML = `<span>Spingiti fino a</span><b>${SPINTA.val.max}</b><span>crediti</span><span class="lbl">${SPINTA.val.motivo}</span>`;
+      if (el) { el.className = spintaClasse(SPINTA.val); el.title = SPINTA.val.motivo; el.innerHTML = spintaDentro(SPINTA.val, pa, me.maxOff); }
     }, 30);
   }
+}
+
+// Chi l'ha preso: si segna sul riquadro della squadra, senza ridisegnare il pannello (il prezzo
+// gia' scritto resta dov'e').
+function scegliSquadra(i) {
+  S.asta.scelta = i;
+  document.querySelectorAll("#chiamato [data-squadra]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.squadra === i)));
+  const e = $("#err-asta"); if (e) e.hidden = true;
 }
 
 function registraDaForm() {
   const err = (m) => { const e = $("#err-asta"); e.textContent = m; e.hidden = false; };
   const id = S.asta.chiamato, t = S.asta.scelta;
   if (!id) return;
-  if (t == null) return err("Scegli chi l'ha preso.");
+  if (t == null) return err("Tocca la squadra che l'ha preso.");
   const prezzo = Math.round(+$("#prezzo-asta").value || 0);
   const g = BY_ID.get(id), s = statoSquadre()[t];
-  if (prezzo < 1) return err("Il prezzo minimo e' 1 credito.");
-  if (s.liberi[g.r] <= 0) return err(`${s.nome} ha gia' tutti i ${NOMI_RUOLO[g.r].toLowerCase()}.`);
-  if (prezzo > s.maxOff) return err(`${s.nome} puo' offrire al massimo ${s.maxOff} crediti.`);
+  if (prezzo < 1) return err("Il prezzo minimo è 1 credito.");
+  if (s.liberi[g.r] <= 0) return err(`${s.nome} ha già tutti i ${NOMI_RUOLO[g.r].toLowerCase()}.`);
+  if (prezzo > s.maxOff) return err(`${s.nome} può offrire al massimo ${s.maxOff} crediti.`);
   S.asta.squadre[t].rosa[id] = prezzo;
   S.asta.log.push({ id, t, p: prezzo, ora: new Date().toISOString() });
   S.asta.chiamato = null; S.asta.scelta = null;
@@ -1663,17 +1737,39 @@ function importaAsta() {
   };
 }
 
+// La ricerca del giocatore chiamato: i liberi che corrispondono, prima quelli il cui nome
+// comincia cosi'. Con le frecce su e giu' si scorre l'elenco, Invio chiama quello evidenziato.
+let RIC = { lista: [], i: 0 };
 function risultatiRicerca() {
-  const q = $("#cerca-asta").value.trim().toLowerCase();
-  const box = $("#risultati");
-  if (!q) { box.hidden = true; return []; }
+  const inp = $("#cerca-asta"), q = inp.value.trim().toLowerCase(), box = $("#risultati");
+  if (!q) { chiudiRicerca(); return []; }
   const l = DATA.giocatori.filter((g) => !OWNER.has(g.id) && g.nome.toLowerCase().includes(q))
-    .sort((a, b) => (a.nome.toLowerCase().startsWith(q) ? 0 : 1) - (b.nome.toLowerCase().startsWith(q) ? 0 : 1) || b.pg - a.pg).slice(0, 7);
-  box.innerHTML = l.map((g, i) => `<button class="${i === 0 ? "sel" : ""}" data-chiama="${g.id}"><span class="role ${g.r}">${g.r}</span>
-    <span><b>${esc(g.nome)}</b>${tagSalute(g)} <small class="lbl" style="text-transform:capitalize">${esc(nomeSq(g.sq))}</small></span><span class="lbl">${fmt(g.pg, 2)} pt/g · ${prezzoAtteso(g)} cr</span></button>`).join("")
-    || `<div class="lbl" style="padding:8px 10px">Nessun giocatore libero con questo nome.</div>`;
+    .sort((a, b) => (a.nome.toLowerCase().startsWith(q) ? 0 : 1) - (b.nome.toLowerCase().startsWith(q) ? 0 : 1) || b.pg - a.pg).slice(0, 8);
+  RIC = { lista: l, i: 0 };
+  box.innerHTML = l.length
+    ? l.map((g, i) => `<button type="button" role="option" id="ris-${i}" data-i="${i}" data-chiama="${g.id}" tabindex="-1"><span class="role ${g.r}">${g.r}</span>
+        <span class="ris-n">${dotFascia(g, true)}<b>${esc(g.nome)}</b>${tagSalute(g)}<small>${esc(nomeSq(g.sq))}</small></span>
+        <span class="ris-v"><b>${fmt(g.pg, 2)}</b> pt/g</span><span class="ris-v"><b>${prezzoAtteso(g)}</b> cr</span></button>`).join("")
+      + `<div class="ris-aiuto" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> per scorrere <kbd>Invio</kbd> per chiamarlo <kbd>Esc</kbd> per chiudere</div>`
+    : `<div class="lbl ris-vuoto">Nessun giocatore libero con questo nome.</div>`;
   box.hidden = false;
+  inp.setAttribute("aria-expanded", "true");
+  segnaRisultato();
   return l;
+}
+function segnaRisultato() {
+  const inp = $("#cerca-asta");
+  $("#risultati").querySelectorAll("[role=option]").forEach((b, k) => {
+    const on = k === RIC.i;
+    b.classList.toggle("sel", on); b.setAttribute("aria-selected", String(on));
+    if (on) { inp.setAttribute("aria-activedescendant", b.id); b.scrollIntoView({ block: "nearest" }); }
+  });
+}
+function chiudiRicerca() {
+  const inp = $("#cerca-asta");
+  $("#risultati").hidden = true;
+  RIC = { lista: [], i: 0 };
+  inp.setAttribute("aria-expanded", "false"); inp.removeAttribute("aria-activedescendant");
 }
 
 // --- eventi -----------------------------------------------------------------------------
@@ -1717,7 +1813,7 @@ document.addEventListener("click", (e) => {
   if (d.open) return scheda(+d.open);
   if (d.abb) return mostraAbbinamento(+d.abb);
   if (d.chiama) { chiudi(); return chiama(+d.chiama); }
-  if (d.squadra !== undefined) { S.asta.scelta = +d.squadra; return renderChiamato(); }
+  if (d.squadra !== undefined) return scegliSquadra(+d.squadra);
   if (d.occ) { chiudi(); return chiama(+d.occ); }
   if (t.id === "asta-avvia") return calcioDInizio(t);
   if (t.id === "asta-chiudi") return dialogoChiusura();
@@ -1785,9 +1881,28 @@ document.addEventListener("change", (e) => {
 $("#q").addEventListener("input", (e) => { S.f.q = e.target.value; renderListone(); });
 $("#cerca-asta").addEventListener("input", risultatiRicerca);
 $("#cerca-asta").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); const l = risultatiRicerca(); if (l.length) chiama(l[0].id); }
-  if (e.key === "Escape") { $("#risultati").hidden = true; }
+  const aperta = !$("#risultati").hidden && RIC.lista.length > 0;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (!aperta) return void risultatiRicerca();          // la freccia riapre l'elenco
+    const n = RIC.lista.length;
+    RIC.i = (RIC.i + (e.key === "ArrowDown" ? 1 : n - 1)) % n;
+    segnaRisultato();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    const l = aperta ? RIC.lista : risultatiRicerca();
+    if (l.length) chiama(l[aperta ? RIC.i : 0].id);
+  } else if (e.key === "Escape") chiudiRicerca();
 });
+// il mouse e la tastiera evidenziano lo stesso risultato; cliccare un risultato non toglie
+// il fuoco al campo, uscire dal campo chiude l'elenco e tornarci lo riapre
+$("#risultati").addEventListener("mousemove", (e) => {
+  const b = e.target.closest("[role=option]");
+  if (b && +b.dataset.i !== RIC.i) { RIC.i = +b.dataset.i; segnaRisultato(); }
+});
+$("#risultati").addEventListener("mousedown", (e) => e.preventDefault());
+$("#cerca-asta").addEventListener("blur", chiudiRicerca);
+$("#cerca-asta").addEventListener("focus", () => { if ($("#cerca-asta").value.trim()) risultatiRicerca(); });
 $("#pmax").addEventListener("input", (e) => { S.f.pmax = +e.target.value || null; renderListone(); });
 document.querySelector("thead").addEventListener("click", (e) => {
   const th = e.target.closest("th[data-k]"); if (!th) return;

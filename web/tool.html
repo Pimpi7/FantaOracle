@@ -88,8 +88,9 @@
           <div class="card" id="chiamata">
             <h2>Giocatore chiamato</h2>
             <div class="cerca">
-              <input id="cerca-asta" type="search" autocomplete="off" placeholder="Scrivi il nome del giocatore chiamato" aria-label="Giocatore chiamato">
-              <div class="risultati" id="risultati" hidden></div>
+              <input id="cerca-asta" type="search" autocomplete="off" placeholder="Scrivi il nome del giocatore chiamato" aria-label="Giocatore chiamato"
+                role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="risultati">
+              <div class="risultati" id="risultati" role="listbox" aria-label="Giocatori liberi" hidden></div>
             </div>
             <div id="chiamato"></div>
           </div>
