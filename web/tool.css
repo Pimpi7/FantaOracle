@@ -252,7 +252,7 @@ td.big { font-weight: 700; }
 .tag.fragile { color: var(--bad); cursor: help; }
 /* delicato e' l'unico avviso solo bordato (insieme a fragile): celeste, col cerotto dello stesso colore */
 .tag.rischio { color: var(--celeste); cursor: help; }
-.tag .segno.pallone { width: 1em; height: 1em; margin: 0 0.3em 0 -0.05em; transform: scale(1.12); }
+.tag .segno.mirino { width: 1em; height: 1em; margin: 0 0.3em 0 -0.05em; }
 td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .ic { width: 26px; height: 26px; display: inline-grid; place-items: center; border: 1px solid var(--rule); background: var(--sheet); border-radius: 5px; font-weight: 700; line-height: 1; }
 .ic:hover { border-color: var(--ink); }
