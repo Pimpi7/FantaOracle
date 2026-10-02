@@ -622,6 +622,13 @@ function titoloFr(g) {
     `; ~${fmt(f.gg, 0)} giorni e ~${fmt(f.pp, 0)} partite perse a stagione`;
 }
 
+// I segni dentro le etichette della propensione: una croce rossa per i fragili, un cerotto
+// bianco per i delicati. Prendono il colore del testo (currentColor) e la sua altezza.
+const SEGNO = {
+  croce: '<svg class="segno" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 1h3.2v3.4H11v3.2H7.6V11H4.4V7.6H1V4.4h3.4z"/></svg>',
+  cerotto: '<svg class="segno" viewBox="0 0 12 12" aria-hidden="true"><g transform="rotate(-40 6 6)"><rect x="0.6" y="3.6" width="10.8" height="4.8" rx="2.4"/>' +
+    '<rect x="4" y="3.6" width="4" height="4.8" fill="rgb(0 0 0 / 0.22)"/><circle cx="5.2" cy="5.2" r=".45" fill="rgb(0 0 0 / 0.35)"/><circle cx="6.8" cy="6.8" r=".45" fill="rgb(0 0 0 / 0.35)"/></g></svg>',
+};
 function tagSalute(g, senzaDubbio = false) {
   let t = "";
   if (g.inf && !(senzaDubbio && !fuori(g) && g.inf.t !== "diffidato")) {
@@ -634,8 +641,8 @@ function tagSalute(g, senzaDubbio = false) {
     const cls = out ? "out" : i.t === "diffidato" ? "diff" : "dubbio";
     t += `<span class="tag ${cls}" title="${esc(titoloInf(g))}">${testo}</span>`;
   }
-  if (fragile(g)) t += `<span class="tag fragile" title="${esc(titoloFr(g))}">FRAGILE</span>`;
-  else if (aRischio(g)) t += `<span class="tag rischio" title="${esc(titoloFr(g))}">DELICATO</span>`;
+  if (fragile(g)) t += `<span class="tag fragile" title="${esc(titoloFr(g))}">${SEGNO.croce}FRAGILE</span>`;
+  else if (aRischio(g)) t += `<span class="tag rischio" title="${esc(titoloFr(g))}">${SEGNO.cerotto}DELICATO</span>`;
   return t;
 }
 
@@ -659,12 +666,19 @@ const COLORI_SQ = {
   roma: ["#8e1f2f", "#f0b323"], sassuolo: ["#00a752", "#111111"], torino: ["#7f1d0b", "#ffffff"],
   udinese: ["#111111", "#ffffff"], venezia: ["#f47920", "#00843d"],
 };
+// Contrasto (WCAG) fra la scritta bianca e un colore: sotto 1,7 la striscia e' troppo chiara
+// (bianco, giallo) e l'etichetta prende il velo scuro; le altre restano coi colori pieni.
+function contrastoBianco(hex) {
+  const lin = (i) => { const c = parseInt(hex.slice(i, i + 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 1.05 / (0.2126 * lin(1) + 0.7152 * lin(3) + 0.0722 * lin(5) + 0.05);
+}
 function tag(g, senzaDubbio = false) {
   let t = "";
   if ((g.qrig || 0) >= 0.4) t += '<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">RIG</span>';
   if ((g.tifo || 1) > 1) {
     const [c1, c2] = COLORI_SQ[g.sq] || ["#8a6a12", "#f2c200"];
-    t += `<span class="tag tifo" style="--t1:${c1};--t2:${c2}" title="Prezzo atteso maggiorato: ${esc(nomeSq(g.sq))} ha molti tifosi in lega">TIFO</span>`;
+    const velo = Math.min(contrastoBianco(c1), contrastoBianco(c2)) < 1.7 ? " velo" : "";
+    t += `<span class="tag tifo${velo}" style="--t1:${c1};--t2:${c2}" title="Prezzo atteso maggiorato: ${esc(nomeSq(g.sq))} ha molti tifosi in lega">TIFO</span>`;
   }
   return t + tagSalute(g, senzaDubbio);
 }

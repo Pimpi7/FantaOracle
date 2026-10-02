@@ -233,18 +233,23 @@ td.big { font-weight: 700; }
 /* Etichette come bollini da tabellone: font condensato, pieni. Chi e' fuori ha la chiave scura
    (OUT, SQ) e accanto il rientro; il tifo porta le strisce coi colori della squadra (--t1, --t2). */
 .tag { display: inline-flex; align-items: center; font: 700 12px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase;
-  padding: 3px 5px 2px; border-radius: 3px; margin-left: 5px; vertical-align: 1px; white-space: nowrap; overflow: hidden;
+  padding: 0.25em 0.42em 0.17em; border-radius: 0.25em; margin-left: 5px; vertical-align: 1px; white-space: nowrap; overflow: hidden;
   color: var(--ink-2); box-shadow: inset 0 0 0 1.5px currentColor; }
-.tag i { font-style: normal; margin: -3px 4px -2px -5px; padding: 3px 5px 2px; background: rgb(0 0 0 / 0.24); }
+.tag i { font-style: normal; margin: -0.25em 0.33em -0.17em -0.42em; padding: 0.25em 0.42em 0.17em; background: rgb(0 0 0 / 0.24); }
+.tag .segno { width: 0.85em; height: 0.85em; margin: -0.1em 0.3em 0 0; flex: none; fill: currentColor; }
+.tag.fragile .segno { fill: var(--bad); }
 .tag.rig { color: #fff; background: #2d68b8; box-shadow: none; }
-/* un velo scuro sulle strisce: le bianche (Lazio, Juve, Napoli...) restano chiare ma la scritta si legge */
-.tag.tifo { color: #fff; background: linear-gradient(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.3)), repeating-linear-gradient(135deg, var(--t1) 0 6px, var(--t2) 6px 12px);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.3); text-shadow: 0 1px 1.5px rgb(0 0 0 / 0.9); }
+/* le strisce coi colori pieni; il velo scuro solo dove una striscia e' troppo chiara per la scritta
+   bianca (classe .velo, decisa in tag() dal contrasto: Lazio, Juve, Napoli, Lecce...) */
+.tag.tifo { color: #fff; background: repeating-linear-gradient(135deg, var(--t1) 0 0.5em, var(--t2) 0.5em 1em);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25); text-shadow: 0 0 2px rgb(0 0 0 / 0.9), 0 1px 1px #000; }
+.tag.tifo.velo { background: linear-gradient(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.3)), repeating-linear-gradient(135deg, var(--t1) 0 0.5em, var(--t2) 0.5em 1em);
+  text-shadow: 0 1px 1.5px rgb(0 0 0 / 0.9); }
 .tag.uno { color: inherit; opacity: 0.8; }
 .tag.out { color: #fff; background: #c5302a; box-shadow: none; cursor: help; }
 .tag.dubbio, .tag.diff { color: #3a2a00; background: #f7c948; box-shadow: none; cursor: help; }
 .tag.fragile { color: var(--bad); cursor: help; }
-.tag.rischio { color: #fff; background: #7a867e; box-shadow: none; cursor: help; }
+.tag.rischio { color: #fff; background: #3b8fd0; box-shadow: none; cursor: help; text-shadow: 0 1px 1px rgb(0 0 0 / 0.25); }
 td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .ic { width: 26px; height: 26px; display: inline-grid; place-items: center; border: 1px solid var(--rule); background: var(--sheet); border-radius: 5px; font-weight: 700; line-height: 1; }
 .ic:hover { border-color: var(--ink); }
@@ -364,7 +369,8 @@ table.compagni button[aria-pressed="true"] { background: var(--ink); color: var(
 .sch-chi { min-width: 0; }
 :is(.scheda, .chiamato) h3 { font-size: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 :is(.scheda, .chiamato) h3 .role { width: 26px; height: 26px; font-size: 15px; border-radius: 6px; }
-:is(.scheda, .chiamato) h3 .tag { margin-left: 0; }
+/* nella scheda il nome e' a 30px: le etichette crescono con lui (le misure sono in em) */
+:is(.scheda, .chiamato) h3 .tag { margin-left: 0; font-size: 16px; }
 :is(.scheda, .chiamato) h3 .fd { margin: 0 3px 0 2px; vertical-align: 0; }
 .sch-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
 .sch-meta .mt { font-size: 12px; line-height: 1.45; padding: 2px 10px; border-radius: 999px; background: var(--tint); color: var(--ink-2); white-space: nowrap; }
@@ -829,7 +835,7 @@ h3 .fd { width: 13px; height: 13px; margin: 0 8px 0 4px; vertical-align: 5px; }
   .boxes.merc-box.gen { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .merc-box .box.ora { grid-column: 1 / -1; }
   table.sq td, table.sq th { padding: 6px 4px; }
-  table.sq .tag { margin-left: 3px; padding: 1px 3px; }
+  table.sq .tag { margin-left: 3px; }
   .occ { grid-template-columns: 22px minmax(0, 1fr) auto; }
   .occ .num { grid-column: 2 / -1; grid-row: 2; text-align: left; white-space: normal; }
 }
