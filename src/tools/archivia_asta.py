@@ -1,16 +1,20 @@
 """Storicizza un'asta: dal testo di "Esporta l'asta" ai CSV in data/aste/<data>/.
 
 Il tool web tiene l'asta solo nella memoria del browser. Qui la si mette in git, in una
-cartella per data, in forma leggibile:
+cartella per data, in forma leggibile. Le aste sono dati di una lega: non vanno su main, che
+resta buono per chiunque, ma su un branch personale (asta-personale):
 
-    asta.json      l'export cosi' com'e' (con Importa si ricarica nel tool)
+    asta.json      l'export del tool, con i nomi delle fantasquadre resi anonimi (con Importa si ricarica nel tool)
     acquisti.csv   una riga per acquisto, nell'ordine dell'asta
     rose.csv       le rose finali, una riga per giocatore
     squadre.csv    il riepilogo per fantasquadra
     ruoli.csv      il riepilogo per ruolo
     README.md      cosa c'e' nella cartella e i numeri principali
 
-    python src/tools/archivia_asta.py <export.json> [--uscita data/aste] [--dati src/web/data.json]
+    python src/tools/archivia_asta.py <export.json> [--uscita data/aste] [--dati src/web/data.json] [--nomi-veri]
+
+I nomi delle fantasquadre non finiscono nell'archivio: diventano "La mia squadra" e "Squadra 2",
+"Squadra 3"... nell'ordine in cui erano sedute (--nomi-veri li lascia come sono).
 
 Nomi, ruoli, prezzi previsti e fasce vengono da data.json: sono quelli della versione dei dati
 con cui si lancia lo script, che conviene sia la stessa dell'asta (e' scritta nel README).
@@ -51,9 +55,20 @@ def _mezzo_su(x: float, cifre: int = 0) -> float:
     return int(x * k + 0.5) / k
 
 
-def archivia(export: Path, uscita: Path, dati: Path) -> Path:
+def anonimizza(asta: dict) -> dict:
+    """I nomi delle fantasquadre diventano quelli di partenza del tool, nell'ordine del tavolo."""
+    io = asta.get("io", 0)
+    for k, t in enumerate(asta["squadre"]):
+        t["nome"] = "La mia squadra" if k == io else f"Squadra {k + 1}"
+    return asta
+
+
+def archivia(export: Path, uscita: Path, dati: Path, nomi_veri: bool = False) -> Path:
     testo = export.read_text(encoding="utf-8")
     asta = json.loads(testo)["asta"]
+    if not nomi_veri:
+        asta = anonimizza(asta)
+        testo = json.dumps({"asta": asta}, ensure_ascii=False, separators=(",", ":"))
     d = json.loads(dati.read_text(encoding="utf-8"))
     meta, gioc = d["meta"], {g["id"]: g for g in d["giocatori"]}
     squadra = {s["slug"]: s["nome"] for s in d["squadre"]}
@@ -71,8 +86,7 @@ def archivia(export: Path, uscita: Path, dati: Path) -> Path:
     inizio = _ora(asta["inizio"]) if asta.get("inizio") else _ora(asta["log"][0]["ora"])
     cartella = uscita.resolve() / inizio.astimezone(ROMA).strftime("%Y-%m-%d")
     cartella.mkdir(parents=True, exist_ok=True)
-    if export.resolve() != (cartella / "asta.json").resolve():
-        (cartella / "asta.json").write_text(testo, encoding="utf-8")
+    (cartella / "asta.json").write_text(testo, encoding="utf-8")
 
     # --- acquisti, nell'ordine dell'asta ---
     acquisti, cumulato = [], 0
@@ -166,7 +180,7 @@ def archivia(export: Path, uscita: Path, dati: Path) -> Path:
     spesi = sum(a["prezzo"] for a in acquisti)
     locale = lambda t: t.astimezone(ROMA).strftime("%H:%M")  # noqa: E731
     righe_sq = "\n".join(
-        f"| {s['fantasquadra']}{' (io)' if s['mia'] else ''} | {s['giocatori']} | {s['crediti_spesi']} | {s['crediti_rimasti']} | "
+        f"| {s['fantasquadra']}{' (io)' if s['mia'] and nomi_veri else ''} | {s['giocatori']} | {s['crediti_spesi']} | {s['crediti_rimasti']} | "
         + " | ".join(str(s[f"spesa_{r}"]) for r in RUOLI) + f" | {s['acquisto_piu_caro']} |" for s in squadre)
     righe_r = "\n".join(
         f"| {NOMI_RUOLO[x['ruolo']]} | {x['assegnati']}/{x['slot_in_lega']} | {x['crediti_pagati']} | {x['crediti_previsti']} | "
@@ -182,14 +196,14 @@ Dalle {locale(inizio)} alle {locale(fine)} (ora italiana): {len(acquisti)} acqui
 
 | File | Cosa contiene |
 |---|---|
-| `asta.json` | L'export del tool cosi' com'e' (*Esporta l'asta*). Con *Importa* si ricarica nel tool. |
+| `asta.json` | L'export del tool (*Esporta l'asta*){"" if nomi_veri else ", con i nomi delle fantasquadre resi anonimi"}. Con *Importa* si ricarica nel tool. |
 | `acquisti.csv` | Una riga per acquisto, nell'ordine dell'asta: ora, giocatore, chi l'ha preso, prezzo, prezzo previsto prima dell'asta e scarto, le medie degli ultimi {FINESTRA} acquisti (quelle del grafico), i crediti spesi fin li', quotazione, FVM, fascia e punti attesi. |
 | `rose.csv` | Le rose finali: una riga per giocatore, con il prezzo pagato. |
 | `squadre.csv` | Per fantasquadra: giocatori, crediti spesi e rimasti, numero e spesa per ruolo. |
 | `ruoli.csv` | Per ruolo: assegnati, crediti pagati contro previsti, media a giocatore. |
 | `grafico.csv`, `grafico.png`, `grafico_riquadri.json` | Il grafico *Andamento del mercato* letto dal sito con `src/tools/scraping_grafico_asta.js`: una riga per colonna del grafico, l'immagine e i numeri dei riquadri. |
 
-`mia` vale 1 per la mia squadra. `turno_giro` e' la squadra a cui toccava chiamare nel giro al momento dell'acquisto
+{"" if nomi_veri else "Le fantasquadre sono anonime: *La mia squadra* e *Squadra 2*, *Squadra 3*... nell'ordine in cui erano sedute al tavolo." + chr(10)}`mia` vale 1 per la mia squadra. `turno_giro` e' la squadra a cui toccava chiamare nel giro al momento dell'acquisto
 (se aveva gia' il ruolo pieno ha chiamato la successiva). `nel_mio_piano` e `prezzo_nel_piano` vengono dal piano con cui
 e' stata avviata l'asta. I prezzi previsti, le fasce e i punti sono quelli dei dati `{meta.get('versione', '')}`
 (Serie A {meta.get('stagione', '')}, dati alla {meta.get('giornata', '')}ª giornata).
@@ -222,5 +236,6 @@ if __name__ == "__main__":
     ap.add_argument("export", type=Path, help='il testo di "Esporta l\'asta", salvato in un file')
     ap.add_argument("--uscita", type=Path, default=radice / "data" / "aste")
     ap.add_argument("--dati", type=Path, default=radice / "src" / "web" / "data.json")
+    ap.add_argument("--nomi-veri", action="store_true", help="lascia i nomi delle fantasquadre come sono nell'export")
     a = ap.parse_args()
-    print(archivia(a.export, a.uscita, a.dati))
+    print(archivia(a.export, a.uscita, a.dati, a.nomi_veri))
