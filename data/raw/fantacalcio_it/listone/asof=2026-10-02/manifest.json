@@ -1,0 +1,20 @@
+{
+  "fonte": "fantacalcio_it",
+  "dataset": "listone",
+  "asof": "2026-10-02",
+  "scaricato_il": "2026-10-02T10:50:41",
+  "righe": 599,
+  "colonne": [
+    "fc_id",
+    "squadra_slug",
+    "slug",
+    "nome",
+    "ruolo",
+    "ruolo_mantra",
+    "pct_giocate",
+    "squadra_sigla",
+    "qi",
+    "qa",
+    "fvm1000"
+  ]
+}

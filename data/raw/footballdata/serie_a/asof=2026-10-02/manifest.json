@@ -1,0 +1,37 @@
+{
+  "fonte": "footballdata",
+  "dataset": "serie_a",
+  "asof": "2026-10-02",
+  "scaricato_il": "2026-10-02T10:50:39",
+  "righe": 1190,
+  "colonne": [
+    "data",
+    "ora",
+    "casa",
+    "trasferta",
+    "gol_casa",
+    "gol_trasferta",
+    "esito",
+    "tiri_casa",
+    "tiri_trasferta",
+    "tiri_porta_casa",
+    "tiri_porta_trasferta",
+    "gialli_casa",
+    "gialli_trasferta",
+    "rossi_casa",
+    "rossi_trasferta",
+    "quota_1",
+    "quota_x",
+    "quota_2",
+    "quota_over25",
+    "quota_under25",
+    "stagione"
+  ],
+  "stagioni": [
+    "2324",
+    "2425",
+    "2526",
+    "2627"
+  ],
+  "falliti": []
+}

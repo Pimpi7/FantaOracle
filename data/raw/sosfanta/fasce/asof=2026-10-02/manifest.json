@@ -1,0 +1,14 @@
+{
+  "fonte": "sosfanta",
+  "dataset": "fasce",
+  "asof": "2026-10-02",
+  "scaricato_il": "2026-10-02T10:50:50",
+  "righe": 492,
+  "colonne": [
+    "ruolo",
+    "fascia",
+    "ordine",
+    "posizione",
+    "nome"
+  ]
+}

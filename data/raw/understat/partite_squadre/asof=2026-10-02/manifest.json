@@ -1,0 +1,26 @@
+{
+  "fonte": "understat",
+  "dataset": "partite_squadre",
+  "asof": "2026-10-02",
+  "scaricato_il": "2026-10-02T10:50:35",
+  "righe": 2380,
+  "colonne": [
+    "anno",
+    "us_team_id",
+    "squadra",
+    "casa",
+    "data",
+    "xg",
+    "xga",
+    "npxg",
+    "npxga",
+    "gol",
+    "subiti"
+  ],
+  "anni": [
+    2023,
+    2024,
+    2025,
+    2026
+  ]
+}
