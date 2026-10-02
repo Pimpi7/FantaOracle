@@ -5,20 +5,21 @@ function renderListone() {
   const l = filtrati();
   const { pos, tot } = posizioni();
   const m = mia();
-  const nStrat = DATA.giocatori.filter(strategia).length;
-  $("#count").textContent = `${l.length} giocatori${strategiaNascosta() ? ` · ${nStrat} della tua strategia nascosti` : ""}`;
+  $("#count").textContent = `${l.length} giocatori`;
   $("#hide-strat").checked = !!S.nascondiStrategia;
   $("#hide-strat").closest("label").hidden = inAsta();   // in asta l'interruttore non serve
-  $("#hide-strat-lbl").textContent = `Nascondi la mia strategia (${nStrat})`;
+  $("#hide-strat-lbl").textContent = "Nascondi la mia strategia";
   const nEscl = Object.keys(S.presi).length;
   $("#hide-lbl").textContent = inAsta() ? `Nascondi i presi (${nEscl})` : nEscl ? `Nascondi gli esclusi (${nEscl})` : "Nascondi gli esclusi";
+  const neutro = strategiaNascosta();
   const out = [];
   for (const g of l) {
-    const cls = m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : suggerito(g) ? "sugg" : "";
+    const cls = neutro ? "" : m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : suggerito(g) ? "sugg" : "";
     const own = inAsta() && OWNER.has(g.id) ? `<span class="tag own">${esc(S.asta.squadre[OWNER.get(g.id)].nome)}</span>` : "";
     const obj = inAsta() && S.asta.obiettivi.includes(g.id) && !OWNER.has(g.id) ? '<span class="tag obj" title="Era nel piano da cui sei partito">OBIETTIVO</span>' : "";
     const azioni = inAsta()
       ? (OWNER.has(g.id) ? "" : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`)
+      : neutro ? `<button class="ic" data-prezzo="${g.id}" title="Metti nella mia rosa" aria-label="Mia rosa">+</button>`
       : `<button class="ic ${m[g.id] != null ? "on" : ""}" data-add="${g.id}" title="${m[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}" aria-label="Mia rosa">${m[g.id] != null ? "✓" : "+"}</button>
         ${S.presi[g.id] ? `<button class="ic on" data-taken="${g.id}" title="Rimetti fra i disponibili" aria-label="Rimetti fra i disponibili">✕</button>` : ""}`;
     const aff = g.aff ?? 0;

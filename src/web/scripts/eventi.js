@@ -60,6 +60,7 @@ document.addEventListener("click", (e) => {
   }
   if (d.annulla) { rimuoviAcquisto(+d.annulla); chiudi(); return aggiorna(); }
   if (inAsta() && d.prendi) return chiama(+d.prendi);
+  if (d.prezzo) return chiediPrezzo(+d.prezzo);
   if (d.add) {
     const id = +d.add;
     if (mia()[id] != null) { delete mia()[id]; chiudi(); return aggiorna(); }

@@ -112,13 +112,12 @@ qualcosa ricalcola. Per ogni suggerito propone le alternative che rientrano nel
 budget. I giocatori esclusi (✕) escono dai suggerimenti.
 
 **Listone senza la mia strategia.** Pensato per guardare i nomi prima dell'asta senza
-farsi guidare da niente: l'interruttore *Nascondi la mia strategia* toglie dal listone
-i giocatori che hai già in rosa (o nel piano) e quelli evidenziati in giallo
-dall'algoritmo. Restano tutti gli altri, esclusi compresi (che hanno il loro
-interruttore). L'etichetta dice quanti sono e il conteggio sopra la tabella quanti ne
-ha nascosti. La posizione nella colonna `#` non cambia (resta quella dentro tutto il
-ruolo, con i buchi dei nascosti). La scelta è salvata nel browser. Con l'asta in corso
-l'interruttore sparisce e il listone resta com'è: la modalità vale solo prima dell'asta.
+farsi guidare da niente: l'interruttore *Nascondi la mia strategia* riporta il listone
+a com'è di base. Spariscono le righe gialle dei suggeriti, il grigio dei giocatori
+che hai in rosa e il segno degli esclusi, e il bottone a destra è un semplice **+** per
+tutti. Nessun giocatore viene tolto. Gli avvisi sul giocatore (infortuni, rigorista,
+tifo) restano, perché non dipendono dalla tua strategia. Con l'asta in corso
+l'interruttore sparisce e il listone resta com'è. La scelta è salvata nel browser.
 
 **Rosa comprimibile.** Su schermo largo il pannello *La mia rosa* sta accanto al
 listone: la freccia in alto a sinistra lo riduce a una barra stretta (con il
