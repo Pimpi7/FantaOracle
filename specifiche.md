@@ -222,7 +222,8 @@ Durante l'asta "La mia rosa" è la rosa reale: i tuoi acquisti al prezzo pagato,
 gli acquisti degli altri esclusi dai suggerimenti. I prezzi attesi dei giocatori
 rimasti seguono il mercato (vedi sotto). Lo stato è salvato
 nel browser a ogni acquisto ed è esportabile. Per uscire: **Sospendi** lascia tutto
-com'è e il pulsante diventa "Riprendi l'asta"; **Chiudi** archivia le rose finali
+com'è e il pulsante diventa "Riprendi l'asta", che rientra direttamente
+nell'asta senza ripassare dal setup; **Chiudi** archivia le rose finali
 nel browser (base del tool formazione), mostra subito il testo da copiare come
 copia di sicurezza e riporta il pulsante a "Modalità asta".
 
