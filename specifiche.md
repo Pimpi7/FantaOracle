@@ -171,8 +171,9 @@ dettaglio:
   momento (la media degli ultimi sei acquisti sul previsto: sopra il 110% si
   spende tanto, sotto il 90% poco) e uno per ruolo con il suo termometro. Sotto, il
   grafico: una colonna per acquisto dalla riga del 100% (rossa sopra, pagato più
-  del previsto; blu sotto), la linea della media mobile pesata sui crediti e, sotto
-  l'asse, le fasi per ruolo. Il previsto è il prezzo atteso prima dell'asta. La
+  del previsto; blu sotto), la linea della media mobile pesata sui crediti (viola, con un
+  bagliore che la stacca da rosso e blu, e un pallino in fondo che pulsa durante
+  l'asta) e, sotto l'asse, le fasi per ruolo. Il previsto è il prezzo atteso prima dell'asta. La
   scala è logaritmica (metà e doppio alla stessa distanza dalla riga); rosso e blu
   restano distinguibili anche per chi non distingue rosso e verde. Passando il
   mouse, toccando o con le frecce si legge ogni acquisto.

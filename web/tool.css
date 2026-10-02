@@ -20,6 +20,7 @@
   --go: #1d7a4a; --warn: #a86a12; --bad: #b3261e;
   --r-p: #d9821b; --r-d: #2b8a4c; --r-c: #2d68b8; --r-a: #c53a2e;  /* colori di ruolo */
   --caldo: #b3261e; --freddo: #2d68b8;   /* grafico del mercato: sopra e sotto il prezzo previsto */
+  --merc: #8b3dff;                        /* e la sua media, viola acceso che brilla su rosso e blu */
   --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --font-body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --radius: 6px;
@@ -32,7 +33,7 @@
     --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
     --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
     --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
-    --caldo: #e8604f; --freddo: #5b93e6;
+    --caldo: #e8604f; --freddo: #5b93e6; --merc: #b57bff;
     color-scheme: dark;
   }
 }
@@ -43,7 +44,7 @@
   --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
   --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
   --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
-  --caldo: #e8604f; --freddo: #5b93e6;
+  --caldo: #e8604f; --freddo: #5b93e6; --merc: #b57bff;
   color-scheme: dark;
 }
 
@@ -210,6 +211,9 @@ td.f + td.nm { padding-left: 8px; }
 td.f .fd { margin: 0 2px; }
 .fd.est { background: transparent; box-shadow: inset 0 0 0 2px var(--c), 0 0 0 3px color-mix(in srgb, var(--c) 20%, transparent), 0 0 7px color-mix(in srgb, var(--c) 45%, transparent); }
 .fd.no { background: var(--ink-2); opacity: 0.28; box-shadow: none; }
+/* Le righe che tagliano il nome con i puntini (overflow: hidden) taglierebbero anche l'alone: gli si
+   da' spazio dentro e lo si restituisce col margine negativo, cosi' l'impaginazione non cambia. */
+.slot .who, .occ-n, .ris-n { padding: 7px 0 7px 8px; margin: -7px 0 -7px -8px; }
 .fd:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .slot .who { padding-left: 2px; }
 #legenda-fasce { position: fixed; z-index: 200; width: 232px; padding: 10px 12px; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
@@ -580,6 +584,9 @@ button.box, .comp { font: inherit; cursor: pointer; }
   }
   .live .dot { animation: batte 1.2s ease-in-out infinite; }
   @keyframes batte { 50% { opacity: 0.25; } }
+  /* in asta il pallino in fondo alla media pulsa: l'alone si allarga e svanisce */
+  .merc.live .alone { animation: pulsa 1.6s ease-out infinite; }
+  @keyframes pulsa { from { transform: scale(0.6); opacity: 0.55; } to { transform: scale(2.4); opacity: 0; } }
   :root[data-asta] .top.entra::after { content: ""; position: absolute; left: 0; bottom: 0; height: 8px; width: 100%; background: var(--stage-fg); transform-origin: left; animation: accende 0.9s ease-out forwards; }
   @keyframes accende { from { transform: scaleX(0); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
 }
@@ -632,7 +639,7 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .fasce-libere > span { display: inline-flex; align-items: center; white-space: nowrap; }
 .fasce-libere .fd { margin: 0 6px 0 2px; }
 .fasce-libere b { margin-left: 4px; }
-.occ .who { display: grid; gap: 1px; white-space: normal; }
+.occ .who { display: grid; gap: 1px; white-space: normal; overflow: visible; }
 .occ-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .occ-n .fd { margin: 0 7px 0 2px; }
 .occ-f { font-size: 11.5px; color: var(--ink-2); }
@@ -652,7 +659,7 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .merc-leg span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .merc-leg .k { width: 10px; height: 10px; border-radius: 2px; }
 .merc-leg .k.caro { background: var(--caldo); } .merc-leg .k.sconto { background: var(--freddo); }
-.merc-leg .k.linea { width: 16px; height: 2px; border-radius: 1px; background: var(--ink); }
+.merc-leg .k.linea { width: 16px; height: 3px; border-radius: 2px; background: var(--merc); box-shadow: 0 0 5px var(--merc); }
 .merc-graf { position: relative; }
 svg.merc { display: block; max-width: 100%; touch-action: pan-y; }
 .merc .griglia { stroke: var(--rule); stroke-width: 1; fill: none; }
@@ -660,8 +667,11 @@ svg.merc { display: block; max-width: 100%; touch-action: pan-y; }
 .merc .caro { fill: var(--caldo); } .merc .sconto { fill: var(--freddo); }
 .merc .piccolo { opacity: 0.35; }
 .merc .pari { fill: var(--ink-2); }
-.merc .media { stroke: var(--ink); stroke-width: 2; fill: none; stroke-linejoin: round; stroke-linecap: round; }
-.merc .punto { fill: var(--ink); stroke: var(--sheet); stroke-width: 2; }
+/* la media: viola con il bagliore (filtro #merc-glow) e un filo chiaro al centro che la fa brillare */
+.merc .media { stroke: var(--merc); stroke-width: 2.6; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.merc .media-luce { stroke: #ffffff; stroke-opacity: 0.55; stroke-width: 1; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.merc .punto { fill: var(--merc); stroke: var(--sheet); stroke-width: 2; }
+.merc .alone { fill: var(--merc); opacity: 0.22; transform-box: fill-box; transform-origin: center; }
 .merc .fase { stroke: var(--ink-2); stroke-width: 2; fill: none; }
 .merc .mirino { stroke: var(--ink); stroke-width: 1; fill: none; }
 .merc text { font-family: var(--font-body); fill: var(--ink-2); }
