@@ -167,16 +167,26 @@ dettaglio:
   acquisto riporta indietro anche il turno. La ricerca mette prima i giocatori del
   ruolo in corso.
 - **Andamento del mercato**, a sinistra sotto il giocatore chiamato, dove ha
-  tutta la larghezza che gli serve: un riquadro per il
-  momento (la media degli ultimi sei acquisti sul previsto: sopra il 110% si
-  spende tanto, sotto il 90% poco) e uno per ruolo con il suo termometro. Sotto, il
-  grafico: una colonna per acquisto dalla riga del 100% (rossa sopra, pagato più
-  del previsto; blu sotto), la linea della media mobile pesata sui crediti (viola, con un
-  bagliore che la stacca da rosso e blu, e un pallino in fondo che pulsa durante
-  l'asta) e, sotto l'asse, le fasi per ruolo. Il previsto è il prezzo atteso prima dell'asta. La
-  scala è logaritmica (metà e doppio alla stessa distanza dalla riga); rosso e blu
-  restano distinguibili anche per chi non distingue rosso e verde. Passando il
-  mouse, toccando o con le frecce si legge ogni acquisto.
+  tutta la larghezza che gli serve. In alto l'*andamento generale*, in crediti e
+  senza confronti con le stime: la quota dei crediti della lega già spesa (con la
+  quota dei giocatori assegnati accanto), i crediti a giocatore in media fin qui e
+  negli ultimi sei acquisti, i crediti ancora da spendere e quanti sono per ogni
+  slot libero. Il grafico ha una colonna per acquisto alta quanto i crediti
+  pagati (scala lineare da zero, un solo colore; la cima segue i prezzi tipici e
+  i colpi fuori scala portano il prezzo scritto sopra), la linea della media degli
+  ultimi sei (viola, con un bagliore che la stacca dalle colonne, e un pallino in
+  fondo che pulsa durante l'asta) e, sotto l'asse, le fasi per ruolo.
+  Sotto, un pannello chiuso che si apre con un tocco (e resta com'è dopo ogni
+  acquisto): i *prezzi pagati rispetto al previsto*. I prezzi attesi seguono già
+  il tavolo da soli, quindi questo è il dettaglio per chi vuole vederlo: un
+  riquadro per il momento (la media degli ultimi sei acquisti sul previsto: sopra
+  il 110% si spende tanto, sotto il 90% poco) e uno per ruolo con il suo
+  termometro; una colonna per acquisto dalla riga del 100% (rossa sopra, pagato
+  più del previsto; blu sotto) e la media mobile pesata sui crediti. Il previsto
+  è il prezzo atteso prima dell'asta; la scala è logaritmica (metà e doppio alla
+  stessa distanza dalla riga); rosso e blu restano distinguibili anche per chi
+  non distingue rosso e verde. In entrambi i grafici, passando il mouse, toccando
+  o con le frecce si legge ogni acquisto.
 - **Squadre**, in alto a destra: crediti, offerta massima, budget di ruolo e slot liberi per ruolo di
   ognuna, con la rosa apribile e l'etichetta su chi deve chiamare.
 - **Occasioni di fine ruolo**, a destra sotto le squadre. Nell'asta per ruolo
