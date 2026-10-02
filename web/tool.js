@@ -606,9 +606,9 @@ function titoloFr(g) {
     `; ~${fmt(f.gg, 0)} giorni e ~${fmt(f.pp, 0)} partite perse a stagione`;
 }
 
-function tagSalute(g) {
+function tagSalute(g, senzaDubbio = false) {
   let t = "";
-  if (g.inf) {
+  if (g.inf && !(senzaDubbio && !fuori(g) && g.inf.t !== "diffidato")) {
     const i = g.inf;
     const out = fuori(g);
     const testo = i.t === "diffidato" ? "DIFFIDATO" : !out ? "IN DUBBIO"
@@ -630,11 +630,11 @@ function filtroSalute(g, f) {
   return true;
 }
 
-function tag(g) {
+function tag(g, senzaDubbio = false) {
   let t = "";
   if ((g.qrig || 0) >= 0.4) t += '<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">RIG</span>';
   if ((g.tifo || 1) > 1) t += '<span class="tag tifo" title="Prezzo atteso maggiorato: squadra con molti tifosi in lega">TIFO</span>';
-  return t + tagSalute(g);
+  return t + tagSalute(g, senzaDubbio);
 }
 
 // Come sta adesso, in un riquadro: verde se disponibile, rosso se salta giornate, giallo se e'
@@ -709,7 +709,7 @@ function renderListone() {
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
       <td class="l"><span class="role ${g.r}">${g.r}</span></td>
       <td class="f">${dotFascia(g, true)}</td>
-      <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}${obj}${own}</td>
+      <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g, true)}${obj}${own}</td>
       <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
       <td class="big">${fmt(g.pg, 2)}</td>
       <td class="hide-s">${fmt(g.fm, 2)}</td>
