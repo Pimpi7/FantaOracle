@@ -667,6 +667,10 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .card.hot { border-color: var(--live-edge); box-shadow: inset 4px 0 0 var(--live); }
 .occ { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 4px; border-top: 1px solid var(--tint); }
 .occ:first-of-type { border-top: 0; }
+/* a fine ruolo, sotto le occasioni: i migliori che restano, a prezzo pieno */
+.occ-sub { margin: 14px 0 2px; padding-top: 10px; border-top: 1px dashed var(--rule); font-size: 12.5px; color: var(--ink-2); }
+.occ-sub b { color: var(--ink); }
+.occ-resto .num span { color: var(--ink-2); }
 .occ .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .occ .who small { color: var(--ink-2); text-transform: capitalize; margin-left: 4px; }
 .occ .num { text-align: right; font-size: 12.5px; white-space: nowrap; }

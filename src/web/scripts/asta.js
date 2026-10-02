@@ -69,7 +69,7 @@ function renderAsta() {
   // titolare: allora va via al prezzo di una riserva. Nell'ultimo ruolo contano invece gli slot
   // dei rivali che hanno ancora crediti. Si propongono dalla fascia piu' alta.
   const fase = MERC.fase, chi = chiChiama();
-  const occ = [];
+  const occ = [], resto = [];
   for (const r of perRuolo() ? (fase ? [fase] : []) : RUOLI) {
     const { buoni, bisogno, peggiore, perSquadra, altri, posti } = MERC.quadro[r];
     const tuttiRivali = st.filter((t) => t.i !== S.asta.io);
@@ -122,8 +122,16 @@ function renderAsta() {
       occ.push({ g, pa, reale, n, maxRivali: daTitolare - 1, riserva: comeRiserva > daTitolare, senzaPosto,
         come: !rivali.length ? "solo" : !vogliono.length ? "riserva" : n && daTitolare >= comeRiserva ? "rivali" : "secco" });
     });
+    // Quando in lega restano pochi slot (in media meno di uno a squadra) le occasioni sono rare: nessun
+    // buono costa il 25% in meno. Si mostrano comunque i migliori ancora liberi, a prezzo pieno, con fin
+    // dove arriva il rivale piu' ricco.
+    if (MERC.aperti[r] <= META.n_squadre) {
+      resto.push({ r, aperti: MERC.aperti[r], fino: rivali.length ? Math.floor(piuRicco(rivali)) : null,
+        lista: DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id) && g.pg > 0).sort((a, b) => b.pg - a.pg).slice(0, 6 + NMIGLIORI) });
+    }
   }
   occ.sort((a, b) => perFascia(a.g, b.g));
+  const mostrate = new Set(occ.slice(0, 6).map((o) => o.g.id));
   let testa;
   if (!perRuolo()) {
     const libLega = RUOLI.map((r) => `${r} ${MERC.aperti[r]}`).join(" · ");
@@ -145,15 +153,23 @@ function renderAsta() {
         title: MERC.futuri.length ? `Nei ruoli dopo i prezzi sono al ${pct(FATT[MERC.futuri[0]])} del previsto: quello che si spende adesso manca dopo` : "Ultimo ruolo: i crediti che restano si spendono qui" })}
     </div>${fasceLibere(fase)}`;
   }
+  // La riga di un giocatore, uguale per le occasioni e per i migliori rimasti; `num` e' il suo blocco di numeri.
+  const rigaOcc = (g, num) => `<div class="occ">
+        <span class="role ${g.r}">${g.r}</span>
+        <span class="who"><span class="occ-n">${dotFascia(g)}<b>${esc(g.nome)}</b><small>${esc(nomeSq(g.sq))}</small></span>
+          <span class="occ-f">${g.fa == null ? "senza fascia" : esc(META.fasce[g.fa]) + (g.fi ? ", stimata" : "")}${!inFasciaAlta(g) && g.pg >= SOGLIA[g.r] ? ", da titolare per i nostri punti" : ""}</span></span>
+        <span class="num">${num}</span>
+        <button class="btn small" data-occ="${g.id}">Chiama</button></div>`;
+  const migliori = resto.map(({ r, aperti, fino, lista }) => {
+    const l = lista.filter((g) => !mostrate.has(g.id)).slice(0, NMIGLIORI);
+    if (!l.length) return "";
+    return `<div class="occ-sub"><b>${NOMI_RUOLO[r]}: i migliori rimasti</b> · ${aperti === 1 ? "resta 1 slot" : `restano ${aperti} slot`} in lega${fino >= 1 ? `, il rivale più ricco arriva a ${fino} cr` : ""}</div>
+      <div class="occ-resto">${l.map((g) => rigaOcc(g, `<b>${fmt(g.pg, 2)}</b> pt/g · <b>${prezzoAtteso(g)}</b> cr<br><span>prezzo atteso</span>`)).join("")}</div>`;
+  }).join("");
   $("#occasioni").className = "card" + (occ.length ? " hot" : "");
   $("#occasioni").innerHTML = `<h2>Occasioni di fine ruolo</h2>${testa}
-    ${occ.length ? occ.slice(0, 6).map((o) => `<div class="occ">
-        <span class="role ${o.g.r}">${o.g.r}</span>
-        <span class="who"><span class="occ-n">${dotFascia(o.g)}<b>${esc(o.g.nome)}</b><small>${esc(nomeSq(o.g.sq))}</small></span>
-          <span class="occ-f">${o.g.fa == null ? "senza fascia" : esc(META.fasce[o.g.fa]) + (o.g.fi ? ", stimata" : "")}${!inFasciaAlta(o.g) && o.g.pg >= SOGLIA[o.g.r] ? ", da titolare per i nostri punti" : ""}</span></span>
-        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br><span title="${esc(perche(o).lungo)}">${perche(o).corto}</span></span>
-        <button class="btn small" data-occ="${o.g.id}">Chiama</button></div>`).join("")
-      : perRuolo() && !fase ? "" : `<p class="lbl">Nessuna per ora. Compaiono quando un giocatore buono può costare molto meno del previsto: chi lo vuole ha finito il budget${perRuolo() ? ", oppure nessun rivale lo vuole più da titolare" : ""}. Li vedrai qui dalla fascia più alta, con il prezzo realistico.</p>`}`;
+    ${occ.length ? occ.slice(0, 6).map((o) => rigaOcc(o.g, `<b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br><span title="${esc(perche(o).lungo)}">${perche(o).corto}</span>`)).join("")
+      : perRuolo() && !fase ? "" : `<p class="lbl">Nessuna per ora. Compaiono quando un giocatore buono può costare molto meno del previsto: chi lo vuole ha finito il budget${perRuolo() ? ", oppure nessun rivale lo vuole più da titolare" : ""}. Li vedrai qui dalla fascia più alta, con il prezzo realistico.</p>`}${migliori}`;
 
   // --- squadre ---
   // Il budget di ruolo dei rivali e' una stima (crediti meno la spesa media dei ruoli dopo). Per
