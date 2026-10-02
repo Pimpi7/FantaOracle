@@ -110,7 +110,8 @@ function renderRosa() {
   h += campo(tutti);
 
   for (const r of RUOLI) {
-    const miei = scelti.filter((x) => x.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
+    // i tuoi in ordine di crediti, dal piu' caro (a pari prezzo, per punti); i suggeriti per punti
+    const miei = scelti.filter((x) => x.g.r === r).sort((a, b) => b.p - a.p || b.g.pg - a.g.pg);
     const sug = SUGG.lista.filter((c) => c.g.r === r).sort((a, b) => b.g.pg - a.g.pg);
     const vuoti = Math.max(0, META.slot[r] - miei.length - sug.length);
     // In asta la rosa e' quella reale, che parte vuota: il piano da cui sei partito resta qui sotto,
