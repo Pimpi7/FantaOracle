@@ -233,10 +233,10 @@ td.big { font-weight: 700; }
 /* Etichette come bollini da tabellone: font condensato, pieni. Chi e' fuori ha la chiave scura
    (OUT, SQ) e accanto il rientro; il tifo porta le strisce coi colori della squadra (--t1, --t2). */
 .tag { display: inline-flex; align-items: center; font: 700 12px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase;
-  padding: 0.25em 0.42em 0.17em; border-radius: 0.25em; margin-left: 5px; vertical-align: 1px; white-space: nowrap; overflow: hidden;
+  padding: 0.2em 0.42em 0.22em; border-radius: 0.25em; margin-left: 5px; vertical-align: -0.06em; white-space: nowrap; overflow: hidden;
   color: var(--ink-2); box-shadow: inset 0 0 0 1.5px currentColor; }
-.tag i { font-style: normal; margin: -0.25em 0.33em -0.17em -0.42em; padding: 0.25em 0.42em 0.17em; background: rgb(0 0 0 / 0.24); }
-.tag .segno { width: 0.85em; height: 0.85em; margin: -0.1em 0.3em 0 0; flex: none; fill: currentColor; }
+.tag i { font-style: normal; margin: -0.2em 0.33em -0.22em -0.42em; padding: 0.2em 0.42em 0.22em; background: rgb(0 0 0 / 0.24); }
+.tag .segno { width: 0.85em; height: 0.85em; margin: 0 0.3em 0 0; flex: none; fill: currentColor; }
 .tag.fragile .segno { fill: var(--bad); }
 .tag.rig { color: #fff; background: #2d68b8; box-shadow: none; }
 /* le strisce coi colori pieni; il velo scuro solo dove una striscia e' troppo chiara per la scritta
