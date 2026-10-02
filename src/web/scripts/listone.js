@@ -7,7 +7,6 @@ function renderListone() {
   const m = mia();
   $("#count").textContent = `${l.length} giocatori`;
   $("#hide-strat").checked = !!S.nascondiStrategia;
-  $("#hide-strat").closest("label").hidden = inAsta();   // in asta l'interruttore non serve
   $("#hide-strat-lbl").textContent = "Nascondi la mia strategia";
   const nEscl = Object.keys(S.presi).length;
   $("#hide-lbl").textContent = inAsta() ? `Nascondi i presi (${nEscl})` : nEscl ? `Nascondi gli esclusi (${nEscl})` : "Nascondi gli esclusi";
@@ -16,7 +15,7 @@ function renderListone() {
   for (const g of l) {
     const cls = neutro ? "" : m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : suggerito(g) ? "sugg" : "";
     const own = inAsta() && OWNER.has(g.id) ? `<span class="tag own">${esc(S.asta.squadre[OWNER.get(g.id)].nome)}</span>` : "";
-    const obj = inAsta() && S.asta.obiettivi.includes(g.id) && !OWNER.has(g.id) ? '<span class="tag obj" title="Era nel piano da cui sei partito">OBIETTIVO</span>' : "";
+    const obj = !neutro && inAsta() && S.asta.obiettivi.includes(g.id) && !OWNER.has(g.id) ? '<span class="tag obj" title="Era nel piano da cui sei partito">OBIETTIVO</span>' : "";
     const azioni = inAsta()
       ? (OWNER.has(g.id) ? "" : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`)
       : neutro ? `<button class="ic" data-prezzo="${g.id}" title="Metti nella mia rosa" aria-label="Mia rosa">+</button>`

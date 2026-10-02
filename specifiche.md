@@ -116,8 +116,10 @@ farsi guidare da niente: l'interruttore *Nascondi la mia strategia* riporta il l
 a com'è di base. Spariscono le righe gialle dei suggeriti, il grigio dei giocatori
 che hai in rosa e il segno degli esclusi, e il bottone a destra è un semplice **+** per
 tutti. Nessun giocatore viene tolto. Gli avvisi sul giocatore (infortuni, rigorista,
-tifo) restano, perché non dipendono dalla tua strategia. Con l'asta in corso
-l'interruttore sparisce e il listone resta com'è. La scelta è salvata nel browser.
+tifo) restano, perché non dipendono dalla tua strategia. L'interruttore c'è anche con
+l'asta in corso: in più nasconde il segno OBIETTIVO, mentre il bottone *Chiama* e la
+squadra che ha preso un giocatore restano, perché sono il mercato. La scelta è salvata
+nel browser.
 
 **Rosa comprimibile.** Su schermo largo il pannello *La mia rosa* sta accanto al
 listone: la freccia in alto a sinistra lo riduce a una barra stretta (con il

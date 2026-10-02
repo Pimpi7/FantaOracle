@@ -284,8 +284,6 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 }
 @media (max-width: 900px) { .rosa-tg { display: none; } }
 @media (prefers-reduced-motion: no-preference) { .main { transition: grid-template-columns 0.25s ease; } }
-/* l'attributo hidden deve vincere sul display dell'interruttore */
-.toggle[hidden] { display: none; }
 /* il quadratino dell'interruttore ha i colori delle righe che spegne: suggeriti (giallo) e miei (grigio) */
 #hide-strat-lbl::before { content: ""; display: inline-block; width: 12px; height: 10px; margin-right: 6px; border-radius: 2px; background: linear-gradient(90deg, var(--mark) 50%, var(--rule) 50%); vertical-align: -1px; }
 .bar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; background: var(--tint); }

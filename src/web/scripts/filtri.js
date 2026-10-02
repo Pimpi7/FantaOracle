@@ -29,8 +29,8 @@ function posizioni() {
 // Evidenziato dall'algoritmo: suggerito e ne' tuo ne' escluso (chi e' tuo o escluso ha il suo colore).
 const suggerito = (g) => SUGG.ids.has(g.id) && mia()[g.id] == null && !S.presi[g.id];
 // Listone neutro: niente righe gialle (suggeriti), grigie (miei) o spente (esclusi), per guardare i nomi
-// prima dell'asta senza influenze. Nessuno sparisce. Con l'asta in corso non si applica.
-const strategiaNascosta = () => S.nascondiStrategia && !inAsta();
+// prima dell'asta (o durante) senza influenze. Nessuno sparisce.
+const strategiaNascosta = () => !!S.nascondiStrategia;
 
 function filtrati() {
   const q = S.f.q.trim().toLowerCase();
