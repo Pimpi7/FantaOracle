@@ -2,22 +2,6 @@
   <img src="docs/img/titolo.png" alt="FantaOracle" width="760">
 </h1>
 
-⚽ Vuoi fare il fantacalcio con gli amici ma non hai tempo di studiarti tutto il listone, e magari non segui neanche così tanto il calcio perchè:
-
-<p align="center",>
-  ☝🏻<em>"Non ci sono più i giocatori di una volta, questi pensano solo ai soldi!"</em>☝🏻
-</p>
-
-però comunque non riesci a smettere di vedere le partite della Maggica perchè Daje Roma Daje 🐺?
-
-🔮 Ecco a te **FantaOracle**, la tua sfera di cristallo per il fantacalcio, un tool semplicissimo che **fa il lavoro sporco al posto tuo**, studiando per te le statistiche delle ultime stagioni (**gol attesi, assist, rigori, clean sheet, affidabilità sulla titolarità**) e trasformandole in una **stima dei fantapunti** che ogni giocatore porterà a giornata, senza che tu debba aprire un solo foglio Excel. ✨Ma c'è di più!✨
-
-🔴 Il giorno dell'asta potrai avviare la **Modalità Asta** che ti guiderà passo passo durante la fase più calda di tutto il Fantacalcio, permettendoti di tenere sotto controllo la tua situazione e quella delle altre squadre, **ricalcolando dinamicamente i suggerimenti di acquisto** e la **possibile riallocazione del budget**, sulla base dell'andamento generale del mercato e dei crediti che tu e i tuoi avversari state spendendo, e mostrandoti nelle fasi finali le **"occasioni"** rimaste.
-
-‼️E anche se hai **esperienza**, **FantaOracle** è uno strumento fondamentale anche per te. Infatti tutti i valori calcolati e i suggerimenti, sono appunto tali. Con la **modalità manuale** potrai creare la tua strategia completamente personalizzata, ed usufruire comunque di tutti gli strumenti di **reportistica** e **monitoraggio** messi a disposizione dal tool durante l'asta, per poter migliorare le tue stime e valutazioni di anno in anno.
-
-⏳**COMING SOON**: pensi che dopo averti aiutato a fare la miglior squadra possibile sarai abbandonato a te stesso, senza saper gestire una formazione così competitiva? Sta arrivando anche la **Modalità Formazione**, che combina tutti i migliori dati a disposizione per fornirti suggerimenti *ad hoc* per massimizzare il punteggio atteso di ogni giornata! 
-
 ### 👉 [Apri il tool](https://pimpi7.github.io/FantaOracle/)
 
 Funziona nel browser, da computer e da telefono, senza installare nulla. I dati si aggiornano da soli ogni martedì e venerdì.
