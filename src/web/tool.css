@@ -284,6 +284,14 @@ td.act { display: flex; gap: 4px; justify-content: flex-end; }
 }
 @media (max-width: 900px) { .rosa-tg { display: none; } }
 @media (prefers-reduced-motion: no-preference) { .main { transition: grid-template-columns 0.25s ease; } }
+/* Listone neutro (Nascondi la mia strategia): niente rosa accanto al listone ne' scheda "La mia rosa" da telefono,
+   e prima dell'asta niente conteggi di crediti e giocatori in testata. */
+:root[data-neutro] #tab-rosa { display: none; }
+:root[data-neutro] .main[data-view="listone"] { grid-template-columns: minmax(0, 1fr); }
+:root[data-neutro] .main[data-view="listone"] .p-rosa { display: none; }
+:root[data-neutro]:not([data-asta]) .budget { display: none; }
+:root[data-neutro]:not([data-asta]) #asta-ctl { margin-left: auto; }
+.toggle[hidden] { display: none; }
 /* il quadratino dell'interruttore ha i colori delle righe che spegne: suggeriti (giallo) e miei (grigio) */
 #hide-strat-lbl::before { content: ""; display: inline-block; width: 12px; height: 10px; margin-right: 6px; border-radius: 2px; background: linear-gradient(90deg, var(--mark) 50%, var(--rule) 50%); vertical-align: -1px; }
 .bar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; background: var(--tint); }

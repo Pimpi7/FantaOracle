@@ -6,7 +6,9 @@ function renderListone() {
   const { pos, tot } = posizioni();
   const m = mia();
   $("#count").textContent = `${l.length} giocatori`;
+  applicaNeutro();
   $("#hide-strat").checked = !!S.nascondiStrategia;
+  $("#hide").closest("label").hidden = neutroPreAsta();   // gli esclusi sono una scelta mia: il filtro (e il loro numero) li tradirebbe
   $("#hide-strat-lbl").textContent = "Nascondi la mia strategia";
   const nEscl = Object.keys(S.presi).length;
   $("#hide-lbl").textContent = inAsta() ? `Nascondi i presi (${nEscl})` : nEscl ? `Nascondi gli esclusi (${nEscl})` : "Nascondi gli esclusi";

@@ -59,11 +59,13 @@ function abbinamento(gs, r) {
 // preso da altri, e le riserve: chi prende voto meno di una volta su tre non si alterna con
 // nessuno. Quelli gia' nella tua rosa restano comunque.
 const PRESENZE_MIN = 0.35;
-function compagni(g) {
-  const solo = abbinamento([g], g.r).pg, m = mia();
+// Con `neutro` non conta niente di cio' che e' mio: ne' la rosa ne' gli esclusi (prima dell'asta), cosi' i
+// compagni non lasciano intuire la strategia.
+function compagni(g, neutro = false) {
+  const solo = abbinamento([g], g.r).pg, m = neutro ? {} : mia(), presi = neutro && !inAsta() ? {} : S.presi;
   return DATA.giocatori
     .filter((q) => q.r === g.r && q.v && q.id !== g.id && q.sq !== g.sq &&
-      (m[q.id] != null || (!S.presi[q.id] && (q.pv ?? 0) >= PRESENZE_MIN)))
+      (m[q.id] != null || (!presi[q.id] && (q.pv ?? 0) >= PRESENZE_MIN)))
     .map((q) => {
       const a = abbinamento([g, q], g.r), mio = m[q.id] != null;
       return { q, a, d: a.pg - solo, p: mio ? +m[q.id] : prezzoAtteso(q), mio };
@@ -110,7 +112,7 @@ function griglia(g, q) {
 // La tabella completa dei compagni resta chiusa finche' non la si apre.
 function sezioneAlternanza(g) {
   if (!PER_GIORNATA[g.r] || !g.v) return "";
-  const lista = compagni(g);
+  const lista = compagni(g, strategiaNascosta());
   const miei = lista.filter((c) => c.mio), altri = lista.filter((c) => !c.mio);
   const top = altri.slice(0, 5);
   const soglia = Math.max(2, Math.round(META.crediti / 100));

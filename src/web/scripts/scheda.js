@@ -149,6 +149,7 @@ function scheda(id) {
   if (SCHEDA.id !== id) SCHEDA = { id, abb: null };
   const azioni = inAsta()
     ? (OWNER.has(g.id) ? `<span class="lbl">Preso da ${esc(S.asta.squadre[OWNER.get(g.id)].nome)} a ${S.asta.squadre[OWNER.get(g.id)].rosa[g.id]} crediti</span>` : `<button class="btn primary" data-chiama="${g.id}">Chiama all'asta</button>`)
+    : neutroPreAsta() ? `<button class="btn primary" data-prezzo="${g.id}">Metti nella mia rosa</button>`
     : `<button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti fra i disponibili" : "Escludi"}</button>
       <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>`;
   apri(`
@@ -172,7 +173,12 @@ function chiediPrezzo(id) {
       <span class="lbl">crediti</span>
     </form>
     <div class="actions"><button class="btn" data-close>Annulla</button><button class="btn primary" id="okprezzo">Metti nella mia rosa</button></div>`);
-  const conferma = () => { const p = Math.max(1, Math.round(+$("#prezzo").value || 1)); mia()[id] = p; delete S.presi[id]; chiudi(); aggiorna(); };
+  const conferma = () => {
+    const p = Math.max(1, Math.round(+$("#prezzo").value || 1));
+    // a listone neutro non so se e' gia' mio: lasciando il prezzo proposto non tocco quello che avevo dato
+    if (strategiaNascosta() && mia()[id] != null && p === prezzoAtteso(g)) { chiudi(); return aggiorna(); }
+    mia()[id] = p; delete S.presi[id]; chiudi(); aggiorna();
+  };
   $("#okprezzo").onclick = conferma;
   $("#fprezzo").onsubmit = (e) => { e.preventDefault(); conferma(); };
   $("#prezzo").select();

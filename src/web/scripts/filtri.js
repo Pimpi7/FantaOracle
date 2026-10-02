@@ -28,9 +28,18 @@ function posizioni() {
 
 // Evidenziato dall'algoritmo: suggerito e ne' tuo ne' escluso (chi e' tuo o escluso ha il suo colore).
 const suggerito = (g) => SUGG.ids.has(g.id) && mia()[g.id] == null && !S.presi[g.id];
-// Listone neutro: niente righe gialle (suggeriti), grigie (miei) o spente (esclusi), per guardare i nomi
-// prima dell'asta (o durante) senza influenze. Nessuno sparisce.
+// Listone neutro: niente che lasci intuire la mia strategia, per guardare i nomi senza influenze.
+// Nessun giocatore sparisce, ma spariscono le righe gialle (suggeriti), grigie (miei) e spente (esclusi), il
+// pannello della rosa, i conteggi in testata, lo stato dei bottoni nella scheda, gli "in rosa" fra i compagni
+// di alternanza e il filtro sugli esclusi. Prima dell'asta gli esclusi sono una mia scelta; in asta sono i
+// giocatori gia' presi dalle squadre, cioe' il mercato, e restano.
 const strategiaNascosta = () => !!S.nascondiStrategia;
+const neutroPreAsta = () => strategiaNascosta() && !inAsta();
+// Gli stili che nascondono la rosa e la testata dipendono da questo attributo della pagina.
+function applicaNeutro() {
+  document.documentElement.toggleAttribute("data-neutro", strategiaNascosta());
+  if (strategiaNascosta() && $("#main").dataset.view === "rosa") vista("listone");
+}
 
 function filtrati() {
   const q = S.f.q.trim().toLowerCase();
@@ -38,7 +47,7 @@ function filtrati() {
     (!S.f.r || g.r === S.f.r) && (!S.f.sq || g.sq === S.f.sq) &&
     (!q || g.nome.toLowerCase().includes(q)) &&
     (!S.f.pmax || prezzoAtteso(g) <= S.f.pmax) &&
-    (!S.f.hide || !S.presi[g.id]) && filtroSalute(g, S.f.salute));
+    (!S.f.hide || neutroPreAsta() || !S.presi[g.id]) && filtroSalute(g, S.f.salute));
   l.sort(confronta);
   return l;
 }

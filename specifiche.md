@@ -112,14 +112,24 @@ qualcosa ricalcola. Per ogni suggerito propone le alternative che rientrano nel
 budget. I giocatori esclusi (✕) escono dai suggerimenti.
 
 **Listone senza la mia strategia.** Pensato per guardare i nomi prima dell'asta senza
-farsi guidare da niente: l'interruttore *Nascondi la mia strategia* riporta il listone
-a com'è di base. Spariscono le righe gialle dei suggeriti, il grigio dei giocatori
-che hai in rosa e il segno degli esclusi, e il bottone a destra è un semplice **+** per
-tutti. Nessun giocatore viene tolto. Gli avvisi sul giocatore (infortuni, rigorista,
-tifo) restano, perché non dipendono dalla tua strategia. L'interruttore c'è anche con
-l'asta in corso: in più nasconde il segno OBIETTIVO, mentre il bottone *Chiama* e la
-squadra che ha preso un giocatore restano, perché sono il mercato. La scelta è salvata
-nel browser.
+farsi guidare da niente: l'interruttore *Nascondi la mia strategia* nasconde tutto ciò
+che lascia intuire cosa hai scelto, e non toglie nessun giocatore. Spariscono:
+- le righe gialle dei suggeriti, il grigio dei giocatori in rosa e il segno degli
+  esclusi; il bottone a destra è un semplice **+** per tutti;
+- il pannello *La mia rosa* accanto al listone (e, da telefono, la scheda *La mia rosa*);
+- prima dell'asta, i conteggi in testata (crediti liberi, offerta massima, giocatori);
+- il filtro *Nascondi gli esclusi* e il numero di esclusi nella sua etichetta;
+- nella scheda del giocatore, lo stato dei bottoni: resta solo *Metti nella mia rosa*
+  (se il prezzo proposto non cambia, non tocca quello che avevi già dato);
+- fra i compagni di alternanza di portieri e attaccanti, chi hai già in rosa (il segno
+  *In rosa* e il gruppo *Già nella tua rosa*) e chi hai escluso: i compagni sono
+  calcolati come se la rosa fosse vuota.
+
+Gli avvisi sul giocatore (infortuni, rigorista, tifo) restano, perché non dipendono
+dalla tua strategia. L'interruttore c'è anche con l'asta in corso: in più nasconde il
+segno OBIETTIVO, mentre il bottone *Chiama*, la squadra che ha preso un giocatore e i
+giocatori già presi restano, perché sono il mercato; la testata dell'asta e la
+scheda *Asta* non cambiano. La scelta è salvata nel browser.
 
 **Rosa comprimibile.** Su schermo largo il pannello *La mia rosa* sta accanto al
 listone: la freccia in alto a sinistra lo riduce a una barra stretta (con il
