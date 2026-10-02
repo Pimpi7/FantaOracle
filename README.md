@@ -89,15 +89,18 @@ Le impostazioni che puoi cambiare:
 
 ### 4. Il giorno dell'asta: calcio d'inizio
 
-Premi il bottone col pallone in testata: il pallone rotola, ti viene incontro e apre il setup. **Modalità asta** trasforma il tool nel tuo assistente live. Dai un nome alle 8 squadre, scegli quale piano usare come lista obiettivi, e parti.
+Premi il bottone col pallone in testata: il pallone rotola, ti viene incontro e apre il setup. **Modalità asta** trasforma il tool nel tuo assistente live. Dai un nome alle 8 squadre nell'ordine in cui siete seduti, scegli quale piano usare come lista obiettivi, il tipo di chiamata (**per ruolo**: prima tutti i portieri, poi difensori, centrocampisti e attaccanti; oppure libera) e il **giro** (orario o antiorario, e chi comincia), e parti.
 
 ![Modalità asta](docs/img/asta.png)
 
 - **Tabellone in alto**: quanti giocatori sono già stati assegnati, ruolo per ruolo, l'ultimo colpo e chi è il rivale più ricco, accanto ai tuoi crediti, alla tua offerta massima e ai tuoi slot ancora liberi.
 - **Giocatore chiamato**: scrivi il nome, scorri i risultati con le frecce e premi Invio. Hai la sua scheda in versione da asta, a riquadri come quella del listone. In giallo **fin dove spingerti**: il prezzo oltre il quale la rosa migliore senza di lui diventa più forte, e se basta a coprire il prezzo atteso (in rosso *Lascialo*, quando non conviene a nessun prezzo). Accanto punti, valore, prezzo atteso e la tua offerta massima; sotto come sta, quanto gioca e, per portieri e attaccanti, quante partite facili ha e quanto rende alternato a chi hai già in rosa.
 - **Chi lo prende**: un riquadro per squadra con la sua offerta massima, spento se ha il ruolo pieno. Tocchi chi l'ha preso, scrivi il prezzo e premi Aggiudicato (o Invio). Il tool aggiorna crediti e slot di tutti, ricalcola i suggerimenti e adegua i prezzi al mercato reale della serata.
-- **Occasioni di fine ruolo**: quando gli avversari hanno riempito un ruolo o finito i crediti, i giocatori buoni rimasti compaiono in cima con il prezzo a cui puoi realisticamente portarli via.
-- **Squadre**: crediti, offerta massima e slot liberi di ognuno, con i numeri che passano dal verde al rosso man mano che si svuotano.
+- **Chi chiama**: sopra la ricerca vedi il ruolo in corso e a chi tocca chiamare, e poi a chi. Dopo ogni acquisto il giro avanza da solo, saltando chi ha già riempito il ruolo; con le frecce lo correggi, con un tocco inverti il verso.
+- **Occasioni di fine ruolo**: per il ruolo in corso, quanti titolari buoni restano liberi e quanti posti da titolare ci sono ancora da riempire. Se i buoni avanzano conviene aspettare, se mancano no. Sotto compaiono i giocatori che puoi portare via a poco, con il prezzo realistico: quelli che i rivali ancora a caccia di un titolare non possono più permettersi, e quelli che a fine ruolo non servono più a nessuno da titolare.
+- **Prezzi che seguono il tavolo**: se nel ruolo in corso si paga più del previsto, i prezzi attesi di chi resta in quel ruolo salgono; e siccome quei crediti poi mancano, scendono quelli dei ruoli dopo. All'ultimo ruolo si spende quello che resta.
+- **Squadre**: crediti, offerta massima, slot liberi e **budget di ruolo** di ognuno: quanto può mettere su un giocatore del ruolo in corso senza intaccare i crediti che gli servono per i ruoli dopo.
+- **Andamento del mercato**: un grafico con una colonna per acquisto, rossa sopra la riga se è stato pagato più del previsto, blu sotto se meno, e la media degli ultimi sei. In un colpo d'occhio vedi quando il tavolo sta spendendo tanto e quando poco, ruolo per ruolo.
 
 Puoi **sospendere** l'asta e riprenderla più tardi, oppure **chiuderla**: le rose finali restano salvate nel browser e ti viene data subito una copia di testo da conservare.
 

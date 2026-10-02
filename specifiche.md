@@ -129,14 +129,32 @@ residuo per ruolo resta visibile.
 Tre piani (A, B, C) salvati nel browser, esportabili e reimportabili come testo.
 
 **Modalità asta.** Il bottone col pallone in testata avvia l'asta live (il pallone rotola sul bottone e apre il setup). Si danno i nomi
-alle 8 squadre e si sceglie da quale piano prendere gli obiettivi (restano segnati
-nel listone, le rose partono vuote). Da lì la testata diventa la fascia scura
+alle 8 squadre, nell'ordine in cui siedono, e si sceglie da quale piano prendere gli
+obiettivi (restano segnati nel listone, le rose partono vuote), il tipo di chiamata
+(per ruolo, nell'ordine P, D, C, A, oppure libera) e il giro (orario, antiorario o
+nessuno, e chi comincia). Da lì la testata diventa la fascia scura
 "In asta" e compare la sezione **Asta**:
 
-- **Occasioni di fine ruolo**, in cima: titolari buoni ancora liberi che gli
-  avversari non possono più contendersi, per slot pieni o crediti finiti, con il
-  prezzo realistico accanto a quello atteso. Il prezzo realistico è il massimo che
-  può offrire il rivale più ricco con uno slot libero in quel ruolo, più uno.
+- **Occasioni di fine ruolo**, in cima. Nell'asta per ruolo guarda solo il ruolo in
+  corso e parte da un conto: i *titolari buoni* ancora liberi (dal livello
+  dell'ultimo titolare della lega in su: i primi 8 portieri, 32 difensori, 28
+  centrocampisti, 20 attaccanti per punti attesi) contro i *posti da titolare*
+  ancora da riempire (1 portiere, 4 difensori, 3,5 centrocampisti e 2,5 attaccanti
+  a squadra, meno i buoni che ha già). Se i buoni avanzano conviene aspettare, se
+  mancano i prezzi salgono. Un titolare buono è un'occasione, con il prezzo
+  realistico accanto a quello atteso, in due casi: il rivale con più *budget di
+  ruolo* fra quelli che cercano ancora un titolare non arriva al 75% del prezzo
+  atteso (lo si batte di un credito); oppure, a fine ruolo, i buoni sono più di
+  quelli che i rivali cercano, e allora gli ultimi vanno via al prezzo di una
+  riserva (la mediana dei giocatori che riempiranno gli slot oltre i titolari).
+  Nell'asta libera vale la regola semplice: il rivale più ricco con uno slot
+  libero nel ruolo, più uno.
+- **Giro delle chiamate**, sopra la ricerca: ruolo in corso con gli assegnati, chi
+  chiama adesso e chi dopo. Dopo ogni acquisto tocca alla squadra dopo quella che
+  ha chiamato, nel verso scelto; chi ha già riempito il ruolo salta il turno. Le
+  frecce spostano il turno a mano, un bottone inverte il verso; annullare l'ultimo
+  acquisto riporta indietro anche il turno. La ricerca mette prima i giocatori del
+  ruolo in corso.
 - **Tabellone** (la fascia in alto): giocatori assegnati sul totale con una barra per ruolo, ultimo acquisto, rivale con l'offerta massima più alta, da quanto dura l'asta; a destra crediti, offerta massima, rosa e slot liberi per ruolo della tua squadra.
 - **Giocatore chiamato**: la ricerca mostra i liberi che corrispondono, con
   fascia, punti e prezzo; frecce su e giù per scorrere, Invio per chiamare quello
@@ -157,18 +175,51 @@ nel listone, le rose partono vuote). Da lì la testata diventa la fascia scura
   rifiuta le offerte che superano il massimo possibile di quella squadra o un
   ruolo già pieno. Quando si chiama un giocatore la pagina scorre quanto basta a
   mostrare il riquadro fino al bottone.
-- **Squadre**: crediti, offerta massima e slot liberi per ruolo di ognuna, con la
-  rosa apribile. **Ultimi acquisti**, con Annulla l'ultimo.
+- **Squadre**: crediti, offerta massima, budget di ruolo e slot liberi per ruolo di
+  ognuna, con la rosa apribile e l'etichetta su chi deve chiamare.
+- **Andamento del mercato**, fra Squadre e Ultimi acquisti: un riquadro per il
+  momento (la media degli ultimi sei acquisti sul previsto: sopra il 110% si
+  spende tanto, sotto il 90% poco) e uno per ruolo con il suo termometro. Sotto, il
+  grafico: una colonna per acquisto dalla riga del 100% (rossa sopra, pagato più
+  del previsto; blu sotto), la linea della media mobile pesata sui crediti e, sotto
+  l'asse, le fasi per ruolo. Il previsto è il prezzo atteso prima dell'asta. La
+  scala è logaritmica (metà e doppio alla stessa distanza dalla riga); rosso e blu
+  restano distinguibili anche per chi non distingue rosso e verde. Passando il
+  mouse, toccando o con le frecce si legge ogni acquisto.
+- **Ultimi acquisti**, con accanto al prezzo lo scarto dal previsto e Annulla
+  l'ultimo.
 
 Durante l'asta "La mia rosa" è la rosa reale: i tuoi acquisti al prezzo pagato,
 gli acquisti degli altri esclusi dai suggerimenti. I prezzi attesi dei giocatori
-rimasti seguono il mercato: si riscalano sui crediti che restano davvero rispetto
-a quelli che il mercato avrebbe chiesto per riempire le rose. Lo stato è salvato
+rimasti seguono il mercato (vedi sotto). Lo stato è salvato
 nel browser a ogni acquisto ed è esportabile. Per uscire: **Sospendi** lascia tutto
 com'è e il pulsante diventa "Riprendi l'asta"; **Chiudi** archivia le rose finali
 nel browser (base del tool formazione), mostra subito il testo da copiare come
-copia di sicurezza e riporta il pulsante a "Modalità asta". Da definire: tipo di asta e ordine
-dei ruoli (per ora ogni ruolo si può chiamare in qualsiasi momento).
+copia di sicurezza e riporta il pulsante a "Modalità asta".
+
+**I prezzi durante l'asta.** Il punto di partenza è il conto generale: i crediti
+spendibili che restano in lega (oltre il minimo di 1 per slot) divisi per quello
+che servirebbe, ai prezzi di partenza, a comprare i giocatori liberi più cari che
+riempiranno gli slot aperti. Nell'asta libera quel fattore vale per tutti i
+ruoli. Nell'asta per ruolo ogni ruolo ha il suo:
+
+- *ruolo in corso*: il termometro del ruolo, cioè crediti pagati su crediti
+  previsti per i giocatori già assegnati, tirato verso il conto generale con un
+  peso pari al 15% della spesa attesa del ruolo (con due o tre acquisti il segnale
+  è debole). Se il tavolo paga caro, il rincaro vale finché i rivali cercano
+  titolari: quando i buoni rimasti sono più dei posti da titolare che i rivali
+  devono ancora riempire si spegne in proporzione.
+- *ruoli dopo*: i crediti spendibili, tolti quelli che il ruolo in corso assorbirà
+  ancora al suo fattore, divisi per la domanda dei ruoli che restano. Quello che
+  si spende in più adesso manca dopo.
+- *ultimo ruolo*: i crediti avanzati non servono più a niente, quindi il conto
+  dei crediti rimasti pesa quanto il termometro (media geometrica dei due).
+
+Ogni fattore sta fra 0,4 e 2,5. Il **budget di ruolo** di una squadra è quanto può
+mettere su un giocatore del ruolo in corso tenendosi, per ogni slot dei ruoli
+dopo, il costo medio atteso di quello slot, e 1 credito per ogni altro slot del
+ruolo in corso; nell'ultimo ruolo coincide con l'offerta massima. È una stima di
+comodo, non un tetto: chi vuole un giocatore può intaccare la riserva.
 
 ---
 
@@ -552,6 +603,8 @@ funzioni a gradini la media non basta).
 
 ## Limiti noti
 
+- I fattori di mercato per ruolo, il budget di ruolo e le occasioni sono stime
+  ragionate, non validate su aste vere: dicono dove guardare, non quanto offrire.
 - La propensione agli infortuni è un avviso, non entra nei punti (vedi sopra).
   Le date di rientro sono quelle delle fonti: un "in dubbio" resta un dubbio.
 - Le statistiche avanzate raccolte sono solo quelle di Serie A: per chi è
@@ -567,8 +620,8 @@ funzioni a gradini la media non basta).
 
 ## Prossimi passi
 
-1. Modalità asta, rifiniture: tipo di asta e ordine dei ruoli, stato condiviso
-   fra computer e telefono. (La prima versione è nel tool: vedi sopra. Nota
+1. Modalità asta, rifiniture: stato condiviso fra computer e telefono (tipo di
+   asta, ordine dei ruoli e giro delle chiamate ci sono: vedi sopra). (La prima versione è nel tool: vedi sopra. Nota
    originale sulle **occasioni di fine ruolo**: giocatori buoni rimasti liberi quando un ruolo
    sta per chiudersi, che si possono prendere a pochissimo. Si avvia con un
    bottone **Modalità asta** col pallone in testata, con un passaggio di
