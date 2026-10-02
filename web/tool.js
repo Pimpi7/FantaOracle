@@ -630,7 +630,7 @@ function renderListone() {
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
       <td class="l"><span class="role ${g.r}">${g.r}</span></td>
       <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}${obj}${own}</td>
-      <td class="l fa hide-s">${pillFascia(g)}</td>
+      <td class="fa hide-s">${pillFascia(g)}</td>
       <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
       <td class="big">${fmt(g.pg, 2)}</td>
       <td class="hide-s">${fmt(g.fm, 2)}</td>
