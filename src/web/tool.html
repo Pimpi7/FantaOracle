@@ -53,6 +53,7 @@
           <option value="fragili">Solo fragili o delicati</option>
         </select>
         <label class="toggle"><input id="hide" type="checkbox"><span id="hide-lbl">Nascondi gli esclusi</span></label>
+        <label class="toggle sugg-tg" title="Toglie dal listone i giocatori evidenziati in giallo dall'algoritmo: i tuoi e gli esclusi restano"><input id="hide-sugg" type="checkbox"><span id="hide-sugg-lbl">Nascondi i suggeriti</span></label>
         <span class="count" id="count"></span>
       </div>
       <div class="table-wrap">
@@ -78,6 +79,7 @@
     </section>
 
     <section class="pane p-rosa" aria-label="La mia rosa">
+      <button class="rosa-rail" id="rosa-rail" data-rosa-tg aria-expanded="false" aria-controls="rosa" title="Mostra la mia rosa"></button>
       <div class="rosa" id="rosa"></div>
     </section>
 

@@ -5,12 +5,15 @@ function renderListone() {
   const l = filtrati();
   const { pos, tot } = posizioni();
   const m = mia();
-  $("#count").textContent = `${l.length} giocatori`;
+  const nSugg = DATA.giocatori.filter(suggerito).length;
+  $("#count").textContent = `${l.length} giocatori${S.nascondiSugg ? ` · ${nSugg} suggeriti nascosti` : ""}`;
+  $("#hide-sugg").checked = !!S.nascondiSugg;
+  $("#hide-sugg-lbl").textContent = `Nascondi i suggeriti (${nSugg})`;
   const nEscl = Object.keys(S.presi).length;
   $("#hide-lbl").textContent = inAsta() ? `Nascondi i presi (${nEscl})` : nEscl ? `Nascondi gli esclusi (${nEscl})` : "Nascondi gli esclusi";
   const out = [];
   for (const g of l) {
-    const cls = m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : SUGG.ids.has(g.id) ? "sugg" : "";
+    const cls = m[g.id] != null ? "mine" : S.presi[g.id] ? "taken" : suggerito(g) ? "sugg" : "";
     const own = inAsta() && OWNER.has(g.id) ? `<span class="tag own">${esc(S.asta.squadre[OWNER.get(g.id)].nome)}</span>` : "";
     const obj = inAsta() && S.asta.obiettivi.includes(g.id) && !OWNER.has(g.id) ? '<span class="tag obj" title="Era nel piano da cui sei partito">OBIETTIVO</span>' : "";
     const azioni = inAsta()

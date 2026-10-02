@@ -56,6 +56,8 @@ Tabelle ed elenchi (gli stop dalla 23/24, le stagioni passate, tutti i compagni)
 
 Aggiungi chi vuoi, al prezzo che pensi di pagarlo, con il **+** nel listone o dalla scheda. Il tool riempie gli slot vuoti con la combinazione più forte che sta nel budget che ti resta, la evidenzia in giallo e la ricalcola a ogni tuo cambiamento. Per ogni suggerito trovi le alternative (**Altri**) e puoi sceglierlo con un clic.
 
+Vuoi guardare il listone senza farti influenzare? L'interruttore **Nascondi i suggeriti** toglie i giocatori evidenziati in giallo (i tuoi restano). E con la freccia in alto a sinistra di *La mia rosa* comprimi il pannello in una barra stretta: il listone prende tutta la larghezza, un clic sulla barra e la rosa torna. Entrambe le scelte restano salvate nel browser.
+
 Rispetta sempre la rosa 3-8-8-6, i 500 crediti e il limite di giocatori della stessa squadra reale. In cima trovi la **formazione tipo** disegnata sul campo, nel modulo che rende di più.
 
 Portieri e attaccanti li sceglie **giornata per giornata**: ogni turno conta chi ha la partita più comoda, quindi due portieri che si coprono il calendario valgono più dei loro punti presi da soli. Sotto i tuoi portieri vedi in quante giornate almeno uno affronta una squadra facile e quanto rende l'alternanza.

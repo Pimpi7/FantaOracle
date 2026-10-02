@@ -26,13 +26,16 @@ function posizioni() {
   return { pos, tot: l.length };
 }
 
+// Evidenziato dall'algoritmo: suggerito e ne' tuo ne' escluso (chi e' tuo o escluso ha il suo colore).
+const suggerito = (g) => SUGG.ids.has(g.id) && mia()[g.id] == null && !S.presi[g.id];
+
 function filtrati() {
   const q = S.f.q.trim().toLowerCase();
   let l = DATA.giocatori.filter((g) =>
     (!S.f.r || g.r === S.f.r) && (!S.f.sq || g.sq === S.f.sq) &&
     (!q || g.nome.toLowerCase().includes(q)) &&
     (!S.f.pmax || prezzoAtteso(g) <= S.f.pmax) &&
-    (!S.f.hide || !S.presi[g.id]) && filtroSalute(g, S.f.salute));
+    (!S.f.hide || !S.presi[g.id]) && (!S.nascondiSugg || !suggerito(g)) && filtroSalute(g, S.f.salute));
   l.sort(confronta);
   return l;
 }

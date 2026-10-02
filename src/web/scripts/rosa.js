@@ -58,7 +58,7 @@ function renderRosa() {
 
   let h = `<div class="card">
     <div class="row" style="justify-content:space-between">
-      <h2>La mia rosa</h2>
+      <div class="row rosa-h"><button class="ic rosa-tg" data-rosa-tg aria-expanded="true" aria-controls="rosa" title="Comprimi la rosa: il listone prende tutto lo spazio" aria-label="Comprimi la rosa">›</button><h2>La mia rosa</h2></div>
       ${inAsta() ? `<span class="live"><span class="dot"></span>Rosa reale</span>` : `<div class="seg" id="piani" role="group" aria-label="Piano">${["A", "B", "C"].map((p) =>
         `<button data-piano="${p}" aria-pressed="${S.piano === p}">Piano ${p}</button>`).join("")}</div>`}
     </div>
@@ -168,4 +168,17 @@ function renderRosa() {
     <p>Sulle due stagioni passate il punteggio ordina i giocatori meglio della fantamedia e dei punti delle prime giornate, ma di poco. Le stelle offensive costano molto piu' di quanto il modello le valuta: e' un'indicazione, non una regola. Se vuoi una stella, sceglila e lascia che il tool ricostruisca il resto.</p>
   </details></div>`;
   $("#rosa").innerHTML = h;
+  // la barra che resta quando la rosa e' compressa: quanti giocatori e quanti crediti
+  const nGioc = scelti.length + SUGG.lista.length, nSlot = RUOLI.reduce((a, r) => a + META.slot[r], 0);
+  $("#rosa-rail").innerHTML = `<span class="rr-chev" aria-hidden="true">‹</span><span class="rr-t">La mia rosa</span><span class="rr-n"><b>${nGioc}</b>/${nSlot}</span>`;
+  $("#rosa-rail").title = `Mostra la mia rosa: ${scelti.length} ${inAsta() ? "presi" : "scelti"}, ${SUGG.lista.length} suggeriti`;
+  $("#main").dataset.rosa = S.rosaChiusa ? "chiusa" : "";
+}
+
+// Comprime o riapre il pannello della rosa (da computer: il listone prende la sua larghezza).
+// La scelta resta salvata; il fuoco passa al bottone che compare al suo posto.
+function rosaChiusa(chiusa, fuoco) {
+  S.rosaChiusa = chiusa; salva();
+  $("#main").dataset.rosa = chiusa ? "chiusa" : "";
+  if (fuoco) (chiusa ? $("#rosa-rail") : $("#rosa .rosa-tg"))?.focus();
 }

@@ -90,6 +90,7 @@ document.addEventListener("click", (e) => {
     return renderListone();
   }
   if (d.view) return vista(d.view);
+  if (d.rosaTg !== undefined) return rosaChiusa(!S.rosaChiusa, true);
   if (t.id === "lega-reset") { S.nSq = S.cred = S.budgetRuolo = null; S.aperte = {}; applicaLega(); return aggiorna(); }
   if (t.id === "svuota") { S.piani[S.piano] = {}; return aggiorna(); }
   if (t.id === "esporta") return esporta();
@@ -106,6 +107,7 @@ document.addEventListener("change", (e) => {
   if (id === "esenzione") { S.esenzioneP = e.target.checked; aggiorna(); }
   if (id === "sq") { S.f.sq = e.target.value; renderListone(); }
   if (id === "hide") { S.f.hide = e.target.checked; renderListone(); }
+  if (id === "hide-sugg") { S.nascondiSugg = e.target.checked; salva(); renderListone(); }
   if (id === "salute") { S.f.salute = e.target.value; renderListone(); }
 });
 $("#q").addEventListener("input", (e) => { S.f.q = e.target.value; renderListone(); });
