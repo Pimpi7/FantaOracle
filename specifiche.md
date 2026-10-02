@@ -74,7 +74,7 @@ l'ultima, `SQ | 2 G` per una squalifica di due giornate); in giallo chi è in
 dubbio per la prossima o ha un acciacco senza data (`? DUBBIO`, `DIFF`). Poi la
 propensione dallo storico: `FRAGILE` bordato di rosso con una croce rossa (circa
 uno su sette) e, più discreto, `DELICATO` bordato di celeste con un cerotto (uno
-su quattro). `RIG` è blu con un pallone, `TIFO` ha le strisce con i colori sociali della squadra
+su quattro). `RIG` è blu con un mirino, `TIFO` ha le strisce con i colori sociali della squadra
 (una tabella per tutte le venti, così vale per qualsiasi squadra messa nel tifo
 in `config/league.yaml`); un velo scuro le copre solo se una striscia è troppo
 chiara per la scritta bianca (contrasto sotto 1,7: bianco, giallo). Le misure
