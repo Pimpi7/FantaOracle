@@ -694,7 +694,7 @@ function renderListone() {
     const azioni = inAsta()
       ? (OWNER.has(g.id) ? "" : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`)
       : `<button class="ic ${m[g.id] != null ? "on" : ""}" data-add="${g.id}" title="${m[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}" aria-label="Mia rosa">${m[g.id] != null ? "✓" : "+"}</button>
-        <button class="ic ${S.presi[g.id] ? "on" : ""}" data-taken="${g.id}" title="${S.presi[g.id] ? "Rimetti fra i disponibili" : "Escludi dai suggerimenti (non lo voglio, o lo do per perso)"}" aria-label="Escludi">✕</button>`;
+        ${S.presi[g.id] ? `<button class="ic on" data-taken="${g.id}" title="Rimetti fra i disponibili" aria-label="Rimetti fra i disponibili">✕</button>` : ""}`;
     const aff = g.aff ?? 0;
     out.push(`<tr class="${cls}" data-id="${g.id}">
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
