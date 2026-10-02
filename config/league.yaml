@@ -97,8 +97,11 @@ switch:
   usi_per_giornata: 1
 
 asta:
-  tipo: PENDING               # chiamata_libera | a_giro
-  ordine_ruoli: PENDING       # es. [P, D, C, A] oppure "libero"
+  # A chiamata per ruolo: prima tutti i portieri, poi difensori, centrocampisti,
+  # attaccanti. Si chiama a giro attorno al tavolo; il verso (orario o antiorario)
+  # e chi comincia si scelgono nel tool all'avvio dell'asta e si correggono dal vivo.
+  tipo: a_giro                # chiamata_libera | a_giro
+  ordine_ruoli: [P, D, C, A]  # oppure "libero"
   prezzo_minimo: 1
 
 # Mercato della nostra asta: come si discosta dalle valutazioni medie.

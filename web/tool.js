@@ -50,16 +50,24 @@ const fmt = (x, d = 1) => (x == null || Number.isNaN(x) ? "–" : Number(x).toLo
 const pct = (x) => (x == null ? "–" : Math.round(x * 100) + "%");
 const segno = (x) => (x > 0 ? "+" : "") + fmt(x, 0);
 const nomeSq = (s) => (DATA.squadre.find((x) => x.slug === s) || { nome: s }).nome;
-// INFL segue l'asta: se il tavolo spende piu' (o meno) del previsto, i prezzi
-// attesi dei giocatori rimasti si riscalano sui crediti che restano davvero.
-let INFL = 1;
+// Il mercato segue l'asta. INFL e' il conto generale: crediti che restano davvero contro quelli
+// che servirebbero, ai prezzi di partenza, per riempire le rose. FATT e' il fattore di ogni ruolo
+// (in un'asta per ruolo il ruolo in corso segue il suo termometro, i ruoli dopo i crediti che
+// avanzano); MERC e' il quadro completo, calcolato in sincronizzaAsta. Fuori dall'asta vale tutto 1.
+let INFL = 1, FATT = { P: 1, D: 1, C: 1, A: 1 }, MERC = null;
+let SPESA_RUOLO = { P: 0, D: 0, C: 0, A: 0 };      // spesa attesa della lega per ruolo, ai prezzi di partenza
+const ORDINE_RUOLI = ["P", "D", "C", "A"];         // l'ordine delle fasi nell'asta per ruolo
+const PESO_PARTENZA = 0.15;                        // quanto pesa il punto di partenza sul termometro di un ruolo
+const FINESTRA = 6;                                // acquisti nella media mobile del grafico
+const limita = (x) => Math.min(2.5, Math.max(0.4, x));
+const perRuolo = () => !!S.asta && S.asta.modo !== "libero";
 // In asta i crediti si colorano da verde (pieni) a rosso (finiti), in proporzione.
 function cr(val, max) {
   if (!inAsta()) return String(val);
   const f = Math.max(0, Math.min(1, max > 0 ? val / max : 0));
   return `<span class="cr" style="color:hsl(${Math.round(f * 128)} var(--cs) var(--cl))">${val}</span>`;
 }
-const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * INFL * (1 + S.margine)));
+const prezzoAtteso = (g) => Math.max(1, Math.round(g.pa * (FATT[g.r] ?? 1) * (1 + S.margine)));
 
 // --- ottimizzatore ----------------------------------------------------------------
 // Portieri e attaccanti hanno i punti attesi partita per partita (g.v, allineati a
@@ -941,6 +949,8 @@ function applicaLega() {
   for (const r of RUOLI) {
     const l = DATA.giocatori.filter((g) => g.r === r).map((g) => g.pg).sort((a, b) => b - a);
     SOGLIA[r] = l[Math.min(T[r], l.length) - 1] ?? 0;
+    SPESA_RUOLO[r] = DATA.giocatori.filter((g) => g.r === r).map((g) => g.pa).sort((a, b) => b - a)
+      .slice(0, META.n_squadre * META.slot[r]).reduce((a, x) => a + x, 0);
   }
   $("#meta").innerHTML = [[`Serie A ${META.stagione}`, `Dati alla ${META.giornata}ª giornata`],
     [`${META.giornate_residue} giornate da comprare`, `${META.n_squadre} squadre · ${META.crediti} crediti`]]
@@ -957,7 +967,7 @@ function cambiaLega(chiave, v) {
 }
 
 function aggiorna() {
-  if (inAsta()) sincronizzaAsta(); else INFL = 1;
+  if (inAsta()) sincronizzaAsta(); else { INFL = 1; FATT = { P: 1, D: 1, C: 1, A: 1 }; MERC = null; }
   SUGG = ottimizza();
   renderBudget(); renderListone(); renderRosa(); renderControlloAsta();
   if (inAsta()) renderAsta();
@@ -1257,17 +1267,234 @@ function sincronizzaAsta() {
   // "Presi da altri" non si segna piu' a mano: sono le rose degli avversari.
   S.presi = {};
   for (const [id, i] of OWNER) if (i !== S.asta.io) S.presi[id] = true;
-  // Inflazione: crediti spendibili rimasti contro quello che il mercato avrebbe
-  // chiesto per i giocatori che servono ancora a riempire le rose.
+  if (!S.asta.modo) S.asta.modo = "ruolo";
+  if (!S.asta.giro) S.asta.giro = { verso: 1, turno: 0 };
+
   const st = statoSquadre();
+  // Crediti spendibili oltre il minimo di 1 per slot, e per ogni ruolo gli slot ancora aperti
+  // in lega con i giocatori liberi piu' cari che li riempiranno (la domanda, ai prezzi di partenza).
   const disp = st.reduce((a, t) => a + Math.max(0, t.crediti - t.liberiTot), 0);
-  let dom = 0;
+  const aperti = {}, resti = {}, dom = {};
   for (const r of RUOLI) {
-    const n = st.reduce((a, t) => a + Math.max(0, t.liberi[r]), 0);
-    const liberi = DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id)).sort((a, b) => b.pa - a.pa).slice(0, n);
-    dom += liberi.reduce((a, g) => a + Math.max(0, g.pa - 1), 0);
+    aperti[r] = st.reduce((a, t) => a + Math.max(0, t.liberi[r]), 0);
+    resti[r] = DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id)).map((g) => g.pa).sort((a, b) => b - a).slice(0, aperti[r]);
+    dom[r] = resti[r].reduce((a, pa) => a + Math.max(0, pa - 1), 0);
   }
-  INFL = dom > 0 ? Math.min(2.5, Math.max(0.4, disp / dom)) : 1;
+  const domTot = RUOLI.reduce((a, r) => a + dom[r], 0);
+  INFL = domTot > 0 ? limita(disp / domTot) : 1;
+
+  // Termometro di ogni ruolo: quanto si e' pagato rispetto al previsto.
+  const term = Object.fromEntries(RUOLI.map((r) => [r, { pagato: 0, previsto: 0, n: 0 }]));
+  for (const x of S.asta.log) {
+    const g = BY_ID.get(x.id); if (!g) continue;
+    const t = term[g.r]; t.pagato += x.p; t.previsto += g.pa; t.n++;
+  }
+
+  // Titolari: per ogni ruolo i giocatori buoni ancora liberi (dal livello dell'ultimo titolare
+  // della lega in su) e quanti posti da titolare restano da riempire, squadra per squadra.
+  const quadro = {};
+  for (const r of RUOLI) {
+    const buoni = DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id) && g.pg >= SOGLIA[r]).sort((a, b) => b.pg - a.pg);
+    const perSquadra = TITOLARI_LEGA()[r] / st.length;
+    const bisogno = st.map((t) => {
+      const ha = Object.keys(S.asta.squadre[t.i].rosa).filter((id) => { const g = BY_ID.get(+id); return g && g.r === r && g.pg >= SOGLIA[r]; }).length;
+      return Math.max(0, Math.min(t.liberi[r], perSquadra - ha));
+    });
+    const mio = bisogno[S.asta.io], altri = bisogno.reduce((a, x) => a + x, 0) - mio;
+    quadro[r] = { buoni, bisogno, perSquadra, mio, altri, posti: Math.round(mio + altri) };
+  }
+
+  // Asta per ruolo: il ruolo in corso e' il primo con slot ancora aperti. I suoi prezzi seguono
+  // il termometro del ruolo (con il mercato generale come punto di partenza, che pesa quanto il
+  // 15% della spesa attesa del ruolo). Quello che il tavolo spende qui manca ai ruoli dopo: i
+  // loro prezzi si riscalano sui crediti che restano. Nell'ultimo ruolo i crediti avanzati non
+  // servono piu' a niente, quindi il conto dei crediti rimasti pesa quanto il termometro.
+  // Un tavolo che paga caro resta caro finche' i rivali cercano titolari: quando i buoni rimasti
+  // sono piu' dei posti che i rivali devono ancora riempire, il rincaro si spegne in proporzione.
+  const fase = perRuolo() ? ORDINE_RUOLI.find((r) => aperti[r] > 0) || null : null;
+  const oltreMinimo = (r, f) => resti[r].reduce((a, pa) => a + Math.max(0, pa * f - 1), 0);
+  FATT = Object.fromEntries(RUOLI.map((r) => [r, INFL]));
+  let futuri = [];
+  if (fase) {
+    futuri = ORDINE_RUOLI.slice(ORDINE_RUOLI.indexOf(fase) + 1).filter((r) => aperti[r] > 0);
+    const t = term[fase], k = PESO_PARTENZA * SPESA_RUOLO[fase];
+    const q = quadro[fase], contesa = Math.min(1, q.altri / Math.max(1, q.buoni.length));
+    const smorza = (f) => (f > 1 ? 1 + (f - 1) * contesa : f);
+    const visto = (t.pagato + k * INFL) / (t.previsto + k);
+    if (futuri.length) {
+      FATT[fase] = smorza(limita(visto));
+      const domFut = futuri.reduce((a, r) => a + dom[r], 0);
+      const dopo = domFut > 0 ? limita((disp - oltreMinimo(fase, FATT[fase])) / domFut) : 1;
+      for (const r of futuri) FATT[r] = dopo;
+    } else FATT[fase] = smorza(limita(Math.sqrt(visto * INFL)));
+  }
+
+  // Budget di ruolo: quanto puo' mettere una squadra su un giocatore del ruolo in corso senza
+  // intaccare i crediti che le servono, in media, per riempire i ruoli dopo (e tenendo 1 credito
+  // per ogni altro slot del ruolo). Nell'ultimo ruolo coincide con l'offerta massima.
+  const medio = {};
+  for (const r of RUOLI) medio[r] = aperti[r] ? resti[r].reduce((a, pa) => a + Math.max(1, pa * FATT[r]), 0) / aperti[r] : 0;
+  const comodo = st.map((t) => {
+    if (!fase) return t.maxOff;
+    if (t.liberi[fase] <= 0 || t.maxOff < 1) return 0;
+    const riserva = futuri.reduce((a, r) => a + Math.max(0, t.liberi[r]) * medio[r], 0);
+    return Math.max(1, Math.min(t.maxOff, Math.round(t.crediti - riserva - (t.liberi[fase] - 1))));
+  });
+  MERC = { st, fase, futuri, aperti, resti, dom, disp, term, comodo, medio, quadro };
+}
+
+// Quanto puo' offrire una squadra per un giocatore del ruolo r: il budget di ruolo se e' il
+// ruolo in corso di un'asta per ruolo, altrimenti l'offerta massima.
+const budgetSquadra = (t, r) => (t.liberi[r] <= 0 ? 0 : MERC && MERC.fase === r ? MERC.comodo[t.i] : t.maxOff);
+const conBudgetDiRuolo = (r) => !!MERC && MERC.fase === r && MERC.futuri.length > 0;
+
+// --- il giro delle chiamate -----------------------------------------------------------------
+// Si chiama a giro: le squadre sono nell'ordine in cui siedono (in senso orario), verso 1 le
+// scorre in quell'ordine, -1 al contrario, 0 spegne il giro. Chi ha gia' riempito il ruolo in
+// corso salta il turno. Dopo ogni acquisto tocca alla squadra dopo chi ha chiamato.
+const puoChiamare = (t) => (MERC.fase ? t.liberi[MERC.fase] > 0 : t.liberiTot > 0);
+function passo(da, verso) {
+  const st = MERC.st, n = st.length;
+  for (let k = 1; k <= n; k++) { const i = (((da + verso * k) % n) + n) % n; if (puoChiamare(st[i])) return i; }
+  return null;
+}
+function chiChiama() {
+  const g = S.asta.giro;
+  if (!g || !g.verso || !MERC) return null;
+  const n = MERC.st.length, i = ((g.turno % n) + n) % n;
+  return puoChiamare(MERC.st[i]) ? i : passo(i, g.verso);
+}
+function muoviGiro(cosa) {
+  const g = S.asta.giro;
+  if (cosa === "verso") g.verso = g.verso === 1 ? -1 : 1;
+  else if (cosa === "spegni") g.verso = 0;
+  else if (cosa === "accendi") g.verso = 1;
+  else {
+    const chi = chiChiama(), a = chi == null ? null : passo(chi, g.verso * +cosa);
+    if (a != null) g.turno = a;
+  }
+  salva(); renderAsta();
+}
+
+function renderGiro() {
+  const el = $("#giro"), g = S.asta.giro, st = MERC.st, fase = MERC.fase;
+  const totR = fase ? META.n_squadre * META.slot[fase] : 0;
+  const faseHtml = !perRuolo() ? `<span class="giro-fase"><b>Chiamata libera</b></span>`
+    : fase ? `<span class="giro-fase"><span class="role ${fase}">${fase}</span><b>${NOMI_RUOLO[fase]}</b><small>${totR - MERC.aperti[fase]}/${totR}</small></span>`
+      : `<span class="giro-fase"><b>Rose complete</b></span>`;
+  const chi = chiChiama();
+  if (chi == null) {
+    el.className = "giro";
+    el.innerHTML = `${faseHtml}${g.verso ? "" : `<span class="giro-ctl"><button type="button" class="btn small" data-giro="accendi">Segui il giro delle chiamate</button></span>`}`;
+    return;
+  }
+  const poi = passo(chi, g.verso), mio = chi === S.asta.io;
+  el.className = "giro" + (mio ? " mio" : "");
+  el.innerHTML = `${faseHtml}
+    <span class="giro-chi">${mio ? "<b>Tocca a te chiamare</b>" : `Chiama <b>${esc(st[chi].nome)}</b>`}${poi != null && poi !== chi ? `<small>poi ${poi === S.asta.io ? "tu" : esc(st[poi].nome)}</small>` : ""}</span>
+    <span class="giro-ctl">
+      <button type="button" class="ic" data-giro="-1" title="Torna alla squadra prima" aria-label="Squadra prima">‹</button>
+      <button type="button" class="ic" data-giro="1" title="Passa alla squadra dopo" aria-label="Squadra dopo">›</button>
+      <button type="button" class="btn small" data-giro="verso" title="Inverti il verso del giro">${g.verso === 1 ? "↻ orario" : "↺ antiorario"}</button>
+    </span>`;
+}
+
+// --- l'andamento del mercato --------------------------------------------------------------------
+// Ogni acquisto contro il suo prezzo previsto prima dell'asta: sopra la riga del 100% si e'
+// pagato di piu', sotto di meno. La linea e' la media degli ultimi acquisti, pesata sui crediti
+// (un giocatore da 1 credito preso a 3 non sposta niente). La scala e' logaritmica: la meta' e
+// il doppio del previsto stanno alla stessa distanza dalla riga.
+function serieMercato() {
+  const acq = S.asta.log.map((x) => ({ x, g: BY_ID.get(x.id) })).filter((a) => a.g)
+    .map(({ x, g }) => ({ g, t: x.t, p: x.p, e: g.pa, r: x.p / Math.max(1, g.pa) }));
+  acq.forEach((a, i) => {
+    let p = 0, e = 0;
+    for (let k = Math.max(0, i - FINESTRA + 1); k <= i; k++) { p += acq[k].p; e += acq[k].e; }
+    a.m = p / Math.max(1, e);
+  });
+  return acq;
+}
+const tonoMercato = (m) => (m >= 1.1 ? ["si spende tanto", "caldo"] : m <= 0.9 ? ["si spende poco", "freddo"] : ["nella norma", ""]);
+
+function renderMercato() {
+  const box0 = $("#mercato");
+  const acq = serieMercato(), N = acq.length, fase = MERC.fase;
+  const ultimo = N ? acq[N - 1].m : null, [parola, tono] = ultimo == null ? ["", ""] : tonoMercato(ultimo);
+  const riquadri = [box({ v: ultimo == null ? "–" : pct(ultimo), l: ultimo == null ? "ancora nessun acquisto" : parola, ic: "polso", cls: "ora " + tono,
+    sub: ultimo == null ? "" : `ultimi ${Math.min(N, FINESTRA)} acquisti sul previsto` })];
+  for (const r of RUOLI) {
+    const t = MERC.term[r], tot = META.n_squadre * META.slot[r];
+    riquadri.push(`<div class="box ruolo${r === fase ? " in-corso" : ""}${t.n ? "" : " zero"}" title="${NOMI_RUOLO[r]}: ${t.n ? `pagati ${t.pagato} crediti contro ${t.previsto} previsti` : "ancora nessun acquisto"}">
+      <b>${t.n ? pct(t.pagato / Math.max(1, t.previsto)) : "–"}</b>
+      <span class="box-l"><span class="role ${r}">${r}</span><span>${t.n}/${tot}${r === fase ? " in corso" : ""}</span></span></div>`);
+  }
+  let h = `<h2>Andamento del mercato</h2><div class="boxes merc-box">${riquadri.join("")}</div>`;
+  if (!N) {
+    box0.innerHTML = h + `<p class="lbl">Il grafico parte dal primo acquisto: una colonna per acquisto, sopra la riga se è stato pagato più del previsto, sotto se meno.</p>`;
+    return;
+  }
+
+  // geometria, in pixel veri: il grafico si ridisegna alla larghezza del riquadro
+  const W = Math.max(260, Math.floor((box0.clientWidth || 544) - 26)), sx = 40, dx = 46, su = 10, altoP = 124, giu = 30;     // a destra il posto per l'etichetta della media
+  const larg = W - sx - dx, H = su + altoP + giu, y0 = su + altoP / 2;
+  const estremo = acq.some((a) => Math.abs(Math.log2(a.m)) > 1) ? Math.log2(3) : 1;      // 50-200%, o 33-300% se serve
+  const y = (r) => y0 - (Math.max(-estremo, Math.min(estremo, Math.log2(Math.max(0.01, r)))) / estremo) * (altoP / 2);
+  const passoX = larg / Math.max(N, 20), bw = Math.max(1.5, Math.min(14, passoX - 2));
+  const cx = (i) => sx + passoX * (i + 0.5);
+  const tacche = (estremo > 1 ? [1 / 3, 0.5, 1, 2, 3] : [0.5, 1, 2]);
+
+  const colonne = acq.map((a, i) => {
+    const yv = y(a.r), alto = Math.abs(yv - y0), x = cx(i) - bw / 2, piccolo = Math.max(a.p, a.e) <= 3;
+    if (alto < 1.5) return `<rect class="pari" x="${x.toFixed(1)}" y="${(y0 - 1).toFixed(1)}" width="${bw.toFixed(1)}" height="2"/>`;
+    const q = Math.min(4, bw / 2, alto), sopra = yv < y0, s = sopra ? 1 : -1;
+    return `<path class="${sopra ? "caro" : "sconto"}${piccolo ? " piccolo" : ""}" d="M${x.toFixed(1)} ${y0}V${(yv + s * q).toFixed(1)}Q${x.toFixed(1)} ${yv.toFixed(1)} ${(x + q).toFixed(1)} ${yv.toFixed(1)}H${(x + bw - q).toFixed(1)}Q${(x + bw).toFixed(1)} ${yv.toFixed(1)} ${(x + bw).toFixed(1)} ${(yv + s * q).toFixed(1)}V${y0}Z"/>`;
+  }).join("");
+  const linea = acq.map((a, i) => `${i ? "L" : "M"}${cx(i).toFixed(1)} ${y(a.m).toFixed(1)}`).join("");
+  // le fasi sotto l'asse: un tratto per ogni ruolo, con la sua lettera
+  let fasi = "";
+  for (let i = 0; i < N;) {
+    let j = i; while (j + 1 < N && acq[j + 1].g.r === acq[i].g.r) j++;
+    const x1 = sx + passoX * i + 1, x2 = sx + passoX * (j + 1) - 1;
+    fasi += `<path class="fase" d="M${x1.toFixed(1)} ${su + altoP + 8}H${x2.toFixed(1)}"/><text class="t-fase" x="${((x1 + x2) / 2).toFixed(1)}" y="${su + altoP + 22}">${acq[i].g.r}</text>`;
+    i = j + 1;
+  }
+  const fine = { x: cx(N - 1), y: y(acq[N - 1].m) };
+  h += `<div class="merc-leg"><span><i class="k caro"></i>pagato più del previsto</span><span><i class="k sconto"></i>meno del previsto</span><span><i class="k linea"></i>media degli ultimi ${FINESTRA}</span></div>
+    <div class="merc-graf"><svg class="merc" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0"
+        aria-label="Andamento del mercato: ${N} acquisti, gli ultimi al ${pct(ultimo)} del prezzo previsto. Frecce sinistra e destra per scorrere gli acquisti.">
+      ${tacche.map((t) => `<path class="${t === 1 ? "base" : "griglia"}" d="M${sx} ${y(t).toFixed(1)}H${W - dx}"/><text class="t-asse" x="${sx - 6}" y="${(y(t) + 3.5).toFixed(1)}">${Math.round(t * 100)}%</text>`).join("")}
+      ${colonne}${fasi}
+      <path class="media" d="${linea}"/>
+      <circle class="punto" cx="${fine.x.toFixed(1)}" cy="${fine.y.toFixed(1)}" r="5"/>
+      <text class="t-fine" x="${(fine.x + 9).toFixed(1)}" y="${(fine.y + 4).toFixed(1)}">${pct(ultimo)}</text>
+      <path class="mirino" d="M0 ${su}V${su + altoP}" hidden/>
+    </svg><div class="merc-tip" hidden></div></div>`;
+  box0.innerHTML = h;
+
+  // passaggio del mouse, tocco e tastiera: il mirino trova l'acquisto, il riquadro dice chi e a quanto
+  const svg = box0.querySelector("svg.merc"), tip = box0.querySelector(".merc-tip"), mirino = svg.querySelector(".mirino");
+  let sel = -1;
+  const mostra = (i) => {
+    sel = Math.max(0, Math.min(N - 1, i));
+    const a = acq[sel], d = a.p - a.e;
+    mirino.setAttribute("d", `M${cx(sel).toFixed(1)} ${su}V${su + altoP}`); mirino.removeAttribute("hidden");
+    tip.textContent = "";
+    const riga = (classe, testo) => { const e = document.createElement("div"); if (classe) e.className = classe; e.textContent = testo; tip.appendChild(e); };
+    riga("tip-v", `${a.p} crediti, ${d === 0 ? "come previsto" : `${Math.abs(d)} ${d > 0 ? "più" : "meno"} del previsto (${a.e})`}`);
+    riga("", `${sel + 1}° acquisto: ${a.g.nome} (${a.g.r}) a ${S.asta.squadre[a.t]?.nome ?? ""}`);
+    riga("tip-m", `media degli ultimi ${Math.min(sel + 1, FINESTRA)}: ${pct(a.m)} del previsto`);
+    tip.hidden = false;
+    const tw = tip.offsetWidth, x = cx(sel);
+    tip.style.left = Math.max(0, Math.min(W - tw, x > W / 2 ? x - tw - 10 : x + 10)) + "px";
+  };
+  const nascondi = () => { mirino.setAttribute("hidden", ""); tip.hidden = true; sel = -1; };
+  svg.addEventListener("pointermove", (e) => { const r = svg.getBoundingClientRect(); mostra(Math.floor((e.clientX - r.left - sx) / passoX)); });
+  svg.addEventListener("pointerleave", nascondi);
+  svg.addEventListener("blur", nascondi);
+  svg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); mostra(sel < 0 ? N - 1 : sel + (e.key === "ArrowRight" ? 1 : -1)); }
+    else if (e.key === "Escape") nascondi();
+  });
 }
 
 function vista(v) {
@@ -1275,6 +1502,7 @@ function vista(v) {
   // Su computer "Listone e rosa" copre entrambe le viste.
   document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected",
     b.dataset.view === v || (v === "rosa" && b.dataset.view === "listone" && innerWidth > 900)));
+  if (v === "asta" && inAsta() && MERC) renderMercato();
 }
 
 // da quanto dura l'asta: dall'avvio, o dal primo acquisto per le aste salvate prima di questo campo
@@ -1330,36 +1558,76 @@ function renderAsta() {
   const st = statoSquadre(), me = st[S.asta.io];
 
   // --- occasioni di fine ruolo ---
+  // Nell'asta per ruolo si guardano solo i giocatori del ruolo in corso. Un titolare buono e'
+  // un'occasione in due casi: i rivali che cercano ancora nel ruolo hanno finito il budget di
+  // ruolo (lo porti via battendo il piu' ricco di un credito), oppure i buoni rimasti sono piu'
+  // dei posti da titolare ancora da riempire, e allora gli ultimi vanno via al prezzo di una riserva.
+  const fase = MERC.fase, chi = chiChiama();
   const occ = [];
-  for (const g of DATA.giocatori) {
-    if (OWNER.has(g.id) || me.liberi[g.r] <= 0 || g.pg < SOGLIA[g.r]) continue;
-    const rivali = st.filter((t) => t.i !== S.asta.io && t.liberi[g.r] > 0);
-    const maxRivali = rivali.reduce((a, t) => Math.max(a, t.maxOff), 0);
-    const pa = prezzoAtteso(g);
-    const reale = rivali.length ? Math.min(pa, maxRivali + 1) : 1;
-    if (reale > me.maxOff || reale > pa * 0.75) continue;
-    occ.push({ g, pa, reale, n: rivali.filter((t) => t.maxOff >= 2).length, maxRivali });
+  for (const r of perRuolo() ? (fase ? [fase] : []) : RUOLI) {
+    const { buoni, bisogno, perSquadra, altri, posti } = MERC.quadro[r];
+    const tuttiRivali = st.filter((t) => t.i !== S.asta.io);
+    if (me.liberi[r] <= 0) continue;
+    const rivali = tuttiRivali.filter((t) => t.liberi[r] > 0);
+    // Chi ha gia' i suoi titolari compra solo riserve: a fare il prezzo di un titolare buono sono
+    // i rivali che ne cercano ancora uno (in un'asta libera, tutti quelli con uno slot).
+    const cercano = perRuolo() ? rivali.filter((t) => bisogno[t.i] > 0) : rivali;
+    const maxRivali = cercano.reduce((a, t) => Math.max(a, budgetSquadra(t, r)), 0);
+    // il prezzo di una riserva: la mediana di quelli che riempiranno gli slot oltre i titolari
+    const riserve = MERC.resti[r].slice(posti).sort((a, b) => a - b);
+    const daRiserva = riserve.length ? Math.max(1, Math.round(riserve[riserve.length >> 1])) : 1;
+    // A fine ruolo (ai rivali manca al piu' un quarto dei titolari) i buoni in piu' di quelli che
+    // i rivali cercano restano a te: vanno via al prezzo di una riserva.
+    const titRivali = perSquadra * tuttiRivali.length, perMe = buoni.length - Math.round(altri);
+    const fineRuolo = perRuolo() && perMe > 0 && altri <= Math.max(1, 0.25 * titRivali);
+    buoni.forEach((g, k) => {
+      const pa = prezzoAtteso(g);
+      let reale = !rivali.length ? 1 : cercano.length ? Math.min(pa, maxRivali + 1) : Math.min(pa, daRiserva);
+      let avanza = rivali.length > 0 && !cercano.length;
+      if (fineRuolo && k >= buoni.length - perMe && daRiserva < reale) { reale = daRiserva; avanza = true; }
+      if (reale > me.maxOff || reale > pa * 0.75) return;
+      occ.push({ g, pa, reale, avanza, n: cercano.filter((t) => budgetSquadra(t, r) >= 2).length, maxRivali });
+    });
   }
   occ.sort((a, b) => b.g.pg - a.g.pg);
-  const libLega = RUOLI.map((r) => `${r} ${st.reduce((a, t) => a + Math.max(0, t.liberi[r]), 0)}`).join(" · ");
+  let testa;
+  if (!perRuolo()) {
+    const libLega = RUOLI.map((r) => `${r} ${MERC.aperti[r]}`).join(" · ");
+    testa = `<div class="lbl" style="margin:-4px 0 8px">Slot ancora liberi in lega: ${libLega} · mercato ${INFL >= 1 ? "+" : ""}${Math.round((INFL - 1) * 100)}% sui prezzi attesi</div>`;
+  } else if (!fase) testa = `<p class="lbl">Tutte le rose sono complete.</p>`;
+  else {
+    const qf = MERC.quadro[fase], q = { buoni: qf.buoni.length, posti: qf.posti, mio: Math.ceil(qf.mio), avanzo: qf.buoni.length - qf.posti };
+    const tot = META.n_squadre * META.slot[fase], fatti = tot - MERC.aperti[fase], f = FATT[fase];
+    const deiRuolo = { P: "dei portieri", D: "dei difensori", C: "dei centrocampisti", A: "degli attaccanti" }[fase];
+    const esito = q.avanzo > 0 ? box({ v: q.avanzo === 1 ? "Ne avanza 1" : `Ne avanzano ${q.avanzo}`, l: "più buoni che posti da titolare", ic: "ok", tono: "ok", cls: "parola", title: "Gli ultimi buoni andranno via a poco: conviene aspettare" })
+      : q.avanzo < 0 ? box({ v: q.avanzo === -1 ? "Ne manca 1" : `Ne mancano ${-q.avanzo}`, l: "più posti da titolare che buoni", ic: "allerta", tono: "ko", cls: "parola", title: "I buoni non bastano per tutti: i prezzi salgono, non aspettare l'ultimo" })
+        : box({ v: "In pari", l: "tanti buoni quanti posti da titolare", ic: "pari", tono: "med", cls: "parola" });
+    testa = `<div class="boxes fase-box">
+      ${box({ v: NOMI_RUOLO[fase], l: `${fatti} su ${tot} assegnati`, ic: "martello", cls: "parola", sub: barra(fatti / tot) })}
+      ${box({ v: q.buoni, l: "titolari buoni ancora liberi", ic: "stella", title: `${NOMI_RUOLO[fase]} liberi da almeno ${fmt(SOGLIA[fase], 2)} punti a giornata: il livello dei titolari della lega` })}
+      ${box({ v: q.posti, l: "posti da titolare da riempire", ic: "persone", sub: q.mio ? `${q.mio} ${q.mio === 1 ? "è tuo" : "sono tuoi"}` : "i tuoi li hai" })}
+      ${esito}
+      ${box({ v: pct(f), l: `prezzi ${deiRuolo} sul previsto`, ic: "polso", tono: f >= 1.1 ? "meno" : f <= 0.9 ? "piu" : "",
+        title: MERC.futuri.length ? `Nei ruoli dopo i prezzi sono al ${pct(FATT[MERC.futuri[0]])} del previsto: quello che si spende adesso manca dopo` : "Ultimo ruolo: i crediti che restano si spendono qui" })}
+    </div>`;
+  }
   $("#occasioni").className = "card" + (occ.length ? " hot" : "");
-  $("#occasioni").innerHTML = `<h2>Occasioni di fine ruolo</h2>
-    <div class="lbl" style="margin:-4px 0 8px">Slot ancora liberi in lega: ${libLega} · mercato ${INFL >= 1 ? "+" : ""}${Math.round((INFL - 1) * 100)}% sui prezzi attesi</div>
+  $("#occasioni").innerHTML = `<h2>Occasioni di fine ruolo</h2>${testa}
     ${occ.length ? occ.slice(0, 6).map((o) => `<div class="occ">
         <span class="role ${o.g.r}">${o.g.r}</span>
         <span class="who"><b>${esc(o.g.nome)}</b><small>${esc(nomeSq(o.g.sq))}</small></span>
-        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br>${o.n ? `${o.n} rivali, al massimo ${cr(o.maxRivali, MAXOFF0())}` : "nessun rivale"}</span>
+        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br>${o.avanza ? "ai rivali non serve da titolare: prezzo da riserva" : o.n ? `${o.n} ${o.n === 1 ? "rivale lo cerca" : "rivali lo cercano"}, ${conBudgetDiRuolo(o.g.r) ? "budget di ruolo" : "offerta"} al massimo ${o.maxRivali}` : "nessun rivale"}</span>
         <button class="btn small" data-occ="${o.g.id}">Chiama</button></div>`).join("")
-      : `<p class="lbl">Nessuna per ora. Compaiono quando in un ruolo restano titolari buoni e gli avversari non hanno piu' slot o crediti per contenderteli: li vedrai qui con il prezzo realistico.</p>`}`;
+      : perRuolo() && !fase ? "" : `<p class="lbl">Nessuna per ora. Compaiono quando restano titolari buoni e i rivali che cercano ancora nel ruolo hanno finito il budget${perRuolo() ? ", o quando i buoni sono più dei posti da titolare" : ""}: li vedrai qui con il prezzo realistico.</p>`}`;
 
   // --- squadre ---
   $("#squadre").innerHTML = `<h2>Squadre</h2><div style="overflow-x:auto"><table class="sq">
-    <thead><tr><th class="l">Squadra</th><th>Crediti</th><th title="Offerta massima possibile adesso">Max</th><th class="l" title="Slot liberi per ruolo">Liberi ${RUOLI.map((r) => `<span class="lr ${r}">${r}</span>`).join("·")}</th><th></th></tr></thead>
+    <thead><tr><th class="l">Squadra</th><th>Crediti</th><th title="Offerta massima possibile adesso">Max</th>${fase && conBudgetDiRuolo(fase) ? `<th title="Budget di ruolo: quanto può mettere su un giocatore del ruolo in corso senza intaccare i crediti per i ruoli dopo">Ruolo</th>` : ""}<th class="l" title="Slot liberi per ruolo">Liberi ${RUOLI.map((r) => `<span class="lr ${r}">${r}</span>`).join("·")}</th><th></th></tr></thead>
     <tbody>${st.map((t) => `<tr class="${t.i === S.asta.io ? "io" : ""}">
-      <td class="l">${esc(t.nome)}</td><td>${cr(t.crediti, META.crediti)}</td><td>${cr(t.maxOff, MAXOFF0())}</td>
+      <td class="l">${esc(t.nome)}${chi === t.i ? '<span class="tag turno" title="Tocca a questa squadra chiamare">CHIAMA</span>' : ""}</td><td>${cr(t.crediti, META.crediti)}</td><td>${cr(t.maxOff, MAXOFF0())}</td>${fase && conBudgetDiRuolo(fase) ? `<td>${t.liberi[fase] > 0 ? MERC.comodo[t.i] : "–"}</td>` : ""}
       <td class="l lib">${RUOLI.map((r) => `<span class="lr ${r}${t.liberi[r] <= 0 ? " zero" : ""}" title="${NOMI_RUOLO[r]} liberi">${t.liberi[r]}</span>`).join(" · ")}</td>
       <td><button class="btn small" data-vedi="${t.i}">${S.asta.aperta === t.i ? "Chiudi" : "Rosa"}</button></td></tr>
-      ${S.asta.aperta === t.i ? `<tr><td colspan="5" class="l" style="white-space:normal">${RUOLI.map((r) => {
+      ${S.asta.aperta === t.i ? `<tr><td colspan="6" class="l" style="white-space:normal">${RUOLI.map((r) => {
         const l = Object.entries(S.asta.squadre[t.i].rosa).map(([id, pz]) => ({ g: BY_ID.get(+id), pz })).filter((x) => x.g && x.g.r === r);
         return l.length ? `<div><span class="role ${r}">${r}</span> ${l.map((x) => `${esc(x.g.nome)} <b>${x.pz}</b>`).join(", ")}</div>` : "";
       }).join("") || "<span class='lbl'>Nessun acquisto.</span>"}</td></tr>` : ""}`).join("")}</tbody></table></div>
@@ -1368,10 +1636,14 @@ function renderAsta() {
   // --- ultimi acquisti ---
   const log = S.asta.log.slice(-8).reverse();
   $("#log").innerHTML = `<h2>Ultimi acquisti</h2><div class="log">${log.map((x) => {
-    const g = BY_ID.get(x.id); return g ? `<div><span><span class="role ${g.r}">${g.r}</span> ${esc(g.nome)}</span><span>${esc(S.asta.squadre[x.t].nome)} · <b>${x.p}</b></span></div>` : "";
+    const g = BY_ID.get(x.id); if (!g) return "";
+    const d = x.p - g.pa;
+    return `<div><span><span class="role ${g.r}">${g.r}</span> ${esc(g.nome)}</span><span>${esc(S.asta.squadre[x.t].nome)} · <b>${x.p}</b><span class="scarto ${d > 0 ? "caro" : d < 0 ? "sconto" : ""}" title="Prezzo previsto prima dell'asta: ${g.pa}">${d > 0 ? "+" + d : d < 0 ? "−" + -d : "="}</span></span></div>`;
   }).join("") || "<p class='lbl'>Ancora nessuno.</p>"}</div>
     ${S.asta.log.length ? `<div class="row" style="margin-top:8px"><button class="btn small" id="annulla-ultimo">Annulla l'ultimo</button></div>` : ""}`;
 
+  renderGiro();
+  renderMercato();
   renderChiamato();
 }
 
@@ -1477,15 +1749,17 @@ function renderChiamato() {
       title: `Il compagno migliore fra quelli che hai già in rosa: in ${mio.a.facile} giornate su ${mio.a.partite} almeno uno dei due ha una partita facile` }));
   }
 
+  const diRuolo = conBudgetDiRuolo(g.r);
   const rivali = st.filter((t) => t.i !== S.asta.io && t.liberi[g.r] > 0 && t.maxOff >= 1);
-  const ricco = rivali.reduce((a, t) => (!a || t.maxOff > a.maxOff ? t : a), null);
+  const ricco = rivali.reduce((a, t) => (!a || budgetSquadra(t, g.r) > budgetSquadra(a, g.r) ? t : a), null);
+  const tettoRivali = Math.max(1, ...rivali.map((t) => budgetSquadra(t, g.r)));
   const squadra = (t) => {
     const pieno = t.liberi[g.r] <= 0, senza = !pieno && t.maxOff < 1, sonoIo = t.i === S.asta.io;
     return `<button type="button" class="box sq${sonoIo ? " io" : ""}" data-squadra="${t.i}" aria-pressed="${S.asta.scelta === t.i}" ${pieno ? "disabled" : ""}
-        title="${pieno ? "Ha già tutti i " + NOMI_RUOLO[g.r].toLowerCase() : senza ? "Crediti finiti" : `Segna che l'ha preso ${esc(t.nome)}`}">
+        title="${pieno ? "Ha già tutti i " + NOMI_RUOLO[g.r].toLowerCase() : senza ? "Crediti finiti" : `Segna che l'ha preso ${esc(t.nome)}` + (diRuolo && !sonoIo ? `. Oltre ${budgetSquadra(t, g.r)} intacca i crediti per i ruoli dopo; al massimo può offrire ${t.maxOff}` : "")}">
       <span class="sq-n">${esc(t.nome)}</span>
-      <b>${pieno || senza ? "–" : cr(t.maxOff, MAXOFF0())}</b>
-      <span class="box-l"><span>${pieno ? "ruolo pieno" : senza ? "crediti finiti" : sonoIo ? "la tua offerta" : "offerta max"}</span></span></button>`;
+      <b>${pieno || senza ? "–" : sonoIo || !diRuolo ? cr(t.maxOff, MAXOFF0()) : cr(budgetSquadra(t, g.r), tettoRivali)}</b>
+      <span class="box-l"><span>${pieno ? "ruolo pieno" : senza ? "crediti finiti" : sonoIo ? "la tua offerta" : diRuolo ? "budget ruolo" : "offerta max"}</span></span></button>`;
   };
 
   box0.innerHTML = `<div class="chiamato r-${g.r}">
@@ -1500,7 +1774,7 @@ function renderChiamato() {
       `<div class="boxes valore">${valore.join("")}</div>
       <div class="boxes stato">${stato.join("")}</div>`)}
     ${sezione("ch-chi", "persone", "Chi lo prende", rivali.length
-        ? `${rivali.length} ${rivali.length === 1 ? "rivale può" : "rivali possono"} ancora offrire, il più ricco è ${esc(ricco.nome)}`
+        ? `${rivali.length} ${rivali.length === 1 ? "rivale può" : "rivali possono"} ancora offrire, ${diRuolo ? "ha più budget di ruolo" : "il più ricco è"} ${esc(ricco.nome)}`
         : "nessun rivale può più offrire",
       `<div class="boxes squadre-asta" role="group" aria-label="Chi l'ha preso">${st.map(squadra).join("")}</div>
       <form class="registra" id="fasta">
@@ -1540,8 +1814,10 @@ function registraDaForm() {
   if (prezzo < 1) return err("Il prezzo minimo è 1 credito.");
   if (s.liberi[g.r] <= 0) return err(`${s.nome} ha già tutti i ${NOMI_RUOLO[g.r].toLowerCase()}.`);
   if (prezzo > s.maxOff) return err(`${s.nome} può offrire al massimo ${s.maxOff} crediti.`);
+  const chiamava = chiChiama(), giro = S.asta.giro;
   S.asta.squadre[t].rosa[id] = prezzo;
-  S.asta.log.push({ id, t, p: prezzo, ora: new Date().toISOString() });
+  S.asta.log.push({ id, t, p: prezzo, ora: new Date().toISOString(), tu: giro.turno });
+  if (chiamava != null) { const n = S.asta.squadre.length; giro.turno = (((chiamava + giro.verso) % n) + n) % n; }
   S.asta.chiamato = null; S.asta.scelta = null;
   aggiorna();
   $("#cerca-asta").focus();
@@ -1555,6 +1831,7 @@ function rimuoviAcquisto(id) {
 function annullaUltimo() {
   const x = S.asta.log.pop();
   if (x) delete S.asta.squadre[x.t].rosa[x.id];
+  if (x && x.tu != null && S.asta.giro) S.asta.giro.turno = x.tu;
   aggiorna();
 }
 
@@ -1642,33 +1919,50 @@ function calcioDInizio(btn) {
 
 function dialogoAvvio() {
   const nomi = S.asta ? S.asta.squadre.map((t) => t.nome) : NOMI_DEFAULT.slice(0, META.n_squadre);
+  const modo0 = S.asta?.modo || "ruolo", verso0 = S.asta?.giro ? S.asta.giro.verso : 1;
+  const primo0 = S.asta?.giro ? ((S.asta.giro.turno % nomi.length) + nomi.length) % nomi.length : 0;
   apri(`<h3>Modalità asta</h3>
-    <p class="lbl">Da qui in poi la tua rosa e' quella reale: registri ogni acquisto, tuo e degli altri, e il tool ricalcola suggerimenti, prezzi e occasioni.</p>
+    <p class="lbl">Da qui in poi la tua rosa è quella reale: registri ogni acquisto, tuo e degli altri, e il tool ricalcola suggerimenti, prezzi e occasioni.</p>
+    <p class="lbl">Scrivi le squadre nell'ordine in cui siete seduti, in senso orario partendo da te: il giro delle chiamate segue quest'ordine.</p>
     <div class="nomi">${nomi.map((n, i) => `<label>${i === 0 ? "La tua squadra" : "Avversario " + i}<input id="nome-${i}" value="${esc(n)}" maxlength="24"></label>`).join("")}</div>
     ${S.asta ? "" : `<div class="row"><span class="lbl">Obiettivi dal piano</span><div class="seg mini">${["A", "B", "C"].map((p) =>
       `<button type="button" data-obj="${p}" aria-pressed="${S.piano === p}">Piano ${p} (${Object.keys(S.piani[p]).length})</button>`).join("")}</div></div>
     <p class="lbl">I giocatori del piano scelto restano segnati come OBIETTIVO nel listone. Non sono acquisti: le rose partono vuote.</p>`}
-    <p class="nota">Da definire: tipo di asta e ordine dei ruoli. Per ora ogni ruolo si puo' chiamare in qualsiasi momento.</p>
+    <div class="row"><span class="lbl">Chiamata</span><div class="seg mini" role="group" aria-label="Tipo di chiamata">
+      <button type="button" data-modo-asta="ruolo" aria-pressed="${modo0 === "ruolo"}" title="Prima tutti i portieri, poi difensori, centrocampisti e attaccanti">Per ruolo: P, D, C, A</button>
+      <button type="button" data-modo-asta="libero" aria-pressed="${modo0 === "libero"}" title="Ogni ruolo si può chiamare in qualsiasi momento">Libera</button></div></div>
+    <div class="row"><span class="lbl">Giro</span><div class="seg mini" role="group" aria-label="Verso del giro">
+      <button type="button" data-verso="1" aria-pressed="${verso0 === 1}">Orario</button>
+      <button type="button" data-verso="-1" aria-pressed="${verso0 === -1}">Antiorario</button>
+      <button type="button" data-verso="0" aria-pressed="${verso0 === 0}" title="Il tool non segue chi deve chiamare">Senza giro</button></div>
+      <label class="lbl" for="av-primo">${S.asta ? "tocca a" : "comincia"}</label>
+      <select id="av-primo" class="pill">${nomi.map((_, i) => `<option value="${i}" ${i === primo0 ? "selected" : ""}>${i === 0 ? "Tu" : "Avversario " + i}</option>`).join("")}</select></div>
+    <p class="lbl">Verso e turno si correggono anche dopo, dal riquadro del giocatore chiamato. Chi ha già riempito il ruolo in corso salta il turno.</p>
     <div class="actions">
       <button class="btn" data-close>Annulla</button>
       ${S.asta ? `<button class="btn" id="asta-nuova">Nuova asta da zero</button>` : ""}
       <button class="btn live-go" id="asta-ok">${S.asta ? "Riprendi l'asta" : "Avvia l'asta"}</button>
     </div>`);
-  let piano = S.piano;
-  document.querySelectorAll("[data-obj]").forEach((b) => b.onclick = () => {
-    piano = b.dataset.obj;
-    document.querySelectorAll("[data-obj]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  let piano = S.piano, modo = modo0, verso = verso0;
+  const gruppo = (attr, scelto) => document.querySelectorAll(`.dialog [${attr}]`).forEach((b) => b.onclick = () => {
+    scelto(b);
+    document.querySelectorAll(`.dialog [${attr}]`).forEach((x) => x.setAttribute("aria-pressed", x === b));
   });
+  gruppo("data-obj", (b) => { piano = b.dataset.obj; });
+  gruppo("data-modo-asta", (b) => { modo = b.dataset.modoAsta; });
+  gruppo("data-verso", (b) => { verso = +b.dataset.verso; });
   const leggiNomi = () => nomi.map((n, i) => ($(`#nome-${i}`).value.trim() || n));
   const parti = (nuova) => {
-    const n = leggiNomi();
+    const n = leggiNomi(), primo = +$("#av-primo").value;
     if (!S.asta || nuova) {
       S.asta = { attiva: true, io: 0, inizio: new Date().toISOString(), squadre: n.map((nome) => ({ nome, rosa: {} })), log: [],
                  obiettivi: Object.keys(S.piani[piano]).map(Number), presiPiano: S.presi,
-                 chiamato: null, scelta: null, aperta: null };
+                 chiamato: null, scelta: null, aperta: null, modo, giro: { verso, turno: primo } };
     } else {
       S.asta.attiva = true;
       S.asta.squadre.forEach((t, i) => { t.nome = n[i]; });
+      S.asta.modo = modo;
+      S.asta.giro = { verso, turno: primo !== primo0 ? primo : S.asta.giro ? S.asta.giro.turno : primo };
     }
     chiudi();
     vista("asta");
@@ -1740,14 +2034,15 @@ function importaAsta() {
 // La ricerca del giocatore chiamato: i liberi che corrispondono, prima quelli il cui nome
 // comincia cosi'. Con le frecce su e giu' si scorre l'elenco, Invio chiama quello evidenziato.
 let RIC = { lista: [], i: 0 };
+const fuoriFase = (g) => (MERC && MERC.fase && g.r !== MERC.fase ? 1 : 0);
 function risultatiRicerca() {
   const inp = $("#cerca-asta"), q = inp.value.trim().toLowerCase(), box = $("#risultati");
   if (!q) { chiudiRicerca(); return []; }
   const l = DATA.giocatori.filter((g) => !OWNER.has(g.id) && g.nome.toLowerCase().includes(q))
-    .sort((a, b) => (a.nome.toLowerCase().startsWith(q) ? 0 : 1) - (b.nome.toLowerCase().startsWith(q) ? 0 : 1) || b.pg - a.pg).slice(0, 8);
+    .sort((a, b) => (fuoriFase(a) - fuoriFase(b)) || (a.nome.toLowerCase().startsWith(q) ? 0 : 1) - (b.nome.toLowerCase().startsWith(q) ? 0 : 1) || b.pg - a.pg).slice(0, 8);
   RIC = { lista: l, i: 0 };
   box.innerHTML = l.length
-    ? l.map((g, i) => `<button type="button" role="option" id="ris-${i}" data-i="${i}" data-chiama="${g.id}" tabindex="-1"><span class="role ${g.r}">${g.r}</span>
+    ? l.map((g, i) => `<button type="button" role="option" id="ris-${i}" data-i="${i}" data-chiama="${g.id}" tabindex="-1"${fuoriFase(g) ? ` class="fuori" title="Non è il ruolo in corso"` : ""}><span class="role ${g.r}">${g.r}</span>
         <span class="ris-n">${dotFascia(g, true)}<b>${esc(g.nome)}</b>${tagSalute(g)}<small>${esc(nomeSq(g.sq))}</small></span>
         <span class="ris-v"><b>${fmt(g.pg, 2)}</b> pt/g</span><span class="ris-v"><b>${prezzoAtteso(g)}</b> cr</span></button>`).join("")
       + `<div class="ris-aiuto" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> per scorrere <kbd>Invio</kbd> per chiamarlo <kbd>Esc</kbd> per chiudere</div>`
@@ -1814,6 +2109,7 @@ document.addEventListener("click", (e) => {
   if (d.abb) return mostraAbbinamento(+d.abb);
   if (d.chiama) { chiudi(); return chiama(+d.chiama); }
   if (d.squadra !== undefined) return scegliSquadra(+d.squadra);
+  if (d.giro) return muoviGiro(d.giro);
   if (d.occ) { chiudi(); return chiama(+d.occ); }
   if (t.id === "asta-avvia") return calcioDInizio(t);
   if (t.id === "asta-chiudi") return dialogoChiusura();
@@ -1910,6 +2206,10 @@ document.querySelector("thead").addEventListener("click", (e) => {
   S.sort = { k, dir: S.sort.k === k ? -S.sort.dir : (k === "nome" || k === "sq" || k === "fa" ? 1 : -1) };
   renderListone();
 });
+
+// il grafico del mercato e' disegnato in pixel veri: se cambia la larghezza si ridisegna
+let ridisegna = 0;
+addEventListener("resize", () => { clearTimeout(ridisegna); ridisegna = setTimeout(() => { if (inAsta() && MERC) renderMercato(); }, 150); });
 
 // --- titolo: anelli di cifre binarie che girano intorno alla sfera della O ------------------------
 // Ogni cifra sta su un anello circolare visto di sbieco (un'ellisse inclinata). Sulla meta' davanti

@@ -19,6 +19,7 @@
   --chalk: #f4f7f2;        /* linee di gesso */
   --go: #1d7a4a; --warn: #a86a12; --bad: #b3261e;
   --r-p: #d9821b; --r-d: #2b8a4c; --r-c: #2d68b8; --r-a: #c53a2e;  /* colori di ruolo */
+  --caldo: #b3261e; --freddo: #2d68b8;   /* grafico del mercato: sopra e sotto il prezzo previsto */
   --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --font-body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --radius: 6px;
@@ -31,6 +32,7 @@
     --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
     --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
     --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
+    --caldo: #e8604f; --freddo: #5b93e6;
     color-scheme: dark;
   }
 }
@@ -41,6 +43,7 @@
   --grass-1: #1d5129; --grass-2: #1a4924; --chalk: #e8efe9;
   --go: #4cc184; --warn: #e0a33c; --bad: #f07167;
   --r-p: #f0a04a; --r-d: #4fbf73; --r-c: #6b9ee8; --r-a: #ef6a5c;
+  --caldo: #e8604f; --freddo: #5b93e6;
   color-scheme: dark;
 }
 
@@ -588,6 +591,7 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .main[data-view="asta"] .p-listone, .main[data-view="asta"] .p-rosa { display: none; }
 .asta { overflow: auto; min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 14px; align-content: start; }
 .asta > div { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.asta > div > .card { min-width: 0; }
 /* su schermo largo le due colonne scorrono ciascuna per conto suo: scorrendo il giocatore chiamato
    le squadre e gli ultimi acquisti restano fermi */
 @media (min-width: 901px) {
@@ -605,6 +609,59 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .occ .num s { color: var(--ink-2); }
 .cerca { position: relative; }
 .cerca input { width: 100%; padding: 10px 12px; font-size: 16px; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--sheet); }
+/* --- il giro delle chiamate: ruolo in corso, chi chiama, e i tasti per correggerlo --- */
+.giro { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: -2px 0 10px; padding: 8px 10px; border-radius: 8px; background: var(--paper); border: 1px solid var(--rule); font-size: 13px; }
+.giro:empty { display: none; }
+.giro.mio { background: var(--live); color: var(--live-fg); border-color: var(--live-edge); }
+.giro-fase, .giro-chi { display: inline-flex; align-items: baseline; gap: 6px; }
+.giro-fase .role { align-self: center; }
+.giro-fase b { font: 700 17px/1 var(--font-display); letter-spacing: 0.03em; text-transform: uppercase; }
+.giro small { font-size: 12px; opacity: 0.7; }
+.giro-ctl { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+.giro-ctl .ic { font-size: 16px; }
+.giro.mio .ic, .giro.mio .btn { color: var(--ink); }
+.tag.turno { color: var(--live-fg); background: var(--live); border-color: var(--live-edge); }
+.risultati button.fuori { opacity: 0.55; }
+.fase-box { margin-bottom: 10px; }
+.boxes.fase-box { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
+
+/* --- andamento del mercato ---
+   Un riquadro per il momento e uno per ruolo, poi il grafico: una colonna per acquisto dalla riga
+   del 100% (rossa sopra, pagato piu' del previsto; blu sotto), e la media degli ultimi acquisti. */
+.boxes.merc-box { grid-template-columns: minmax(118px, 1.5fr) repeat(4, minmax(64px, 1fr)); gap: 6px; }
+.merc-box .box { padding: 7px 8px 8px; }
+.merc-box .box > b { font-size: 22px; }
+.merc-box .box.ora > b { font-size: 28px; }
+.merc-box .box.ora.caldo { box-shadow: inset 4px 0 0 var(--caldo); }
+.merc-box .box.ora.freddo { box-shadow: inset 4px 0 0 var(--freddo); }
+.merc-box .box.ruolo .role { width: 16px; height: 16px; font-size: 10.5px; }
+.merc-box .box.ruolo.in-corso { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.merc-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 10px 0 2px; font-size: 11.5px; color: var(--ink-2); }
+.merc-leg span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.merc-leg .k { width: 10px; height: 10px; border-radius: 2px; }
+.merc-leg .k.caro { background: var(--caldo); } .merc-leg .k.sconto { background: var(--freddo); }
+.merc-leg .k.linea { width: 16px; height: 2px; border-radius: 1px; background: var(--ink); }
+.merc-graf { position: relative; }
+svg.merc { display: block; max-width: 100%; touch-action: pan-y; }
+.merc .griglia { stroke: var(--rule); stroke-width: 1; fill: none; }
+.merc .base { stroke: var(--ink-2); stroke-width: 1; fill: none; }
+.merc .caro { fill: var(--caldo); } .merc .sconto { fill: var(--freddo); }
+.merc .piccolo { opacity: 0.35; }
+.merc .pari { fill: var(--ink-2); }
+.merc .media { stroke: var(--ink); stroke-width: 2; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.merc .punto { fill: var(--ink); stroke: var(--sheet); stroke-width: 2; }
+.merc .fase { stroke: var(--ink-2); stroke-width: 2; fill: none; }
+.merc .mirino { stroke: var(--ink); stroke-width: 1; fill: none; }
+.merc text { font-family: var(--font-body); fill: var(--ink-2); }
+.merc .t-asse { font-size: 10.5px; text-anchor: end; }
+.merc .t-fase { font-size: 10.5px; font-weight: 700; text-anchor: middle; }
+.merc .t-fine { font-size: 12px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--sheet); stroke-width: 3; }
+.merc-tip { position: absolute; top: 4px; z-index: 2; max-width: 240px; padding: 7px 9px; pointer-events: none; font-size: 12px; line-height: 1.35;
+  background: var(--sheet); color: var(--ink-2); border: 1px solid var(--ink); border-radius: 6px; box-shadow: 0 6px 18px rgb(0 0 0 / 0.16); }
+.merc-tip .tip-v { color: var(--ink); font-weight: 700; }
+.scarto { display: inline-block; min-width: 30px; margin-left: 6px; text-align: right; font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.scarto.caro { color: var(--caldo); } .scarto.sconto { color: var(--freddo); }
+
 /* risultati della ricerca: quello evidenziato (frecce o mouse) ha la barra gialla a sinistra */
 .risultati { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; margin-top: 4px; max-height: 62vh; overflow: auto;
   background: var(--sheet); border: 1px solid var(--ink); border-radius: 8px; box-shadow: 0 10px 28px rgb(0 0 0 / 0.18); }
@@ -710,3 +767,14 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
 }
 :root[data-asta] .tabs button[aria-selected="true"] { border-color: var(--live-edge); font-weight: 700; }
 h3 .fd { width: 13px; height: 13px; margin: 0 8px 0 4px; vertical-align: 5px; }
+/* l'asta da telefono: riquadri su due colonne, il momento del mercato a tutta larghezza,
+   nelle occasioni nome e bottone sulla prima riga e i numeri sotto */
+@media (max-width: 600px) {
+  .boxes.fase-box { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .boxes.merc-box { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .merc-box .box.ora { grid-column: 1 / -1; }
+  table.sq td, table.sq th { padding: 6px 4px; }
+  table.sq .tag { margin-left: 3px; padding: 1px 3px; }
+  .occ { grid-template-columns: 22px minmax(0, 1fr) auto; }
+  .occ .num { grid-column: 2 / -1; grid-row: 2; text-align: left; white-space: normal; }
+}
