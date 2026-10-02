@@ -143,17 +143,17 @@ function sezioneAlternanza(g) {
   const carte = [...miei.slice(0, 2).map((c) => [c, "In rosa"]), ...top.slice(0, 3).map((c) => [c, ""]), ...low.slice(0, 2).map((c) => [c, "Low cost"])];
   if (mv) {
     const gia = carte.find(([c]) => c === mv);
-    if (gia) gia[1] = gia[1] ? `${gia[1]} · miglior voto FantaLab` : "Miglior voto FantaLab";
-    else carte.splice(miei.slice(0, 2).length + Math.min(3, top.length), 0, [mv, "Miglior voto FantaLab"]);
+    if (gia) gia[2] = true;
+    else carte.splice(miei.slice(0, 2).length + Math.min(3, top.length), 0, [mv, "", true]);
   }
   const perVotoTab = perVoto.filter((c) => !top.includes(c) && !low.includes(c)).slice(0, 5);
-  const carta = ([c, nota]) => `<button type="button" class="comp" data-abb="${c.q.id}" aria-pressed="${c.q === scelto}" title="Metti ${esc(c.q.nome)} nella griglia accanto a ${esc(g.nome)}">
+  const carta = ([c, nota, voto]) => `<button type="button" class="comp" data-abb="${c.q.id}" aria-pressed="${c.q === scelto}" title="Metti ${esc(c.q.nome)} nella griglia accanto a ${esc(g.nome)}">
       <span class="comp-n">${esc(c.q.nome)}<small>${esc(nomeSq(c.q.sq))}</small></span>
       <b>+${fmt(c.d, 2)}<small>pt/g</small></b>
       <span class="comp-d"><span><i class="c fl-f"></i>${c.a.facile}/${c.a.partite}</span><span>voto ${c.a.voto}</span><span>${c.p} cr</span></span>
-      ${nota ? `<span class="comp-t">${nota}</span>` : ""}</button>`;
+      ${nota || voto ? `<span class="comp-ts">${nota ? `<span class="comp-t">${nota}</span>` : ""}${voto ? '<span class="comp-t mv" title="Il voto FantaLab più alto per questo giocatore">Miglior voto FantaLab</span>' : ""}</span>` : ""}</button>`;
   const riga = (c) => `<tr data-riga="${c.q.id}" class="${c.q === scelto ? "sel" : ""}">
-      <td class="l nm"><button data-open="${c.q.id}">${esc(c.q.nome)}</button>${c.mio ? '<span class="tag own">IN ROSA</span>' : ""}${c === mv ? '<span class="tag own" title="Il voto FantaLab più alto per questo giocatore">MIGLIOR VOTO</span>' : ""}</td>
+      <td class="l nm"><button data-open="${c.q.id}">${esc(c.q.nome)}</button>${c.mio ? '<span class="tag own">IN ROSA</span>' : ""}${c === mv ? '<span class="tag mv" title="Il voto FantaLab più alto per questo giocatore">MIGLIOR VOTO</span>' : ""}</td>
       <td class="l sq hide-s">${esc(nomeSq(c.q.sq))}</td>
       <td>${c.a.facile}/${c.a.partite}</td>
       <td class="hide-s">${c.a.voto}</td>
