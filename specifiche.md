@@ -177,7 +177,7 @@ dettaglio:
   slot libero. Il grafico ha una colonna per acquisto alta quanto i crediti
   pagati (scala lineare da zero, un solo colore; la cima segue i prezzi tipici e
   i colpi fuori scala portano il prezzo scritto sopra), la linea della media degli
-  ultimi sei (gialla, il giallo dell'asta, con un bagliore che la stacca dalle
+  ultimi sei (blu elettrico, con un bagliore che la stacca dalle
   colonne e un pallino in fondo che pulsa durante l'asta) e, sotto l'asse, le
   fasi per ruolo: un tratto per ruolo, nel colore del ruolo.
   Sotto, un pannello chiuso che si apre con un tocco (e resta com'è dopo ogni
@@ -187,7 +187,7 @@ dettaglio:
   il 110% si spende tanto, sotto il 90% poco) e uno per ruolo con il suo
   termometro; una colonna per acquisto dalla riga del 100% (sopra, pagato più del
   previsto; sotto, meno: la posizione basta, le colonne sono neutre come nel
-  grafico generale) e la media mobile pesata sui crediti, in viola. Il previsto è
+  grafico generale) e la media mobile pesata sui crediti, in ambra. Il previsto è
   il prezzo atteso prima dell'asta; la scala è logaritmica (metà e doppio alla
   stessa distanza dalla riga). Sotto l'asse, gli stessi tratti colorati per
   ruolo. In entrambi i grafici, passando il mouse, toccando o con le frecce si
