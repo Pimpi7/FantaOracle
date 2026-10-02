@@ -1501,12 +1501,15 @@ function renderMercato() {
   }
   const fine = { x: cx(N - 1), y: y(acq[N - 1].m) };
   h += `<div class="merc-leg"><span><i class="k caro"></i>pagato più del previsto</span><span><i class="k sconto"></i>meno del previsto</span><span><i class="k linea"></i>media degli ultimi ${FINESTRA}</span></div>
-    <div class="merc-graf"><svg class="merc" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0"
+    <div class="merc-graf"><svg class="merc${inAsta() ? " live" : ""}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0"
         aria-label="Andamento del mercato: ${N} acquisti, gli ultimi al ${pct(ultimo)} del prezzo previsto. Frecce sinistra e destra per scorrere gli acquisti.">
       ${tacche.map((t) => `<path class="${t === 1 ? "base" : "griglia"}" d="M${sx} ${y(t).toFixed(1)}H${W - dx}"/><text class="t-asse" x="${sx - 6}" y="${(y(t) + 3.5).toFixed(1)}">${Math.round(t * 100)}%</text>`).join("")}
       ${colonne}${fasi}
-      <path class="media" d="${linea}"/>
-      <circle class="punto" cx="${fine.x.toFixed(1)}" cy="${fine.y.toFixed(1)}" r="5"/>
+      <defs><filter id="merc-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><feGaussianBlur stdDeviation="3" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <path class="media" d="${linea}" filter="url(#merc-glow)"/><path class="media-luce" d="${linea}"/>
+      <circle class="alone" cx="${fine.x.toFixed(1)}" cy="${fine.y.toFixed(1)}" r="8"/>
+      <circle class="punto" cx="${fine.x.toFixed(1)}" cy="${fine.y.toFixed(1)}" r="5" filter="url(#merc-glow)"/>
       <text class="t-fine" x="${(fine.x + 9).toFixed(1)}" y="${(fine.y + 4).toFixed(1)}">${pct(ultimo)}</text>
       <path class="mirino" d="M0 ${su}V${su + altoP}" hidden/>
     </svg><div class="merc-tip" hidden></div></div>`;
