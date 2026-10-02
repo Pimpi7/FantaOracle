@@ -622,20 +622,30 @@ function titoloFr(g) {
     `; ~${fmt(f.gg, 0)} giorni e ~${fmt(f.pp, 0)} partite perse a stagione`;
 }
 
+// I segni dentro le etichette: una croce rossa per i fragili, un cerotto per i delicati (nel
+// colore del testo, currentColor), un pallone bianco per i rigoristi. Alti quanto il testo.
+const SEGNO = {
+  croce: '<svg class="segno" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 1h3.2v3.4H11v3.2H7.6V11H4.4V7.6H1V4.4h3.4z"/></svg>',
+  cerotto: '<svg class="segno" viewBox="0 0 12 12" aria-hidden="true"><g transform="rotate(-40 6 6)"><rect x="0.6" y="3.6" width="10.8" height="4.8" rx="2.4"/>' +
+    '<rect x="4" y="3.6" width="4" height="4.8" fill="rgb(0 0 0 / 0.22)"/><circle cx="5.2" cy="5.2" r=".45" fill="rgb(0 0 0 / 0.35)"/><circle cx="6.8" cy="6.8" r=".45" fill="rgb(0 0 0 / 0.35)"/></g></svg>',
+  pallone: '<svg class="segno pallone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff"/>' +
+    '<g fill="#1d4f94"><path d="M12 7.4l4.4 3.2-1.7 5.2H9.3l-1.7-5.2z"/><path d="M9 2.7l3-.5 3 .5-3 2.2zM21.4 8.8l.4 3-.9 2.9-1.2-3.6zM18.9 19.4l-2.6 1.6-3 .5 1.6-3.4zM5.1 19.4l2.6 1.6 3 .5-1.6-3.4zM2.6 8.8l-.4 3 .9 2.9 1.2-3.6z"/></g>' +
+    '<path d="M12 7.4V4.9M16.4 10.6l2.5-.8M14.7 15.8l1.6 2.2M9.3 15.8l-1.6 2.2M7.6 10.6l-2.5-.8" stroke="#1d4f94" stroke-width="1.4"/></svg>',
+};
 function tagSalute(g, senzaDubbio = false) {
   let t = "";
   if (g.inf && !(senzaDubbio && !fuori(g) && g.inf.t !== "diffidato")) {
     const i = g.inf;
     const out = fuori(g);
     // Bollini da tabellone: chi e' fuori ha la chiave (OUT, SQ) e accanto quando rientra
-    const testo = i.t === "diffidato" ? "DIFF." : !out ? "? DUBBIO"
+    const testo = i.t === "diffidato" ? "DIFF" : !out ? "? DUBBIO"
       : i.t === "squalificato" ? `<i>SQ</i>${i.fs ? "STAGIONE" : i.s ? `${i.s} G` : ""}`
       : `<i>OUT</i>${i.fs ? "STAGIONE" : i.g ? `${i.g}ª` : ""}`;
     const cls = out ? "out" : i.t === "diffidato" ? "diff" : "dubbio";
     t += `<span class="tag ${cls}" title="${esc(titoloInf(g))}">${testo}</span>`;
   }
-  if (fragile(g)) t += `<span class="tag fragile" title="${esc(titoloFr(g))}">FRAGILE</span>`;
-  else if (aRischio(g)) t += `<span class="tag rischio" title="${esc(titoloFr(g))}">DELICATO</span>`;
+  if (fragile(g)) t += `<span class="tag fragile" title="${esc(titoloFr(g))}">${SEGNO.croce}FRAGILE</span>`;
+  else if (aRischio(g)) t += `<span class="tag rischio" title="${esc(titoloFr(g))}">${SEGNO.cerotto}DELICATO</span>`;
   return t;
 }
 
@@ -659,12 +669,19 @@ const COLORI_SQ = {
   roma: ["#8e1f2f", "#f0b323"], sassuolo: ["#00a752", "#111111"], torino: ["#7f1d0b", "#ffffff"],
   udinese: ["#111111", "#ffffff"], venezia: ["#f47920", "#00843d"],
 };
+// Contrasto (WCAG) fra la scritta bianca e un colore: sotto 1,7 la striscia e' troppo chiara
+// (bianco, giallo) e l'etichetta prende il velo scuro; le altre restano coi colori pieni.
+function contrastoBianco(hex) {
+  const lin = (i) => { const c = parseInt(hex.slice(i, i + 2), 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 1.05 / (0.2126 * lin(1) + 0.7152 * lin(3) + 0.0722 * lin(5) + 0.05);
+}
 function tag(g, senzaDubbio = false) {
   let t = "";
-  if ((g.qrig || 0) >= 0.4) t += '<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">RIG</span>';
+  if ((g.qrig || 0) >= 0.4) t += `<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">${SEGNO.pallone}RIG</span>`;
   if ((g.tifo || 1) > 1) {
     const [c1, c2] = COLORI_SQ[g.sq] || ["#8a6a12", "#f2c200"];
-    t += `<span class="tag tifo" style="--t1:${c1};--t2:${c2}" title="Prezzo atteso maggiorato: ${esc(nomeSq(g.sq))} ha molti tifosi in lega">TIFO</span>`;
+    const velo = Math.min(contrastoBianco(c1), contrastoBianco(c2)) < 1.7 ? " velo" : "";
+    t += `<span class="tag tifo${velo}" style="--t1:${c1};--t2:${c2}" title="Prezzo atteso maggiorato: ${esc(nomeSq(g.sq))} ha molti tifosi in lega">TIFO</span>`;
   }
   return t + tagSalute(g, senzaDubbio);
 }
