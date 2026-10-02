@@ -57,9 +57,14 @@ Le etichette **RIG** segnalano i rigoristi, **TIFO** i giocatori che in lega cos
 
 ### 2. Apri la scheda di un giocatore
 
-Un clic sul nome e vedi da dove nasce il suo punteggio: voto atteso, gol, assist, rigori, cartellini, minuti, i fantavoti di quest'anno, lo storico delle ultime stagioni e i suoi **infortuni**: quello in corso con la data di rientro e quanto farebbe da sano, e tutti gli stop dalla 23/24. Da lì lo metti in rosa o lo escludi dai suggerimenti (se non lo vuoi, o per vedere come cambia il piano se te lo soffiano).
+Un clic sul nome e hai tutto in una scheda a riquadri, da leggere a colpo d'occhio: **verde** va bene, **giallo** attenzione, **rosso** male. Le sezioni sono sempre nello stesso ordine:
 
-Per **portieri e attaccanti** la scheda ha anche la **griglia di alternanza**, come quella di [FantaLab](https://app.fantalab.it/griglia-portieri): ogni giornata che resta con l'avversario colorato in verde, giallo o rosso secondo quanto è facile affrontarlo. Sotto trovi i **compagni con cui alternarlo**: con chi, schierando ogni turno quello con la partita migliore, hai quasi sempre una partita facile, e quanti punti a giornata ti fa guadagnare la coppia. Ci sono i migliori, quelli low cost e quelli che hai già in rosa.
+- **Informazioni**: punti a giornata, probabilità di voto, valore e prezzo atteso, e come nasce il fantavoto pezzo per pezzo (voto, gol, assist, rigori, cartellini).
+- **Infortuni**: come sta adesso, con la data di rientro e quanto farebbe da sano, e quanto spesso si ferma.
+- **Fantavoti di questa stagione**: giornata per giornata, con presenze, media e fantamedia.
+- **Griglia abbinamenti**, per **portieri e attaccanti**: come quella di [FantaLab](https://app.fantalab.it/griglia-portieri), ogni giornata che resta con l'avversario colorato secondo quanto è facile affrontarlo, e i **compagni con cui alternarlo**: con chi, schierando ogni turno quello con la partita migliore, hai quasi sempre una partita facile, e quanti punti a giornata ti fa guadagnare la coppia. Tocca un compagno e la coppia finisce nella griglia.
+
+Tabelle ed elenchi (gli stop dalla 23/24, le stagioni passate, tutti i compagni) restano chiusi: si aprono toccando il riquadro con la freccia. In fondo, sempre a portata, i bottoni per metterlo in rosa o escluderlo dai suggerimenti (se non lo vuoi, o per vedere come cambia il piano se te lo soffiano).
 
 ![Scheda giocatore](docs/img/scheda.png)
 

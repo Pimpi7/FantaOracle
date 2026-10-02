@@ -45,8 +45,27 @@ una ~. Quotazioni e FVM di un infortunato possono già essere scontati, quindi l
 essere prudente per i campioni.
 
 `RIG` segnala i rigoristi, `TIFO` i giocatori con prezzo maggiorato perché in
-lega ci sono molti tifosi di quella squadra. Un clic sul nome apre la scheda: da
-cosa nasce il punteggio, fantavoti di questa stagione, storico delle ultime tre.
+lega ci sono molti tifosi di quella squadra. Un clic sul nome apre la scheda.
+
+**Scheda giocatore.** Testata ferma con nome, squadra, quotazione, FVM e fascia;
+corpo che scorre, diviso in sezioni sempre nello stesso ordine; azioni ferme in
+fondo. Ogni sezione è fatta di riquadri: il valore in grande, sotto l'etichetta
+con la sua icona. Il colore dice lo stato e basta: verde bene, giallo attenzione,
+rosso male, gli stessi tre delle fasce FantaLab. Tabelle ed elenchi partono
+chiusi e si aprono dal riquadro che li riassume (quello con la freccia).
+
+1. *Informazioni*: punti a giornata, probabilità di voto, quota da titolare e
+   minuti, valore, prezzo atteso con l'affare. Sotto, come nasce il fantavoto:
+   voto atteso, gol, assist, rigori, malus e taratura sommano esattamente al
+   fantavoto atteso (per i portieri porta inviolata e gol subiti); a parte la
+   quota del modificatore difesa.
+2. *Infortuni*: come sta adesso, propensione, stop dalla 23/24, giorni e partite
+   persi a stagione. L'elenco degli stop si apre dal riquadro che li conta.
+3. *Fantavoti di questa stagione*: una colonna per giornata giocata (verde dal
+   6,5, rossa sotto il 5,5, la riga tratteggiata è il 6) e presenze, media voto,
+   fantamedia, gol e assist dell'anno. Le stagioni passate si aprono dal riquadro
+   delle presenze.
+4. *Griglia abbinamenti*, solo per portieri e attaccanti (vedi sotto).
 
 **Infortuni.** Accanto al nome, in rosso pieno chi salta almeno una delle
 prossime giornate (`OUT → 8a`: rientro alla 8ª, `OUT STAGIONE` se torna dopo
@@ -56,21 +75,26 @@ storico: `FRAGILE` (circa uno su sette) e, più discreto, `DELICATO` (uno su
 quattro). È un giudizio nostro sullo storico, diverso dalla fascia "A rischio"
 della guida SOS Fanta. Passandoci sopra si leggono motivo, data di rientro e i numeri che
 hanno deciso il giudizio. Un filtro tiene solo i disponibili, i disponibili non
-fragili, gli indisponibili o i fragili e delicati. La scheda ha una sezione Infortuni con
-lo stop in corso, quanto farebbe da sano e l'elenco degli stop dalla 23/24.
+fragili, gli indisponibili o i fragili e delicati. Nella scheda, la sezione Infortuni dice
+lo stop in corso, quanto farebbe da sano e, a richiesta, l'elenco degli stop dalla 23/24.
 
-**Calendario e abbinamenti.** Nella scheda di portieri e attaccanti c'è la loro
-riga della griglia di alternanza: una casella per giornata con l'avversario,
-verde, gialla o rossa secondo la fascia della griglia di
+**Calendario e abbinamenti.** Nella scheda di portieri e attaccanti la sezione
+*Griglia abbinamenti* parte da com'è il calendario da solo: partite facili, medie
+e difficili, voto FantaLab e, per gli attaccanti, quanto il calendario sposta i
+gol attesi. Poi i compagni con cui alternarlo meglio, un riquadro a testa: i
+**+Pt/g**, cioè i punti a giornata in più se ogni turno schieri chi ha la partita
+migliore invece di lui sempre in campo, le giornate in cui almeno uno dei due ha
+una partita facile, il voto FantaLab della coppia (0–100) e il prezzo. In
+evidenza chi hai già in rosa, i tre migliori e due low cost (fino a 5 crediti su
+500); *Tutti i compagni* apre la tabella completa. Toccare un compagno mette la
+coppia nella griglia: una casella per giornata con l'avversario, verde, gialla o
+rossa secondo la fascia della griglia di
 [FantaLab](https://app.fantalab.it/griglia-portieri) (facile, media, difficile),
-maiuscola in casa e minuscola fuori. Sotto, i compagni con cui alternarlo meglio:
-per ognuno le giornate in cui almeno uno dei due ha una partita facile, il voto
-FantaLab della coppia (0–100) e **+Pt/g**, i punti a giornata in più se ogni turno
-schieri chi ha la partita migliore invece di lui sempre in campo. Tre gruppi: chi
-hai già in rosa, i migliori, e i low cost (fino a 5 crediti su 500). Un clic su
-*Griglia* mette la coppia nella griglia, con sbiadita la partita di chi resta in
+maiuscola in casa e minuscola fuori, sbiadita la partita di chi resta in
 panchina e barrate le giornate che un giocatore salta per infortunio o
-squalifica. Le riserve (meno di un voto ogni tre giornate) non compaiono.
+squalifica. Su schermo largo le giornate stanno su due righe, così la stagione si
+vede tutta senza scorrere. Le riserve (meno di un voto ogni tre giornate) non
+compaiono.
 
 **Costruttore guidato.** Metti in rosa chi vuoi, al prezzo che vuoi: il tool
 completa gli slot rimanenti con la combinazione più forte che sta nel budget
