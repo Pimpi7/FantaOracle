@@ -133,28 +133,13 @@ alle 8 squadre, nell'ordine in cui siedono, e si sceglie da quale piano prendere
 obiettivi (restano segnati nel listone, le rose partono vuote), il tipo di chiamata
 (per ruolo, nell'ordine P, D, C, A, oppure libera) e il giro (orario, antiorario o
 nessuno, e chi comincia). Da lì la testata diventa la fascia scura
-"In asta" e compare la sezione **Asta**:
+"In asta" e compare la sezione **Asta**.
 
-- **Occasioni di fine ruolo**, in cima. Nell'asta per ruolo guarda solo il ruolo in
-  corso e parte da un conto: i *titolari buoni* ancora liberi (dal livello
-  dell'ultimo titolare della lega in su: i primi 8 portieri, 32 difensori, 28
-  centrocampisti, 20 attaccanti per punti attesi) contro i *posti da titolare*
-  ancora da riempire (1 portiere, 4 difensori, 3,5 centrocampisti e 2,5 attaccanti
-  a squadra, meno i buoni che ha già). Se i buoni avanzano conviene aspettare, se
-  mancano i prezzi salgono. Un titolare buono è un'occasione, con il prezzo
-  realistico accanto a quello atteso, in due casi: il rivale con più *budget di
-  ruolo* fra quelli che cercano ancora un titolare non arriva al 75% del prezzo
-  atteso (lo si batte di un credito); oppure, a fine ruolo, i buoni sono più di
-  quelli che i rivali cercano, e allora gli ultimi vanno via al prezzo di una
-  riserva (la mediana dei giocatori che riempiranno gli slot oltre i titolari).
-  Nell'asta libera vale la regola semplice: il rivale più ricco con uno slot
-  libero nel ruolo, più uno.
-- **Giro delle chiamate**, sopra la ricerca: ruolo in corso con gli assegnati, chi
-  chiama adesso e chi dopo. Dopo ogni acquisto tocca alla squadra dopo quella che
-  ha chiamato, nel verso scelto; chi ha già riempito il ruolo salta il turno. Le
-  frecce spostano il turno a mano, un bottone inverte il verso; annullare l'ultimo
-  acquisto riporta indietro anche il turno. La ricerca mette prima i giocatori del
-  ruolo in corso.
+La pagina è su due colonne che scorrono ognuna per conto suo: a sinistra il
+giocatore chiamato e sotto l'andamento del mercato; a destra le squadre, le
+occasioni e gli ultimi acquisti. Su telefono si impilano in quest'ordine. Nel
+dettaglio:
+
 - **Tabellone** (la fascia in alto): giocatori assegnati sul totale con una barra per ruolo, ultimo acquisto, rivale con l'offerta massima più alta, da quanto dura l'asta; a destra crediti, offerta massima, rosa e slot liberi per ruolo della tua squadra.
 - **Giocatore chiamato**: la ricerca mostra i liberi che corrispondono, con
   fascia, punti e prezzo; frecce su e giù per scorrere, Invio per chiamare quello
@@ -175,9 +160,14 @@ nessuno, e chi comincia). Da lì la testata diventa la fascia scura
   rifiuta le offerte che superano il massimo possibile di quella squadra o un
   ruolo già pieno. Quando si chiama un giocatore la pagina scorre quanto basta a
   mostrare il riquadro fino al bottone.
-- **Squadre**: crediti, offerta massima, budget di ruolo e slot liberi per ruolo di
-  ognuna, con la rosa apribile e l'etichetta su chi deve chiamare.
-- **Andamento del mercato**, fra Squadre e Ultimi acquisti: un riquadro per il
+- **Giro delle chiamate**, sopra la ricerca: ruolo in corso con gli assegnati, chi
+  chiama adesso e chi dopo. Dopo ogni acquisto tocca alla squadra dopo quella che
+  ha chiamato, nel verso scelto; chi ha già riempito il ruolo salta il turno. Le
+  frecce spostano il turno a mano, un bottone inverte il verso; annullare l'ultimo
+  acquisto riporta indietro anche il turno. La ricerca mette prima i giocatori del
+  ruolo in corso.
+- **Andamento del mercato**, a sinistra sotto il giocatore chiamato, dove ha
+  tutta la larghezza che gli serve: un riquadro per il
   momento (la media degli ultimi sei acquisti sul previsto: sopra il 110% si
   spende tanto, sotto il 90% poco) e uno per ruolo con il suo termometro. Sotto, il
   grafico: una colonna per acquisto dalla riga del 100% (rossa sopra, pagato più
@@ -186,6 +176,44 @@ nessuno, e chi comincia). Da lì la testata diventa la fascia scura
   scala è logaritmica (metà e doppio alla stessa distanza dalla riga); rosso e blu
   restano distinguibili anche per chi non distingue rosso e verde. Passando il
   mouse, toccando o con le frecce si legge ogni acquisto.
+- **Squadre**, in alto a destra: crediti, offerta massima, budget di ruolo e slot liberi per ruolo di
+  ognuna, con la rosa apribile e l'etichetta su chi deve chiamare.
+- **Occasioni di fine ruolo**, a destra sotto le squadre. Nell'asta per ruolo
+  guarda solo il ruolo in corso e parte da un conto: i giocatori *buoni* ancora
+  liberi contro i *posti da titolare* ancora da riempire (1 portiere, 4 difensori,
+  3,5 centrocampisti e 2,5 attaccanti a squadra, meno i buoni che ha già). È
+  buono chi è in *Fascia alta* o più su nella guida di SOS Fanta, oppure è da
+  titolare per i nostri punti (dal livello dell'ultimo titolare della lega in su:
+  i primi 8 portieri, 32 difensori, 28 centrocampisti, 20 attaccanti). Se i buoni
+  avanzano conviene aspettare, se mancano i prezzi salgono. Sotto i riquadri, una
+  riga dice quanti giocatori restano liberi in ogni fascia, dalla più alta fino
+  alla Fascia media.
+  Le occasioni sono elencate **dalla fascia più alta** (a pari fascia, per punti),
+  con la fascia scritta sotto il nome, il prezzo realistico accanto a quello
+  atteso e, in breve, il perché (per esteso passandoci sopra). In lista entrano i
+  buoni e chi è almeno in Fascia media. È un'occasione chi ha un prezzo realistico
+  non oltre il 75% di quello atteso. Il prezzo realistico dipende dal momento:
+  - *finché ci sono ruoli dopo*, un giocatore lo vogliono da titolare i rivali che
+    cercano ancora un titolare (solo se è un buono) e quelli che, pur avendo i
+    loro, ci guadagnerebbero una fascia: è di fascia più alta del loro ultimo
+    titolare nel ruolo. Il prezzo è un credito in più del *budget di ruolo* del
+    più ricco fra loro. Se non lo vuole nessuno da titolare, è il prezzo di una
+    riserva (la mediana dei giocatori che riempiranno gli slot oltre i titolari).
+    A fine ruolo, quando i buoni sono più di quelli che i rivali cercano, gli
+    ultimi nell'ordine delle fasce contano solo per chi ci guadagna una fascia; e
+    chi, nella fila dei liberi per prezzo, viene dopo tutti gli slot rimasti ai
+    rivali va al prezzo di una riserva.
+  - *nell'ultimo ruolo* i crediti rimasti non servono ad altro: ogni rivale con
+    uno slot offre quello che ha, ma compra solo tanti giocatori quanti slot gli
+    restano. Le offerte dei rivali si mettono in fila slot per slot (chi ha due
+    slot divide il budget; un credito lo offre sempre), dalla più alta; i liberi
+    si mettono in fila per prezzo atteso. Sul più caro pesa l'offerta più alta,
+    sul secondo la seconda, e così via: chi viene dopo gli slot dei rivali ricchi
+    si prende con un credito in più di quel che resta. La riga lo dice ("dopo i
+    più ricchi") perché vale quando i ricchi hanno comprato: chiamato prima può
+    salire fino all'offerta del più ricco.
+  - *nell'asta libera* vale la regola semplice: il rivale più ricco con uno slot
+    libero nel ruolo, più uno.
 - **Ultimi acquisti**, con accanto al prezzo lo scarto dal previsto e Annulla
   l'ultimo.
 

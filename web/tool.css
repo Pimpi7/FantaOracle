@@ -622,8 +622,20 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .giro.mio .ic, .giro.mio .btn { color: var(--ink); }
 .tag.turno { color: var(--live-fg); background: var(--live); border-color: var(--live-edge); }
 .risultati button.fuori { opacity: 0.55; }
-.fase-box { margin-bottom: 10px; }
-.boxes.fase-box { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
+/* occasioni: il conto del ruolo in cinque riquadri stretti, le fasce ancora libere, poi la lista */
+.boxes.fase-box { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.fase-box .box { padding: 7px 8px 8px; }
+.fase-box .box > b { font-size: 22px; }
+.fase-box .box.parola > b { font-size: 17px; }
+.fase-box .box-l .ico { display: none; }
+.fasce-libere { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 10px 0; font-size: 12px; }
+.fasce-libere > span { display: inline-flex; align-items: center; white-space: nowrap; }
+.fasce-libere .fd { margin: 0 6px 0 2px; }
+.fasce-libere b { margin-left: 4px; }
+.occ .who { display: grid; gap: 1px; white-space: normal; }
+.occ-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.occ-n .fd { margin: 0 7px 0 2px; }
+.occ-f { font-size: 11.5px; color: var(--ink-2); }
 
 /* --- andamento del mercato ---
    Un riquadro per il momento e uno per ruolo, poi il grafico: una colonna per acquisto dalla riga
@@ -770,7 +782,7 @@ h3 .fd { width: 13px; height: 13px; margin: 0 8px 0 4px; vertical-align: 5px; }
 /* l'asta da telefono: riquadri su due colonne, il momento del mercato a tutta larghezza,
    nelle occasioni nome e bottone sulla prima riga e i numeri sotto */
 @media (max-width: 600px) {
-  .boxes.fase-box { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .boxes.fase-box { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .boxes.merc-box { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .merc-box .box.ora { grid-column: 1 / -1; }
   table.sq td, table.sq th { padding: 6px 4px; }

@@ -61,6 +61,14 @@ const PESO_PARTENZA = 0.15;                        // quanto pesa il punto di pa
 const FINESTRA = 6;                                // acquisti nella media mobile del grafico
 const limita = (x) => Math.min(2.5, Math.max(0.4, x));
 const perRuolo = () => !!S.asta && S.asta.modo !== "libero";
+// Un giocatore e' "buono" in due modi: per i nostri punti e' da titolare nella lega, oppure la
+// guida di SOS Fanta lo mette in fascia alta o piu' su. Le due liste coincidono solo in parte,
+// e servono entrambe: la prima dice quanto rende, la seconda quanto lo vorranno gli altri.
+// Fra i buoni, l'ordine e' per fascia (dalla piu' alta; chi non ne ha una va in fondo), poi per punti.
+const indiceFascia = (nome, ripiego) => { const i = (META.fasce || []).indexOf(nome); return i < 0 ? ripiego : i; };
+const inFasciaAlta = (g) => g.fa != null && g.fa <= indiceFascia("Fascia alta", 4);
+const buono = (g) => g.pg >= SOGLIA[g.r] || inFasciaAlta(g);
+const perFascia = (a, b) => ((a.fa ?? 99) - (b.fa ?? 99)) || b.pg - a.pg;
 // In asta i crediti si colorano da verde (pieni) a rosso (finiti), in proporzione.
 function cr(val, max) {
   if (!inAsta()) return String(val);
@@ -1290,18 +1298,25 @@ function sincronizzaAsta() {
     const t = term[g.r]; t.pagato += x.p; t.previsto += g.pa; t.n++;
   }
 
-  // Titolari: per ogni ruolo i giocatori buoni ancora liberi (dal livello dell'ultimo titolare
-  // della lega in su) e quanti posti da titolare restano da riempire, squadra per squadra.
+  // Titolari: per ogni ruolo i giocatori buoni ancora liberi (da titolare per i nostri punti, o
+  // in fascia alta per SOS Fanta) e quanti posti da titolare restano da riempire, squadra per squadra.
   const quadro = {};
   for (const r of RUOLI) {
-    const buoni = DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id) && g.pg >= SOGLIA[r]).sort((a, b) => b.pg - a.pg);
+    const buoni = DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id) && buono(g)).sort(perFascia);
     const perSquadra = TITOLARI_LEGA()[r] / st.length;
     const bisogno = st.map((t) => {
-      const ha = Object.keys(S.asta.squadre[t.i].rosa).filter((id) => { const g = BY_ID.get(+id); return g && g.r === r && g.pg >= SOGLIA[r]; }).length;
+      const ha = Object.keys(S.asta.squadre[t.i].rosa).filter((id) => { const g = BY_ID.get(+id); return g && g.r === r && buono(g); }).length;
       return Math.max(0, Math.min(t.liberi[r], perSquadra - ha));
     });
     const mio = bisogno[S.asta.io], altri = bisogno.reduce((a, x) => a + x, 0) - mio;
-    quadro[r] = { buoni, bisogno, perSquadra, mio, altri, posti: Math.round(mio + altri) };
+    // La fascia dell'ultimo titolare di ogni squadra: un giocatore libero di fascia piu' alta le
+    // farebbe comodo anche se i titolari li ha gia' (99 = non ha ancora tutti i titolari, o senza fascia).
+    const nTit = Math.ceil(perSquadra);
+    const peggiore = st.map((t) => {
+      const suoi = Object.keys(S.asta.squadre[t.i].rosa).map((id) => BY_ID.get(+id)).filter((g) => g && g.r === r).sort(perFascia);
+      return suoi.length < nTit ? 99 : suoi[nTit - 1].fa ?? 99;
+    });
+    quadro[r] = { buoni, bisogno, peggiore, perSquadra, mio, altri, posti: Math.round(mio + altri) };
   }
 
   // Asta per ruolo: il ruolo in corso e' il primo con slot ancora aperti. I suoi prezzi seguono
@@ -1341,6 +1356,32 @@ function sincronizzaAsta() {
     return Math.max(1, Math.min(t.maxOff, Math.round(t.crediti - riserva - (t.liberi[fase] - 1))));
   });
   MERC = { st, fase, futuri, aperti, resti, dom, disp, term, comodo, medio, quadro };
+}
+
+// Perche' un giocatore e' un'occasione: chi lo vuole e fin dove puo' arrivare.
+function perche(o) {
+  const budget = conBudgetDiRuolo(o.g.r) ? "budget di ruolo" : "offerta massima";
+  if (o.come === "coda") return !o.prima || o.maxRivali >= o.ricco
+    ? { corto: `i rivali arrivano a ${o.maxRivali}`, lungo: `È l'ultimo ruolo, chi ha uno slot offre quello che gli resta: il più ricco arriva a ${o.maxRivali}, lo batti con un credito in più` }
+    : { corto: `dopo i più ricchi: rivali fino a ${o.maxRivali}`, lungo: `È l'ultimo ruolo: ai rivali che hanno ancora crediti ${o.ricchi === 1 ? "resta 1 slot" : `restano ${o.ricchi} slot`}, e punteranno sui più cari fra i liberi. Per prezzo è al posto ${o.prima + 1} fra i liberi: quando hanno comprato restano offerte fino a ${o.maxRivali}, lo prendi con un credito in più. Chiamato prima può salire fino a ${o.ricco}` };
+  if (o.come === "solo") return { corto: "nessun rivale ha posto", lungo: "Nessun rivale ha più uno slot nel ruolo: è tuo al minimo" };
+  if (o.come === "rivali") return { corto: `${o.n === 1 ? "lo vuole 1 rivale" : `lo vogliono in ${o.n}`}, fino a ${o.maxRivali}`,
+    lungo: `${o.n === 1 ? "Lo vuole ancora 1 rivale" : `Lo vogliono ancora ${o.n} rivali`}${perRuolo() ? " (cercano un titolare, o hanno titolari di fascia più bassa)" : ""}: il più ricco arriva a ${o.maxRivali} di ${budget}, lo batti con un credito in più` };
+  if (o.come === "secco") return o.riserva
+    ? { corto: "da riserva: chi lo vuole è a secco", lungo: `I rivali che lo vorrebbero da titolare non hanno più ${budget} per rilanciare: gli altri lo prenderebbero solo come riserva, al prezzo di una riserva` }
+    : { corto: "chi lo vuole ha finito i crediti", lungo: `I rivali che lo vorrebbero non hanno più ${budget} per rilanciare` };
+  if (o.senzaPosto) return { corto: "ai rivali non restano slot: da riserva", lungo: "I liberi più cari di lui sono più degli slot che restano ai rivali nel ruolo: prima ne hanno altri da prendere. Va via al prezzo di una riserva" };
+  return { corto: "ai rivali non serve: da riserva", lungo: "Nessun rivale lo vuole da titolare: hanno già i loro, di fascia pari o più alta. Lo prenderebbero solo come riserva, al prezzo di una riserva" };
+}
+
+// Le fasce ancora libere nel ruolo: quanti giocatori restano in ogni fascia, dalla piu' alta
+// fino alla fascia media. E' il colpo d'occhio su cosa c'e' ancora di buono per la guida.
+function fasceLibere(r) {
+  const fino = indiceFascia("Fascia media", 7), conta = new Map();
+  for (const g of DATA.giocatori) if (g.r === r && !OWNER.has(g.id) && g.fa != null && g.fa <= fino) conta.set(g.fa, (conta.get(g.fa) || 0) + 1);
+  if (!conta.size) return `<p class="fasce-libere"><span class="lbl">Nessun ${{ P: "portiere", D: "difensore", C: "centrocampista", A: "attaccante" }[r]} libero dalla fascia media in su.</span></p>`;
+  return `<p class="fasce-libere"><span class="lbl">Ancora liberi</span>${[...conta].sort((a, b) => a[0] - b[0]).map(([fa, n]) =>
+    `<span><span class="fd" style="--c:${coloreFascia(META.fasce[fa])}" data-fa="${fa}" role="img" aria-label="Fascia"></span>${esc(META.fasce[fa])} <b>${n}</b></span>`).join("")}</p>`;
 }
 
 // Quanto puo' offrire una squadra per un giocatore del ruolo r: il budget di ruolo se e' il
@@ -1558,38 +1599,68 @@ function renderAsta() {
   const st = statoSquadre(), me = st[S.asta.io];
 
   // --- occasioni di fine ruolo ---
-  // Nell'asta per ruolo si guardano solo i giocatori del ruolo in corso. Un titolare buono e'
-  // un'occasione in due casi: i rivali che cercano ancora nel ruolo hanno finito il budget di
-  // ruolo (lo porti via battendo il piu' ricco di un credito), oppure i buoni rimasti sono piu'
-  // dei posti da titolare ancora da riempire, e allora gli ultimi vanno via al prezzo di una riserva.
+  // Nell'asta per ruolo si guardano solo i giocatori del ruolo in corso. Un giocatore buono (per
+  // fascia o per punti) lo vuole chi cerca ancora un titolare e chi, pur avendo i suoi titolari,
+  // ci guadagnerebbe una fascia. E' un'occasione quando chi lo vuole ha finito il budget di ruolo
+  // (lo porti via con un credito in piu' del piu' ricco), oppure quando non lo vuole nessuno da
+  // titolare: allora va via al prezzo di una riserva. Nell'ultimo ruolo contano invece gli slot
+  // dei rivali che hanno ancora crediti. Si propongono dalla fascia piu' alta.
   const fase = MERC.fase, chi = chiChiama();
   const occ = [];
   for (const r of perRuolo() ? (fase ? [fase] : []) : RUOLI) {
-    const { buoni, bisogno, perSquadra, altri, posti } = MERC.quadro[r];
+    const { buoni, bisogno, peggiore, perSquadra, altri, posti } = MERC.quadro[r];
     const tuttiRivali = st.filter((t) => t.i !== S.asta.io);
     if (me.liberi[r] <= 0) continue;
     const rivali = tuttiRivali.filter((t) => t.liberi[r] > 0);
-    // Chi ha gia' i suoi titolari compra solo riserve: a fare il prezzo di un titolare buono sono
-    // i rivali che ne cercano ancora uno (in un'asta libera, tutti quelli con uno slot).
-    const cercano = perRuolo() ? rivali.filter((t) => bisogno[t.i] > 0) : rivali;
-    const maxRivali = cercano.reduce((a, t) => Math.max(a, budgetSquadra(t, r)), 0);
     // il prezzo di una riserva: la mediana di quelli che riempiranno gli slot oltre i titolari
     const riserve = MERC.resti[r].slice(posti).sort((a, b) => a - b);
     const daRiserva = riserve.length ? Math.max(1, Math.round(riserve[riserve.length >> 1])) : 1;
     // A fine ruolo (ai rivali manca al piu' un quarto dei titolari) i buoni in piu' di quelli che
-    // i rivali cercano restano a te: vanno via al prezzo di una riserva.
+    // i rivali cercano restano fuori dai loro titolari: sono gli ultimi nell'ordine delle fasce.
     const titRivali = perSquadra * tuttiRivali.length, perMe = buoni.length - Math.round(altri);
     const fineRuolo = perRuolo() && perMe > 0 && altri <= Math.max(1, 0.25 * titRivali);
-    buoni.forEach((g, k) => {
-      const pa = prezzoAtteso(g);
-      let reale = !rivali.length ? 1 : cercano.length ? Math.min(pa, maxRivali + 1) : Math.min(pa, daRiserva);
-      let avanza = rivali.length > 0 && !cercano.length;
-      if (fineRuolo && k >= buoni.length - perMe && daRiserva < reale) { reale = daRiserva; avanza = true; }
+    const piuRicco = (l) => l.reduce((a, t) => Math.max(a, budgetSquadra(t, r)), 0);
+    // Gli slot che restano ai rivali nel ruolo: per chi viene dopo, nella fila dei liberi per
+    // prezzo, non c'e' posto nemmeno volendo.
+    const slotRivali = rivali.reduce((a, t) => a + t.liberi[r], 0);
+    // Nell'ultimo ruolo i crediti rimasti non servono ad altro: ogni rivale con uno slot offre
+    // quello che ha, ma puo' comprare solo tanti giocatori quanti slot gli restano. Le offerte dei
+    // rivali, slot per slot (chi ha due slot divide il budget, ma 1 credito lo offre sempre),
+    // dalla piu' alta: sul piu' caro dei liberi pesa la prima, sul secondo la seconda, e cosi' via.
+    const ultimo = perRuolo() && !MERC.futuri.length;
+    const offerte = !ultimo ? [] : rivali.flatMap((t) => Array.from({ length: t.liberi[r] }, (_, j) => Math.max(1, budgetSquadra(t, r) / (j + 1)))).sort((a, b) => b - a);
+    // In lista entrano i buoni e, con loro, chi e' almeno in fascia media: fuori dai buoni non
+    // lo cerca chi vuole un titolare, ma solo chi ci guadagnerebbe una fascia.
+    const finoA = indiceFascia("Fascia media", 7);
+    const candidati = DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id) && (buono(g) || (g.fa != null && g.fa <= finoA))).sort(perFascia);
+    // I rivali riempiono gli slot partendo da chi vale di piu' sul mercato: il posto in fila di
+    // un giocatore e' il suo posto fra i liberi del ruolo per prezzo atteso.
+    const fila = new Map(DATA.giocatori.filter((g) => g.r === r && !OWNER.has(g.id)).sort((a, b) => b.pa - a.pa || b.pg - a.pg).map((g, i) => [g.id, i]));
+    candidati.forEach((g) => {
+      const pa = prezzoAtteso(g), iB = buoni.indexOf(g), k = fila.get(g.id), senzaPosto = perRuolo() && k >= slotRivali;
+      const inPiu = iB < 0 || (fineRuolo && iB >= buoni.length - perMe);
+      if (ultimo) {
+        // finche' un rivale ha uno slot, un credito lo puo' sempre offrire
+        const fino = Math.floor(offerte[k] ?? (rivali.length ? 1 : 0)), reale = Math.max(1, Math.min(pa, fino + 1));
+        if (reale > me.maxOff || reale > pa * 0.75) return;
+        occ.push({ g, pa, reale, maxRivali: fino, prima: k, ricco: Math.floor(offerte[0] ?? 0), ricchi: offerte.filter((x) => x >= 2).length, come: rivali.length ? "coda" : "solo" });
+        return;
+      }
+      // In un'asta libera lo vogliono tutti quelli con uno slot. Per ruolo: chi cerca un titolare
+      // (finche' i buoni non sono in piu') e chi ha titolari di fascia piu' bassa della sua.
+      const vogliono = senzaPosto ? [] : !perRuolo() ? rivali
+        : rivali.filter((t) => (!inPiu && bisogno[t.i] > 0) || (g.fa != null && g.fa < peggiore[t.i]));
+      const altriRivali = rivali.filter((t) => !vogliono.includes(t));
+      const daTitolare = vogliono.length ? piuRicco(vogliono) + 1 : 0;
+      const comeRiserva = altriRivali.length ? Math.min(daRiserva, piuRicco(altriRivali) + 1) : 0;
+      const reale = Math.min(pa, Math.max(1, daTitolare, comeRiserva));
       if (reale > me.maxOff || reale > pa * 0.75) return;
-      occ.push({ g, pa, reale, avanza, n: cercano.filter((t) => budgetSquadra(t, r) >= 2).length, maxRivali });
+      const n = vogliono.filter((t) => budgetSquadra(t, r) >= 2).length;
+      occ.push({ g, pa, reale, n, maxRivali: daTitolare - 1, riserva: comeRiserva > daTitolare, senzaPosto,
+        come: !rivali.length ? "solo" : !vogliono.length ? "riserva" : n && daTitolare >= comeRiserva ? "rivali" : "secco" });
     });
   }
-  occ.sort((a, b) => b.g.pg - a.g.pg);
+  occ.sort((a, b) => perFascia(a.g, b.g));
   let testa;
   if (!perRuolo()) {
     const libLega = RUOLI.map((r) => `${r} ${MERC.aperti[r]}`).join(" · ");
@@ -1604,21 +1675,22 @@ function renderAsta() {
         : box({ v: "In pari", l: "tanti buoni quanti posti da titolare", ic: "pari", tono: "med", cls: "parola" });
     testa = `<div class="boxes fase-box">
       ${box({ v: NOMI_RUOLO[fase], l: `${fatti} su ${tot} assegnati`, ic: "martello", cls: "parola", sub: barra(fatti / tot) })}
-      ${box({ v: q.buoni, l: "titolari buoni ancora liberi", ic: "stella", title: `${NOMI_RUOLO[fase]} liberi da almeno ${fmt(SOGLIA[fase], 2)} punti a giornata: il livello dei titolari della lega` })}
+      ${box({ v: q.buoni, l: "buoni ancora liberi", ic: "stella", title: `${NOMI_RUOLO[fase]} liberi in fascia alta o più su per SOS Fanta, oppure da titolare per i nostri punti (almeno ${fmt(SOGLIA[fase], 2)} a giornata)` })}
       ${box({ v: q.posti, l: "posti da titolare da riempire", ic: "persone", sub: q.mio ? `${q.mio} ${q.mio === 1 ? "è tuo" : "sono tuoi"}` : "i tuoi li hai" })}
       ${esito}
       ${box({ v: pct(f), l: `prezzi ${deiRuolo} sul previsto`, ic: "polso", tono: f >= 1.1 ? "meno" : f <= 0.9 ? "piu" : "",
         title: MERC.futuri.length ? `Nei ruoli dopo i prezzi sono al ${pct(FATT[MERC.futuri[0]])} del previsto: quello che si spende adesso manca dopo` : "Ultimo ruolo: i crediti che restano si spendono qui" })}
-    </div>`;
+    </div>${fasceLibere(fase)}`;
   }
   $("#occasioni").className = "card" + (occ.length ? " hot" : "");
   $("#occasioni").innerHTML = `<h2>Occasioni di fine ruolo</h2>${testa}
     ${occ.length ? occ.slice(0, 6).map((o) => `<div class="occ">
         <span class="role ${o.g.r}">${o.g.r}</span>
-        <span class="who"><b>${esc(o.g.nome)}</b><small>${esc(nomeSq(o.g.sq))}</small></span>
-        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br>${o.avanza ? "ai rivali non serve da titolare: prezzo da riserva" : o.n ? `${o.n} ${o.n === 1 ? "rivale lo cerca" : "rivali lo cercano"}, ${conBudgetDiRuolo(o.g.r) ? "budget di ruolo" : "offerta"} al massimo ${o.maxRivali}` : "nessun rivale"}</span>
+        <span class="who"><span class="occ-n">${dotFascia(o.g)}<b>${esc(o.g.nome)}</b><small>${esc(nomeSq(o.g.sq))}</small></span>
+          <span class="occ-f">${o.g.fa == null ? "senza fascia" : esc(META.fasce[o.g.fa]) + (o.g.fi ? ", stimata" : "")}${!inFasciaAlta(o.g) && o.g.pg >= SOGLIA[o.g.r] ? ", da titolare per i nostri punti" : ""}</span></span>
+        <span class="num"><b>${fmt(o.g.pg, 2)}</b> pt/g · <s>${o.pa}</s> <b>${o.reale}</b> cr<br><span title="${esc(perche(o).lungo)}">${perche(o).corto}</span></span>
         <button class="btn small" data-occ="${o.g.id}">Chiama</button></div>`).join("")
-      : perRuolo() && !fase ? "" : `<p class="lbl">Nessuna per ora. Compaiono quando restano titolari buoni e i rivali che cercano ancora nel ruolo hanno finito il budget${perRuolo() ? ", o quando i buoni sono più dei posti da titolare" : ""}: li vedrai qui con il prezzo realistico.</p>`}`;
+      : perRuolo() && !fase ? "" : `<p class="lbl">Nessuna per ora. Compaiono quando un giocatore buono può costare molto meno del previsto: chi lo vuole ha finito il budget${perRuolo() ? ", oppure nessun rivale lo vuole più da titolare" : ""}. Li vedrai qui dalla fascia più alta, con il prezzo realistico.</p>`}`;
 
   // --- squadre ---
   $("#squadre").innerHTML = `<h2>Squadre</h2><div style="overflow-x:auto"><table class="sq">
