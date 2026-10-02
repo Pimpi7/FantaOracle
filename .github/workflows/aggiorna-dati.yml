@@ -1,6 +1,6 @@
 # Aggiorna dati, database, proiezioni e tool dopo ogni turno di campionato.
 # Il database DuckDB si ricostruisce dagli snapshot: in git finiscono solo i
-# nuovi snapshot (data/raw) e i dati del tool (web/data.json).
+# nuovi snapshot (data/raw) e i dati del tool (src/web/data.json).
 name: Aggiorna i dati
 
 on:
@@ -41,11 +41,11 @@ jobs:
         run: |
           git config user.name "FantaOracle bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/raw web/data.json
+          git add data/raw src/web/data.json
           if git diff --cached --quiet; then
             echo "Nessun dato nuovo."
             exit 0
           fi
-          GIORNATA=$(python -c "import json;print(json.load(open('web/data.json'))['meta']['giornata'])")
+          GIORNATA=$(python -c "import json;print(json.load(open('src/web/data.json'))['meta']['giornata'])")
           git commit -m "Dati aggiornati alla ${GIORNATA}a giornata" -m "Aggiornamento automatico: voti, listone, Understat, quote, proiezioni e tool."
           git push

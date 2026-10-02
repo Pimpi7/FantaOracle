@@ -145,7 +145,7 @@ git clone https://github.com/Pimpi7/FantaOracle.git
 cd FantaOracle
 pip install -e ".[dev]"
 python -m fantaoracle all          # scarica i dati, costruisce il database, calcola il modello
-cd web && python -m http.server    # poi apri http://localhost:8000
+cd src/web && python -m http.server    # poi apri http://localhost:8000
 ```
 
 Il tool va aperto tramite un server locale (quello di Python va benissimo): aperto direttamente dal disco, il browser blocca la lettura dei dati. Le regole della lega stanno tutte in [`config/league.yaml`](config/league.yaml); i singoli comandi della pipeline sono descritti nelle [specifiche](specifiche.md#avvio).
