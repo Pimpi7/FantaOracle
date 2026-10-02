@@ -1,8 +1,8 @@
 """Storicizza un'asta: dal testo di "Esporta l'asta" ai CSV in data/aste/<data>/.
 
-Il tool web tiene l'asta solo nella memoria del browser. Qui la si mette in git, in una
-cartella per data, in forma leggibile. Le aste sono dati di una lega: non vanno su main, che
-resta buono per chiunque, ma su un branch personale (asta-personale):
+Il tool web tiene l'asta solo nella memoria del browser. Qui la si salva in una cartella per
+data, in forma leggibile. Le aste sono dati di una lega: restano in locale (data/aste/ e' nel
+.gitignore) e il repository resta buono per chiunque:
 
     asta.json      l'export del tool, con i nomi delle fantasquadre resi anonimi (con Importa si ricarica nel tool)
     acquisti.csv   una riga per acquisto, nell'ordine dell'asta

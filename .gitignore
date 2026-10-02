@@ -19,3 +19,7 @@ data/*.duckdb.wal
 data/proc/*
 !data/proc/.gitkeep
 src/web/artefatto.html
+
+# Le aste storicizzate (src/tools/archivia_asta.py) sono dati di una lega: restano
+# sul computer di chi le ha giocate, non vanno in git.
+data/aste/

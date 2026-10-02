@@ -720,8 +720,8 @@ data/ref/                   tabelle curate a mano: override dei nomi, calendario
                             ufficiale con le giornate, fasce FantaLab
 data/aste/<data>/           le aste concluse: export del tool, acquisti in ordine, rose
                             finali, riepiloghi per squadra e per ruolo, grafico del mercato.
-                            Non stanno su main, che resta senza dati di una lega: vanno su
-                            un branch personale (asta-personale)
+                            Restano in locale: la cartella è nel .gitignore, perché sono
+                            dati di una lega e il repository resta buono per chiunque
 tests/                      i test (pytest; quello dell'asta gira dove c'è Node)
 ```
 
