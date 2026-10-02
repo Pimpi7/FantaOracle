@@ -14,7 +14,7 @@ però comunque non riesci a smettere di vedere le partite della Maggica perchè 
 
 🔴 Il giorno dell'asta potrai avviare la **Modalità Asta** che ti guiderà passo passo durante la fase più calda di tutto il Fantacalcio, permettendoti di tenere sotto controllo la tua situazione e quella delle altre squadre, **ricalcolando dinamicamente i suggerimenti di acquisto** e la **possibile riallocazione del budget**, sulla base dell'andamento generale del mercato e dei crediti che tu e i tuoi avversari state spendendo, e mostrandoti nelle fasi finali le **"occasioni"** rimaste.
 
-‼️ Tutte queste feature sono sempre dei **suggerimenti**, la scelta finale sarà sempre tua!
+‼️E anche se hai **esperienza**, **FantaOracle** è uno strumento fondamentale anche per te. Infatti tutti i valori calcolati e i suggerimenti, sono appunto tali. Con la **modalità manuale** potrai creare la tua strategia completamente personalizzata, ed usufruire comunque di tutti gli strumenti di **reportistica** e **monitoraggio** messi a disposizione dal tool durante l'asta, per poter migliorare le tue stime e valutazioni di anno in anno.
 
 ⏳**COMING SOON**: pensi che dopo averti aiutato a fare la miglior squadra possibile sarai abbandonato a te stesso, senza saper gestire una formazione così competitiva? Sta arrivando anche la **Modalità Formazione**, che combina tutti i migliori dati a disposizione per fornirti suggerimenti *ad hoc* per massimizzare il punteggio atteso di ogni giornata! 
 
