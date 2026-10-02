@@ -42,7 +42,7 @@ I 599 giocatori delle 20 squadre di Serie A, ordinati per punti attesi. Filtri p
 
 | Colonna | Cosa ti dice |
 |---|---|
-| Fascia | La fascia della Guida all'Asta di [SOS Fanta](https://www.sosfanta.com/guida-asta-fantacalcio/guida-asta-fantacalcio-2026-2027-tutti-consigli-fasce-chi-prendere/), da *Super top* a *Da evitare*. È l'opinione della redazione, da confrontare con i nostri numeri; vuota per chi la guida non classifica. Gli infortunati, che la guida elenca a parte, hanno una fascia stimata da noi (pill tratteggiata, con la ~). |
+| F | Un pallino colorato, a sinistra del nome, con la fascia della Guida all'Asta di [SOS Fanta](https://www.sosfanta.com/guida-asta-fantacalcio/guida-asta-fantacalcio-2026-2027-tutti-consigli-fasce-chi-prendere/), da *Super top* a *Da evitare*. Passandoci sopra col mouse (o toccandolo) vedi la legenda con tutti i colori. Cliccando sull'intestazione ordini per fascia. È l'opinione della redazione, da confrontare con i nostri numeri; spento per chi la guida non classifica. Gli infortunati, che la guida elenca a parte, hanno una fascia stimata da noi (pallino vuoto). Il pallino c'è anche nella scheda del giocatore e nella rosa. |
 | **Pt/g** | Punti attesi a giornata. Il numero su cui ragionare. |
 | FM att. | Fantavoto atteso quando scende in campo |
 | Pres. | Probabilità che prenda voto in una giornata |

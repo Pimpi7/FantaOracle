@@ -23,7 +23,7 @@ fantamedia mostra il nostro punteggio:
 
 | Colonna | Significato |
 |---|---|
-| Fascia | La fascia della Guida all'Asta di SOS Fanta (Super top, Top, Semitop… fino a Da evitare, passando per Infortunati e A rischio). È l'opinione della redazione, non entra nel modello. Vuota se la guida non classifica il giocatore; nascosta da telefono. Ogni fascia ha il suo colore. |
+| F | Pallino colorato a sinistra del nome (ordinabile). La fascia della Guida all'Asta di SOS Fanta (Super top, Top, Semitop… fino a Da evitare, passando per Infortunati e A rischio). È l'opinione della redazione, non entra nel modello. Spento se la guida non classifica il giocatore; vuoto se la fascia è stimata. Ogni fascia ha il suo colore, la legenda compare al passaggio del mouse (o al tocco); il pallino è anche nella scheda e nella rosa. |
 | **Pt/g** | Punti attesi a giornata: probabilità di prendere voto × fantavoto atteso. Per portieri e difensori include la quota del modificatore difesa. |
 | FM att. | Fantavoto atteso quando gioca |
 | Pres. | Probabilità di prendere voto in una giornata |

@@ -493,21 +493,45 @@ function filtrati() {
 // saturazione (1 = piena), colore del testo se la pill e' piena]. Dall'oro dei top ai verdi e
 // azzurri delle fasce alte, ai blu spenti di chi costa poco; viola per i jolly, rosa per le
 // scommesse, arancio e rosso per i rischi. Una fascia nuova di SOS Fanta resta grigia.
-const FASCIA_STILE = {
-  "Super top": [45, 1, "#2b2200"], "Top": [45, 1], "Semitop": [92, 1], "Sotto ai semitop": [145, 1],
-  "Fascia alta": [172, 1], "Fascia media": [200, 1], "Sopra ai low cost": [222, 1],
-  "Low cost 1ª fascia": [238, 0.6], "Low cost 2ª fascia": [246, 0.35], "Leghe numerose": [210, 0.12],
-  "Jolly 1ª fascia": [268, 1], "Jolly 2ª fascia": [280, 1], "Jolly 3ª fascia": [292, 1], "Jolly 4ª fascia": [304, 1],
-  "Possibili sorprese": [322, 1], "Scommesse": [345, 1], "A rischio": [24, 1], "Da evitare": [2, 1, "#fff"],
+const FASCIA_COL = {
+  "Super top": "#f5b700", "Top": "#e07b00", "Semitop": "#84cc16", "Sotto ai semitop": "#16a34a",
+  "Fascia alta": "#0d9488", "Fascia media": "#2563eb", "Sopra ai low cost": "#6366f1",
+  "Low cost 1ª fascia": "#8fa0b8", "Low cost 2ª fascia": "#64748b", "Leghe numerose": "#b9c2cf",
+  "Jolly 1ª fascia": "#a855f7", "Jolly 2ª fascia": "#d946ef", "Jolly 3ª fascia": "#ec4899", "Jolly 4ª fascia": "#fb7185",
+  "Possibili sorprese": "#06b6d4", "Scommesse": "#a16207", "A rischio": "#c2410c", "Da evitare": "#dc2626",
 };
-function pillFascia(g) {
-  if (g.fa == null) return '<span class="fp-no" title="La guida di SOS Fanta non classifica questo giocatore">–</span>';
-  const nome = META.fasce[g.fa], [h, k, pieno] = FASCIA_STILE[nome] || [210, 0.12];
-  const titolo = g.fi
-    ? "Fascia stimata da noi: SOS Fanta lo segna fra gli infortunati, quindi la ricaviamo confrontandolo con i giocatori dello stesso ruolo per prezzo e punti attesi"
-    : "Fascia secondo la guida all'asta di SOS Fanta";
-  return `<span class="fp${pieno ? " solid" : ""}${g.fi ? " est" : ""}" style="--h:${h};--k:${k}${pieno ? `;--sfg:${pieno}` : ""}" title="${titolo}">${esc(nome)}</span>`;
+const coloreFascia = (nome) => FASCIA_COL[nome] || "#8a8f98";
+// Il pallino della fascia. Nel listone senza fascia resta un punto spento (la colonna non si sfalsa);
+// altrove (scheda, rosa) senza fascia non si mostra niente. Gli abbinamenti stimati hanno il pallino vuoto.
+function dotFascia(g, vuoto = false) {
+  if (g.fa == null) return vuoto ? '<span class="fd no" tabindex="0" role="img" aria-label="Fascia non indicata" data-fa=""></span>' : "";
+  const nome = META.fasce[g.fa];
+  return `<span class="fd${g.fi ? " est" : ""}" style="--c:${coloreFascia(nome)}" tabindex="0" role="img" aria-label="Fascia: ${esc(nome)}${g.fi ? " (stimata)" : ""}" data-fa="${g.fa}"${g.fi ? ' data-fi="1"' : ""}></span>`;
 }
+// Legenda al passaggio del mouse (o al tocco, o con la tastiera): tutte le fasce con la sua evidenziata.
+const LEG = document.createElement("div");
+LEG.id = "legenda-fasce"; LEG.hidden = true; LEG.setAttribute("role", "tooltip");
+document.body.appendChild(LEG);
+function mostraLegenda(el) {
+  const i = el.dataset.fa === "" ? null : +el.dataset.fa, stimata = el.dataset.fi === "1";
+  LEG.innerHTML = `<b>Fascia · guida SOS Fanta</b>` + META.fasce.map((n, k) =>
+    `<div class="${k === i ? "on" : ""}"><i style="--c:${coloreFascia(n)}"></i>${esc(n)}</div>`).join("")
+    + (i == null ? "<small>La guida non classifica questo giocatore.</small>"
+      : stimata ? "<small>Fascia stimata da noi: SOS Fanta lo segna fra gli infortunati, quindi la ricaviamo confrontandolo con i giocatori dello stesso ruolo per prezzo e punti attesi.</small>" : "");
+  LEG.hidden = false;
+  const r = el.getBoundingClientRect(), w = LEG.offsetWidth, h = LEG.offsetHeight;
+  LEG.style.left = Math.max(8, Math.min(r.right + 10, innerWidth - w - 8)) + "px";
+  LEG.style.top = Math.max(8, Math.min(r.top - 28, innerHeight - h - 8)) + "px";
+}
+const nascondiLegenda = () => { LEG.hidden = true; };
+const alDot = (e) => e.target.closest && e.target.closest(".fd");
+document.addEventListener("mouseover", (e) => { const d = alDot(e); if (d) mostraLegenda(d); });
+document.addEventListener("mouseout", (e) => { if (alDot(e)) nascondiLegenda(); });
+document.addEventListener("focusin", (e) => { const d = alDot(e); if (d) mostraLegenda(d); });
+document.addEventListener("focusout", (e) => { if (alDot(e)) nascondiLegenda(); });
+document.addEventListener("click", (e) => { const d = alDot(e); if (d) mostraLegenda(d); else nascondiLegenda(); });
+document.addEventListener("scroll", nascondiLegenda, true);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") nascondiLegenda(); });
 
 // --- infortuni ------------------------------------------------------------------
 // g.inf: chi e' fermo adesso (t tipo, m motivo, g giornata e d data di rientro, s giornate che
@@ -629,8 +653,8 @@ function renderListone() {
     out.push(`<tr class="${cls}" data-id="${g.id}">
       <td class="rank" title="${pos.get(g.id)}° su ${tot}">${pos.get(g.id)}</td>
       <td class="l"><span class="role ${g.r}">${g.r}</span></td>
+      <td class="f">${dotFascia(g, true)}</td>
       <td class="l nm"><button data-open="${g.id}">${esc(g.nome)}</button>${tag(g)}${obj}${own}</td>
-      <td class="fa hide-s">${pillFascia(g)}</td>
       <td class="l sq hide-s">${esc(nomeSq(g.sq))}</td>
       <td class="big">${fmt(g.pg, 2)}</td>
       <td class="hide-s">${fmt(g.fm, 2)}</td>
@@ -752,7 +776,7 @@ function renderRosa() {
       <span class="lbl">${miei.length} scelti · ${sug.length} suggeriti · ${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></div>`;
     for (const x of miei) {
       h += `<div class="slot"><span class="role ${r}">${r}</span>
-        <span class="who"><b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
+        <span class="who">${dotFascia(x.g)}<b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
         <span class="num"><b>${fmt(x.g.pg, 2)}</b> pt/g</span>
         <span class="num"><b>${x.p}</b> cr</span>
         <button class="ic" data-add="${x.g.id}" title="Togli dalla rosa" aria-label="Togli">−</button></div>`;
@@ -760,7 +784,7 @@ function renderRosa() {
     for (const c of sug) {
       const aperta = S.aperte[c.g.id];
       h += `<div class="slot sugg"><span class="role ${r}">${r}</span>
-        <span class="who"><button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${c.g.id}"><b>${esc(c.g.nome)}</b></button>${tagSalute(c.g)}<small>${esc(nomeSq(c.g.sq))}</small>${c.uno ? '<span class="tag uno" title="Slot riservato a un giocatore da 1 credito">1 CR</span>' : ""}</span>
+        <span class="who">${dotFascia(c.g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${c.g.id}"><b>${esc(c.g.nome)}</b></button>${tagSalute(c.g)}<small>${esc(nomeSq(c.g.sq))}</small>${c.uno ? '<span class="tag uno" title="Slot riservato a un giocatore da 1 credito">1 CR</span>' : ""}</span>
         <span class="num"><b>${fmt(c.g.pg, 2)}</b> pt/g</span>
         <span class="num"><b>${c.p}</b> cr</span>
         <span class="row" style="gap:4px;flex-wrap:nowrap">
@@ -768,7 +792,7 @@ function renderRosa() {
           <button class="btn small" data-alt="${c.g.id}" aria-expanded="${!!aperta}">${aperta ? "Chiudi" : "Altri"}</button>
         </span>
         ${aperta ? `<div class="alts">${(SUGG.alt[c.g.id] || []).map((a) => `<div>
-            <span class="n"><b>${esc(a.c.g.nome)}</b> <small style="text-transform:capitalize">${esc(nomeSq(a.c.g.sq))}</small></span>
+            <span class="n">${dotFascia(a.c.g)}<b>${esc(a.c.g.nome)}</b> <small style="text-transform:capitalize">${esc(nomeSq(a.c.g.sq))}</small></span>
             <span>${fmt(a.c.g.pg, 2)} pt/g</span><span><b>${a.c.p}</b> cr</span>
             <button class="btn small" data-prendi="${a.c.g.id}">Scegli</button></div>`).join("") || "<span class='lbl'>Nessuna alternativa nel budget.</span>"}</div>` : ""}
       </div>`;
@@ -964,7 +988,7 @@ function scheda(id) {
   const ul = g.ul.map(([gi, fv]) => `<span class="${fv == null ? "sv" : ""}" style="height:${fv == null ? 8 : Math.max(6, Math.min(100, (fv / 16) * 100))}%" title="Giornata ${gi}: ${fv == null ? "senza voto" : fv}"><em>${fv == null ? "sv" : fmt(fv, 1)}</em></span>`).join("");
   apri(`
     <div class="row" style="justify-content:space-between;align-items:flex-start">
-      <div><h3><span class="role ${g.r}" style="vertical-align:4px">${g.r}</span> ${esc(g.nome)}${tag(g)}</h3>
+      <div><h3><span class="role ${g.r}" style="vertical-align:4px">${g.r}</span> ${dotFascia(g)}${esc(g.nome)}${tag(g)}</h3>
         <div class="sub">${esc(nomeSq(g.sq))} · quotazione ${fmt(g.qa, 0)} (iniziale ${fmt(g.qi, 0)}) · FVM ${fmt(g.fvm, 0)}</div></div>
       <button class="ic" data-close aria-label="Chiudi">✕</button>
     </div>
@@ -1242,7 +1266,7 @@ function renderChiamato() {
   const scelta = S.asta.scelta;
   box.innerHTML = `<div class="chiamato">
     <div class="row" style="justify-content:space-between;align-items:flex-end">
-      <div><h3><span class="role ${g.r}" style="vertical-align:5px">${g.r}</span> ${esc(g.nome)}${tag(g)}${S.asta.obiettivi.includes(id) ? '<span class="tag obj">OBIETTIVO</span>' : ""}</h3>
+      <div><h3><span class="role ${g.r}" style="vertical-align:5px">${g.r}</span> ${dotFascia(g)}${esc(g.nome)}${tag(g)}${S.asta.obiettivi.includes(id) ? '<span class="tag obj">OBIETTIVO</span>' : ""}</h3>
         <div class="sub lbl" style="text-transform:capitalize">${esc(nomeSq(g.sq))}</div></div>
       <button class="btn small" data-open="${id}">Scheda</button>
     </div>
