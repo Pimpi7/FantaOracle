@@ -1499,7 +1499,7 @@ function renderMercato() {
       sub: `${barra(spesi / totCr)}${intero(spesi)} su ${intero(totCr)} · assegnato il ${pct(ass / totSlot)} dei giocatori` }),
     box({ v: ass ? fmt(spesi / ass, 1) : "–", l: "crediti a giocatore, finora", title: "Quanto è costato in media ogni giocatore assegnato fin qui" }),
     box({ v: N ? fmt(acq[N - 1].c, 1) : "–", l: N ? `crediti a giocatore, ultimi ${Math.min(N, FINESTRA)}` : "crediti a giocatore, ultimi acquisti", cls: "adesso",
-      title: "È dove arriva la linea viola del grafico" }),
+      title: "È dove arriva la linea gialla del grafico" }),
     box({ v: intero(restano), l: `crediti ancora da spendere`, sub: liberi ? `${fmt(restano / liberi, 1)} a slot · ${liberi} slot liberi` : "rose complete" }),
   ];
   let h = `<h2>Andamento del mercato</h2><div class="boxes merc-box gen">${generale.join("")}</div>`;
@@ -1519,7 +1519,7 @@ function renderMercato() {
     for (let i = 0; i < N;) {
       let j = i; while (j + 1 < N && acq[j + 1].g.r === acq[i].g.r) j++;
       const x1 = sx + passoX * i + 1, x2 = sx + passoX * (j + 1) - 1;
-      f += `<path class="fase" d="M${x1.toFixed(1)} ${base + 8}H${x2.toFixed(1)}"/><text class="t-fase" x="${((x1 + x2) / 2).toFixed(1)}" y="${base + 22}">${acq[i].g.r}</text>`;
+      f += `<path class="fase ${acq[i].g.r}" d="M${x1.toFixed(1)} ${base + 8}H${x2.toFixed(1)}"/><text class="t-fase" x="${((x1 + x2) / 2).toFixed(1)}" y="${base + 22}">${acq[i].g.r}</text>`;
       i = j + 1;
     }
     return f;
@@ -1579,7 +1579,7 @@ function renderMercato() {
   const colonne = acq.map((a, i) => {
     const yv = y(a.r), piccolo = Math.max(a.p, a.e) <= 3;
     if (Math.abs(yv - y0) < 1.5) return `<rect class="pari" x="${(cx(i) - bw / 2).toFixed(1)}" y="${(y0 - 1).toFixed(1)}" width="${bw.toFixed(1)}" height="2"/>`;
-    return colonna(`${yv < y0 ? "caro" : "sconto"}${piccolo ? " piccolo" : ""}`, i, y0, yv);
+    return colonna(`pagato${piccolo ? " piccolo" : ""}`, i, y0, yv);
   }).join("");
   const linea = acq.map((a, i) => `${i ? "L" : "M"}${cx(i).toFixed(1)} ${y(a.m).toFixed(1)}`).join("");
   const fine = { x: cx(N - 1), y: y(ultimo) };
@@ -1588,7 +1588,7 @@ function renderMercato() {
       <span class="ma-t">${ico("polso")}Prezzi pagati rispetto al previsto</span><span class="ma-v ${tono}"><b>${pct(ultimo)}</b> ${parola}</span><span class="box-chev">${ico("giu")}</span></button>
     <div class="pannello${eraAperto ? " aperto" : ""}" id="merc-previsto"><div><div class="merc-in">
       <div class="boxes merc-box">${riquadri.join("")}</div>
-      <div class="merc-leg"><span><i class="k caro"></i>pagato più del previsto</span><span><i class="k sconto"></i>meno del previsto</span><span><i class="k linea"></i>media degli ultimi ${FINESTRA}</span></div>
+      <div class="merc-leg"><span><i class="k pagato"></i>sopra la riga: pagato più del previsto; sotto: meno</span><span><i class="k linea"></i>media degli ultimi ${FINESTRA}</span></div>
       <div class="merc-graf"><svg class="merc prev${inAsta() ? " in-asta" : ""}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0"
           aria-label="Prezzi rispetto al previsto: ${N} acquisti, gli ultimi al ${pct(ultimo)} del prezzo previsto. Frecce sinistra e destra per scorrere gli acquisti.">
         ${tacche.map((t) => `<path class="${t === 1 ? "base" : "griglia"}" d="M${sx} ${y(t).toFixed(1)}H${W - dx}"/><text class="t-asse" x="${sx - 6}" y="${(y(t) + 3.5).toFixed(1)}">${Math.round(t * 100)}%</text>`).join("")}
