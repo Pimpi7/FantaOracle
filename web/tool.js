@@ -627,9 +627,11 @@ function tagSalute(g, senzaDubbio = false) {
   if (g.inf && !(senzaDubbio && !fuori(g) && g.inf.t !== "diffidato")) {
     const i = g.inf;
     const out = fuori(g);
-    const testo = i.t === "diffidato" ? "DIFFIDATO" : !out ? "IN DUBBIO"
-      : i.t === "squalificato" ? "SQUALIFICATO" : i.fs ? "OUT STAGIONE" : i.g ? `OUT → ${i.g}a` : "OUT";
-    const cls = out ? "out" : "dubbio";
+    // Bollini da tabellone: chi e' fuori ha la chiave (OUT, SQ) e accanto quando rientra
+    const testo = i.t === "diffidato" ? "DIFF." : !out ? "? DUBBIO"
+      : i.t === "squalificato" ? `<i>SQ</i>${i.fs ? "STAGIONE" : i.s ? `${i.s} G` : ""}`
+      : `<i>OUT</i>${i.fs ? "STAGIONE" : i.g ? `${i.g}ª` : ""}`;
+    const cls = out ? "out" : i.t === "diffidato" ? "diff" : "dubbio";
     t += `<span class="tag ${cls}" title="${esc(titoloInf(g))}">${testo}</span>`;
   }
   if (fragile(g)) t += `<span class="tag fragile" title="${esc(titoloFr(g))}">FRAGILE</span>`;
@@ -646,10 +648,24 @@ function filtroSalute(g, f) {
   return true;
 }
 
+// I colori sociali, per le strisce dell'etichetta TIFO: vale per qualsiasi squadra messa nel
+// tifo in config/league.yaml, non solo Roma e Lazio.
+const COLORI_SQ = {
+  atalanta: ["#1e71b8", "#111111"], bologna: ["#a21c26", "#1a2f48"], cagliari: ["#a01d32", "#1b2a4a"],
+  como: ["#1d3c8f", "#ffffff"], fiorentina: ["#5b2a86", "#ffffff"], frosinone: ["#0047bb", "#ffd200"],
+  genoa: ["#a81e2d", "#002147"], inter: ["#0068a8", "#111111"], juventus: ["#111111", "#ffffff"],
+  lazio: ["#5fbfe9", "#ffffff"], lecce: ["#d71920", "#ffd400"], milan: ["#d50a0a", "#111111"],
+  monza: ["#e30613", "#ffffff"], napoli: ["#129bd4", "#ffffff"], parma: ["#1b4ea2", "#ffd200"],
+  roma: ["#8e1f2f", "#f0b323"], sassuolo: ["#00a752", "#111111"], torino: ["#7f1d0b", "#ffffff"],
+  udinese: ["#111111", "#ffffff"], venezia: ["#f47920", "#00843d"],
+};
 function tag(g, senzaDubbio = false) {
   let t = "";
   if ((g.qrig || 0) >= 0.4) t += '<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">RIG</span>';
-  if ((g.tifo || 1) > 1) t += '<span class="tag tifo" title="Prezzo atteso maggiorato: squadra con molti tifosi in lega">TIFO</span>';
+  if ((g.tifo || 1) > 1) {
+    const [c1, c2] = COLORI_SQ[g.sq] || ["#8a6a12", "#f2c200"];
+    t += `<span class="tag tifo" style="--t1:${c1};--t2:${c2}" title="Prezzo atteso maggiorato: ${esc(nomeSq(g.sq))} ha molti tifosi in lega">TIFO</span>`;
+  }
   return t + tagSalute(g, senzaDubbio);
 }
 

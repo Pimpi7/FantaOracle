@@ -67,12 +67,15 @@ chiusi e si aprono dal riquadro che li riassume (quello con la freccia).
    delle presenze.
 4. *Griglia abbinamenti*, solo per portieri e attaccanti (vedi sotto).
 
-**Infortuni.** Accanto al nome, in rosso pieno chi salta almeno una delle
-prossime giornate (`OUT → 8a`: rientro alla 8ª, `OUT STAGIONE` se torna dopo
-l'ultima, `SQUALIFICATO`), tratteggiato chi è in dubbio per la prossima o ha un
-acciacco senza data (`IN DUBBIO`, `DIFFIDATO`). Poi la propensione dallo
-storico: `FRAGILE` (circa uno su sette) e, più discreto, `DELICATO` (uno su
-quattro). È un giudizio nostro sullo storico, diverso dalla fascia "A rischio"
+**Infortuni.** Accanto al nome, bollini da tabellone nel font dei titoli. In
+rosso pieno chi salta almeno una delle prossime giornate, con la chiave scura e
+accanto il rientro (`OUT | 8ª`: rientro alla 8ª, `OUT | STAGIONE` se torna dopo
+l'ultima, `SQ | 2 G` per una squalifica di due giornate); in giallo chi è in
+dubbio per la prossima o ha un acciacco senza data (`? DUBBIO`, `DIFF.`). Poi la
+propensione dallo storico: `FRAGILE` bordato di rosso (circa uno su sette) e,
+più discreto, `DELICATO` in grigio (uno su quattro). `RIG` è blu, `TIFO` ha le
+strisce con i colori sociali della squadra (una tabella per tutte le venti, così
+vale per qualsiasi squadra messa nel tifo in `config/league.yaml`). È un giudizio nostro sullo storico, diverso dalla fascia "A rischio"
 della guida SOS Fanta. Passandoci sopra si leggono motivo, data di rientro e i numeri che
 hanno deciso il giudizio. Un filtro tiene solo i disponibili, i disponibili non
 fragili, gli indisponibili o i fragili e delicati. Nella scheda, la sezione Infortuni dice
