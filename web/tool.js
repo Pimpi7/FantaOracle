@@ -622,15 +622,14 @@ function titoloFr(g) {
     `; ~${fmt(f.gg, 0)} giorni e ~${fmt(f.pp, 0)} partite perse a stagione`;
 }
 
-// I segni dentro le etichette: una croce rossa per i fragili, un cerotto per i delicati (nel
-// colore del testo, currentColor), un pallone bianco per i rigoristi. Alti quanto il testo.
+// I segni dentro le etichette, nel colore del testo (currentColor) e alti quanto lui: una croce
+// rossa per i fragili, un cerotto per i delicati, un mirino per i rigoristi.
 const SEGNO = {
   croce: '<svg class="segno" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 1h3.2v3.4H11v3.2H7.6V11H4.4V7.6H1V4.4h3.4z"/></svg>',
   cerotto: '<svg class="segno" viewBox="0 0 12 12" aria-hidden="true"><g transform="rotate(-40 6 6)"><rect x="0.6" y="3.6" width="10.8" height="4.8" rx="2.4"/>' +
     '<rect x="4" y="3.6" width="4" height="4.8" fill="rgb(0 0 0 / 0.22)"/><circle cx="5.2" cy="5.2" r=".45" fill="rgb(0 0 0 / 0.35)"/><circle cx="6.8" cy="6.8" r=".45" fill="rgb(0 0 0 / 0.35)"/></g></svg>',
-  pallone: '<svg class="segno pallone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff"/>' +
-    '<g fill="#1d4f94"><path d="M12 7.4l4.4 3.2-1.7 5.2H9.3l-1.7-5.2z"/><path d="M9 2.7l3-.5 3 .5-3 2.2zM21.4 8.8l.4 3-.9 2.9-1.2-3.6zM18.9 19.4l-2.6 1.6-3 .5 1.6-3.4zM5.1 19.4l2.6 1.6 3 .5-1.6-3.4zM2.6 8.8l-.4 3 .9 2.9 1.2-3.6z"/></g>' +
-    '<path d="M12 7.4V4.9M16.4 10.6l2.5-.8M14.7 15.8l1.6 2.2M9.3 15.8l-1.6 2.2M7.6 10.6l-2.5-.8" stroke="#1d4f94" stroke-width="1.4"/></svg>',
+  mirino: '<svg class="segno mirino" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.6">' +
+    '<circle cx="12" cy="12" r="7.6"/><path d="M12 1.5v5M12 17.5v5M1.5 12h5M17.5 12h5"/></g><circle cx="12" cy="12" r="2.1" fill="currentColor"/></svg>',
 };
 function tagSalute(g, senzaDubbio = false) {
   let t = "";
@@ -677,7 +676,7 @@ function contrastoBianco(hex) {
 }
 function tag(g, senzaDubbio = false) {
   let t = "";
-  if ((g.qrig || 0) >= 0.4) t += `<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">${SEGNO.pallone}RIG</span>`;
+  if ((g.qrig || 0) >= 0.4) t += `<span class="tag rig" title="Rigorista: calcia la maggior parte dei rigori della squadra">${SEGNO.mirino}RIG</span>`;
   if ((g.tifo || 1) > 1) {
     const [c1, c2] = COLORI_SQ[g.sq] || ["#8a6a12", "#f2c200"];
     const velo = Math.min(contrastoBianco(c1), contrastoBianco(c2)) < 1.7 ? " velo" : "";
