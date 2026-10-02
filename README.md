@@ -94,9 +94,8 @@ Premi il bottone col pallone in testata: il pallone rotola, ti viene incontro e 
 ![Modalità asta](docs/img/asta.png)
 
 - **Tabellone in alto**: quanti giocatori sono già stati assegnati, ruolo per ruolo, l'ultimo colpo e chi è il rivale più ricco, accanto ai tuoi crediti, alla tua offerta massima e ai tuoi slot ancora liberi.
-- **Giocatore chiamato**: scrivi il nome e vedi subito punti, valore, prezzo atteso e la tua offerta massima. Soprattutto vedi **fin dove spingerti**: il prezzo oltre il quale la rosa migliore senza di lui diventa più forte.
-- **Chi può ancora prenderlo**: gli avversari che hanno slot e crediti, con la loro offerta massima.
-- **Registra l'acquisto**: chi l'ha preso e a quanto. Il tool aggiorna crediti e slot di tutti, ricalcola i suggerimenti e adegua i prezzi al mercato reale della serata.
+- **Giocatore chiamato**: scrivi il nome, scorri i risultati con le frecce e premi Invio. Hai la sua scheda in versione da asta, a riquadri come quella del listone. In giallo **fin dove spingerti**: il prezzo oltre il quale la rosa migliore senza di lui diventa più forte, e se basta a coprire il prezzo atteso (in rosso *Lascialo*, quando non conviene a nessun prezzo). Accanto punti, valore, prezzo atteso e la tua offerta massima; sotto come sta, quanto gioca e, per portieri e attaccanti, quante partite facili ha e quanto rende alternato a chi hai già in rosa.
+- **Chi lo prende**: un riquadro per squadra con la sua offerta massima, spento se ha il ruolo pieno. Tocchi chi l'ha preso, scrivi il prezzo e premi Aggiudicato (o Invio). Il tool aggiorna crediti e slot di tutti, ricalcola i suggerimenti e adegua i prezzi al mercato reale della serata.
 - **Occasioni di fine ruolo**: quando gli avversari hanno riempito un ruolo o finito i crediti, i giocatori buoni rimasti compaiono in cima con il prezzo a cui puoi realisticamente portarli via.
 - **Squadre**: crediti, offerta massima e slot liberi di ognuno, con i numeri che passano dal verde al rosso man mano che si svuotano.
 

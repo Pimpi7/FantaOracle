@@ -138,13 +138,25 @@ nel listone, le rose partono vuote). Da lì la testata diventa la fascia scura
   prezzo realistico accanto a quello atteso. Il prezzo realistico è il massimo che
   può offrire il rivale più ricco con uno slot libero in quel ruolo, più uno.
 - **Tabellone** (la fascia in alto): giocatori assegnati sul totale con una barra per ruolo, ultimo acquisto, rivale con l'offerta massima più alta, da quanto dura l'asta; a destra crediti, offerta massima, rosa e slot liberi per ruolo della tua squadra.
-- **Giocatore chiamato**: cerchi il nome e vedi punti attesi, valore, prezzo
-  atteso e la tua offerta massima. Poi **fin dove spingerti**: il prezzo più alto a
-  cui la rosa migliore con lui resta forte almeno quanto la rosa migliore senza di
-  lui. Si calcola rifacendo l'ottimizzazione a ogni prezzo provato, per bisezione.
-  Sotto, chi può ancora prenderlo e al massimo a quanto.
-- **Registrazione**: chi l'ha preso, a quanto, Aggiudicato. Il tool rifiuta le
-  offerte che superano il massimo possibile di quella squadra o un ruolo già pieno.
+- **Giocatore chiamato**: la ricerca mostra i liberi che corrispondono, con
+  fascia, punti e prezzo; frecce su e giù per scorrere, Invio per chiamare quello
+  evidenziato, Esc per chiudere (il mouse evidenzia lo stesso risultato). Il
+  riquadro è la scheda in versione da asta, con gli stessi riquadri e colori.
+  *Quanto vale*: in giallo **fin dove spingerti**, il prezzo più alto a cui la
+  rosa migliore con lui resta forte almeno quanto la rosa migliore senza di lui
+  (si calcola rifacendo l'ottimizzazione a ogni prezzo provato, per bisezione),
+  con accanto se copre il prezzo atteso, se è tutto quello che puoi offrire, o
+  in rosso *Lascialo* quando non conviene a nessun prezzo. Poi punti a giornata,
+  valore, prezzo atteso con l'affare, la tua offerta massima. Sotto: come sta
+  adesso, propensione agli infortuni, probabilità di voto, titolarità e, per
+  portieri e attaccanti, le partite facili che restano e i punti in più
+  alternandolo al migliore dei compagni che hai già.
+- **Chi lo prende**: un riquadro per squadra con l'offerta massima che può ancora
+  fare, spento se ha il ruolo pieno. Il riquadro premuto è chi l'ha preso (il
+  prezzo già scritto non si perde); poi il prezzo e Aggiudicato, o Invio. Il tool
+  rifiuta le offerte che superano il massimo possibile di quella squadra o un
+  ruolo già pieno. Quando si chiama un giocatore la pagina scorre quanto basta a
+  mostrare il riquadro fino al bottone.
 - **Squadre**: crediti, offerta massima e slot liberi per ruolo di ognuna, con la
   rosa apribile. **Ultimi acquisti**, con Annulla l'ultimo.
 
