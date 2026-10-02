@@ -116,7 +116,10 @@ function renderRosa() {
     // con il prezzo che gli avevi dato, finche' non lo prendi tu (o te lo prende un altro).
     const obj = inAsta() ? (S.asta.obiettivi || []).map((id) => BY_ID.get(id)).filter((g) => g && g.r === r && !(g.id in m)).sort((a, b) => b.pg - a.pg) : [];
     h += `<div class="card"><div class="ruolo-h"><span class="role ${r}">${r}</span><h3>${NOMI_RUOLO[r]}</h3>
-      <span class="lbl">${miei.length} ${inAsta() ? "presi" : "scelti"}${obj.length ? ` · ${obj.length} nel piano (${obj.reduce((a, g) => a + prezzoPiano(g), 0)} cr)` : ""} · ${sug.length} suggeriti · ${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></div>`;
+      <span class="conti"><span class="cnt">${miei.length} ${inAsta() ? "presi" : "scelti"}</span>${obj.length ? `<span class="cnt piano">${obj.length} nel piano · ${obj.reduce((a, g) => a + prezzoPiano(g), 0)} cr</span>` : ""}<span class="cnt sugg">${sug.length} suggeriti</span><span class="cnt tot">${spesaR(r)}${S.budgetRuolo ? ` / ${S.budgetRuolo[r]}` : ""} crediti</span></span></div>`;
+    // con un piano di partenza i tre gruppi (presi, piano, suggeriti) hanno un'etichetta ciascuno
+    const grp = (cl, t) => (obj.length ? `<div class="grp ${cl}">${t}</div>` : "");
+    if (miei.length) h += grp("", "Presi");
     for (const x of miei) {
       h += `<div class="slot"><span class="role ${r}">${r}</span>
         <span class="who">${dotFascia(x.g)}<b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
@@ -124,6 +127,7 @@ function renderRosa() {
         <span class="num"><b>${x.p}</b> cr</span>
         <button class="ic" data-add="${x.g.id}" title="Togli dalla rosa" aria-label="Togli">−</button></div>`;
     }
+    if (obj.length) h += grp("piano", "Dal tuo piano");
     for (const g of obj) {
       const per = OWNER.has(g.id) ? S.asta.squadre[OWNER.get(g.id)] : null;
       const pz = prezzoPiano(g);
@@ -133,6 +137,7 @@ function renderRosa() {
         <span class="num"><b>${pz}</b> cr<small class="lbl"> nel piano</small></span>
         ${per ? `<span class="lbl">preso da ${esc(per.nome)}</span>` : `<button class="btn small" data-chiama="${g.id}" title="Apri nel pannello dell'asta">Chiama</button>`}</div>`;
     }
+    if (sug.length) h += grp("sugg", "Suggeriti dal tool");
     for (const c of sug) {
       const aperta = S.aperte[c.g.id];
       h += `<div class="slot sugg"><span class="role ${r}">${r}</span>
