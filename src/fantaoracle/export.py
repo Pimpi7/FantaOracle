@@ -1,4 +1,4 @@
-"""Export dei dati per il tool web: web/data.json.
+"""Export dei dati per il tool web: src/web/data.json.
 
 Il tool e' una pagina statica: tutto quello che mostra arriva da questo file.
 Contiene solo i giocatori del listone corrente (le 20 squadre di quest'anno), le
@@ -18,7 +18,7 @@ from .config import load_league
 from .db import tabella
 from .paths import ROOT
 
-WEB = ROOT / "web"
+WEB = ROOT / "src" / "web"
 
 
 def _r(x, n=2):
@@ -28,25 +28,30 @@ def _r(x, n=2):
 
 
 def pagina() -> None:
-    """web/index.html = web/tool.html dentro un documento completo.
+    """src/web/index.html = src/web/tool.html dentro un documento completo.
 
-    Il tool e' diviso in tre file: tool.html (struttura), tool.css (stile) e
-    tool.js (logica). tool.html e' scritto come frammento (titolo, link, markup)
+    Il tool e' diviso in tool.html (struttura), tool.css (stile) e i moduli
+    JavaScript della cartella scripts/ (logica), caricati nell'ordine in cui
+    sono elencati in tool.html. tool.html e' scritto come frammento (titolo, link, markup)
     perche' e' anche il sorgente della pagina pubblicata come artifact, che
     aggiunge da se' doctype e head. Per GitHub Pages serve il documento intero;
-    ai riferimenti a tool.css e tool.js si aggiunge un'impronta del contenuto,
+    ai riferimenti a tool.css e agli script si aggiunge un'impronta del contenuto,
     cosi' dopo un aggiornamento il browser non tiene in cache la versione vecchia.
-    Scrive anche web/artefatto.html (non in git): il frammento con le impronte, da
+    Scrive anche src/web/artefatto.html (non in git): il frammento con le impronte, da
     pubblicare come artifact al posto di tool.html.
     """
     import hashlib
 
     corpo = (WEB / "tool.html").read_text(encoding="utf-8")
-    for nome, attr in (("tool.css", "href"), ("tool.js", "src")):
-        impronta = hashlib.sha256((WEB / nome).read_bytes()).hexdigest()[:10]
-        corpo = corpo.replace(f'{attr}="{nome}"', f'{attr}="{nome}?v={impronta}"')
+    import re
+
+    def con_impronta(m):
+        impronta = hashlib.sha256((WEB / m["file"]).read_bytes()).hexdigest()[:10]
+        return f'{m["attr"]}="{m["file"]}?v={impronta}"'
+
+    corpo = re.sub(r'(?P<attr>href|src)="(?P<file>tool\.css|scripts/[\w.-]+\.js)"', con_impronta, corpo)
     # Stesso frammento, con le impronte, per l'artifact su claude.ai: senza, chi l'ha gia'
-    # aperto continua a vedere il tool.css e il tool.js vecchi dalla cache del browser.
+    # aperto continua a vedere il tool.css e gli script vecchi dalla cache del browser.
     (WEB / "artefatto.html").write_text(corpo, encoding="utf-8")
     (WEB / "index.html").write_text(
         "<!doctype html>\n<html lang=\"it\">\n<head>\n<meta charset=\"utf-8\">\n"

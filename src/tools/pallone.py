@@ -7,10 +7,10 @@ riportati sulla sfera (cosi' le cuciture sono curve), proiezione ortografica
 del solo emisfero visibile e ombreggiatura per faccia, piu' un velo sferico e
 un riflesso per il volume.
 
-    python scripts/pallone.py > /tmp/pallone.svg
+    python src/tools/pallone.py > /tmp/pallone.svg
 
 Stampa l'SVG su una riga, pronto da incollare nella costante PALLONE di
-web/tool.js.
+src/web/scripts/pallone.js.
 """
 
 from __future__ import annotations

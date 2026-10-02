@@ -15,7 +15,7 @@ tutte in [`config/league.yaml`](config/league.yaml).
 
 ## Il tool
 
-Una pagina web statica ([`web/`](web/)), utilizzabile da computer e da telefono.
+Una pagina web statica ([`src/web/`](src/web/)), utilizzabile da computer e da telefono.
 
 **Listone.** I 599 giocatori delle 20 squadre di quest'anno, filtrabili per
 ruolo, squadra, prezzo e nome e ordinabili per ogni colonna. Al posto della
@@ -34,7 +34,7 @@ fantamedia mostra il nostro punteggio:
 
 **Fasce stimate.** SOS Fanta mette alcuni giocatori fra gli *Infortunati*, che è uno stato e
 non un livello. Per non lasciarli fuori dal confronto se ne stima la fascia
-([`model/fasce.py`](fantaoracle/model/fasce.py)): si cercano, dentro lo stesso ruolo, i sette
+([`model/fasce.py`](src/fantaoracle/model/fasce.py)): si cercano, dentro lo stesso ruolo, i sette
 giocatori classificati più vicini per FVM, quotazione iniziale e punti attesi, e si prende la
 mediana pesata delle loro fasce. Si usa solo la scala di qualità, da *Super top* a *Leghe
 numerose*; i jolly, le scommesse e i rischi sono giudizi di convenienza e non si inferiscono.
@@ -290,7 +290,7 @@ Comandi singoli:
 | `python -m fantaoracle ingest` | raccolta da tutte le fonti (`--fonte voti`, `--fonte infortuni`, `--completo`). Fasce di SOS Fanta e infortuni sono facoltativi: se una pagina cambia o non risponde, l'aggiornamento del resto prosegue |
 | `python -m fantaoracle db` | ricostruisce `data/fantaoracle.duckdb` dagli snapshot |
 | `python -m fantaoracle model` | proiezioni e valutazioni, scritte nel database |
-| `python -m fantaoracle export` | `web/data.json` e `web/index.html` |
+| `python -m fantaoracle export` | `src/web/data.json` e `src/web/index.html` |
 | `make test` | test |
 
 ---
@@ -299,7 +299,7 @@ Comandi singoli:
 
 ```
 fonti web ──> snapshot grezzi ──> database DuckDB ──> modello ──> export ──> tool web
-              data/raw/           data/*.duckdb       proiezioni   web/data.json
+              data/raw/           data/*.duckdb       proiezioni   src/web/data.json
               Parquet datati      tabelle pulite      valutazioni
               (in git)            (ricostruibile)
 ```
@@ -385,7 +385,7 @@ secondo candidato troppo vicino viene dichiarato ambiguo invece di essere scritt
 
 ## Il modello
 
-[`fantaoracle/model/projection.py`](fantaoracle/model/projection.py)
+[`src/fantaoracle/model/projection.py`](src/fantaoracle/model/projection.py)
 
 ```
 punti a giornata = probabilità di voto × fantavoto atteso quando gioca
@@ -405,7 +405,7 @@ punti a giornata = probabilità di voto × fantavoto atteso quando gioca
 
 ### Partita per partita: calendario e alternanza
 
-[`fantaoracle/model/calendario.py`](fantaoracle/model/calendario.py)
+[`src/fantaoracle/model/calendario.py`](src/fantaoracle/model/calendario.py)
 
 Per portieri e attaccanti il modello stima i punti di ogni partita che resta, non
 solo la media: è quello che serve per alternarli. La media sulle giornate è il
@@ -470,7 +470,7 @@ quelli. Lo stesso codice fa la proiezione vera e il backtest.
 
 ### Infortuni
 
-[`fantaoracle/model/infortuni.py`](fantaoracle/model/infortuni.py)
+[`src/fantaoracle/model/infortuni.py`](src/fantaoracle/model/infortuni.py)
 
 **Chi è fermo adesso** cambia i punti. La giornata di rientro viene da SosFanta
 ("in dubbio per la 8a"); dove manca, dalla data di probabile ritorno di
@@ -506,7 +506,7 @@ storico. Un solo crociato, anche lungo, non fa un fragile.
 
 ### Backtest
 
-[`fantaoracle/model/backtest.py`](fantaoracle/model/backtest.py). Le stagioni
+[`src/fantaoracle/model/backtest.py`](src/fantaoracle/model/backtest.py). Le stagioni
 2024-25 e 2025-26 vengono congelate alla 5ª giornata (quella dell'asta),
 proiettate sulle restanti 33 e confrontate con i fantapunti realmente fatti. Gli
 xG della stagione congelata sono esclusi, perché sono aggregati di fine stagione:
@@ -535,7 +535,7 @@ prime giornate lo rivelano bene. I parametri sono calibrati su questo backtest.
 
 ## Valore e prezzo atteso
 
-[`fantaoracle/model/valuation.py`](fantaoracle/model/valuation.py)
+[`src/fantaoracle/model/valuation.py`](src/fantaoracle/model/valuation.py)
 
 **Valore.** VORP a due livelli. Si comprano 24 portieri ma ne giocano 8 a
 settimana: misurare il valore rispetto al 25° portiere gonfierebbe tutti i
@@ -561,7 +561,7 @@ un'indicazione, non una regola.
 
 ## Il costruttore
 
-[`web/tool.js`](web/tool.js)
+[`src/web/scripts/`](src/web/scripts/)
 
 L'obiettivo non è la somma dei 25 giocatori ma la forza dell'undici che puoi
 schierare ogni settimana. Dentro ogni ruolo i giocatori sono ordinati per punti
@@ -601,8 +601,8 @@ budget. Circa 85 ms sulla rosa vuota.
 
 | Workflow | Quando | Cosa fa |
 |---|---|---|
-| [`aggiorna-dati.yml`](.github/workflows/aggiorna-dati.yml) | martedì e venerdì mattina, o a mano | test, pipeline completa, commit dei nuovi snapshot e di `web/data.json` |
-| [`pages.yml`](.github/workflows/pages.yml) | a ogni modifica di `web/` e dopo ogni aggiornamento dei dati | pubblica il tool su GitHub Pages |
+| [`aggiorna-dati.yml`](.github/workflows/aggiorna-dati.yml) | martedì e venerdì mattina, o a mano | test, pipeline completa, commit dei nuovi snapshot e di `src/web/data.json` |
+| [`pages.yml`](.github/workflows/pages.yml) | a ogni modifica di `src/web/` e dopo ogni aggiornamento dei dati | pubblica il tool su GitHub Pages |
 
 Per attivare GitHub Pages: *Settings → Pages → Source: GitHub Actions*. Su una
 repo privata Pages richiede un piano GitHub Pro (incluso nel GitHub Student
@@ -614,27 +614,33 @@ Developer Pack).
 
 ```
 config/league.yaml          regole della lega, mercato, parametri del motore
-fantaoracle/
-  ingest/                   raccolta: Fantacalcio.it, Understat, football-data, infortuni
-  resolve/                  allineamento dei nomi fra fonti
-  model/
-    projection.py           punti attesi per giocatore
-    calendario.py           difficoltà delle partite, FantaLab, punti per giornata
-    infortuni.py            giornate saltate e propensione agli infortuni
-    backtest.py             validazione sulle stagioni passate (anche dell'alternanza)
-    valuation.py            valore, prezzo atteso, affare
-    odds.py                 quote -> gol attesi e clean sheet
-    scoring.py              fantavoto, modificatore difesa, esito h2h
-    pipeline.py             proiezione della stagione corrente nel database
-  db.py                     schema e build del database
-  store.py                  snapshot append-only
-  export.py                 dati e pagina del tool
-web/
-  tool.html                 struttura della pagina (frammento, sorgente anche dell'artifact)
-  tool.css                  stile: token di colore per tema chiaro, scuro e modalità asta
-  tool.js                   logica: ottimizzatore, listone, rosa, formazione tipo, asta
-  index.html                documento completo per Pages, generato da `export`
-  data.json                 giocatori, proiezioni, valutazioni e regole della lega
+src/
+  fantaoracle/
+    ingest/                   raccolta: Fantacalcio.it, Understat, football-data, infortuni
+    resolve/                  allineamento dei nomi fra fonti
+    model/
+      projection.py           punti attesi per giocatore
+      calendario.py           difficoltà delle partite, FantaLab, punti per giornata
+      infortuni.py            giornate saltate e propensione agli infortuni
+      backtest.py             validazione sulle stagioni passate (anche dell'alternanza)
+      valuation.py            valore, prezzo atteso, affare
+      odds.py                 quote -> gol attesi e clean sheet
+      scoring.py              fantavoto, modificatore difesa, esito h2h
+      pipeline.py             proiezione della stagione corrente nel database
+    db.py                     schema e build del database
+    store.py                  snapshot append-only
+    export.py                 dati e pagina del tool
+  web/
+    tool.html                 struttura della pagina (frammento, sorgente anche dell'artifact)
+    tool.css                  stile: token di colore per tema chiaro, scuro e modalità asta
+    scripts/                  logica in moduli JS, caricati nell'ordine di tool.html:
+                            stato, ottimizzatore, calendario, filtri, infortuni, listone,
+                            rosa, lega, formazione, scheda, asta (stato, giro, mercato,
+                            viste, chiamata, dialoghi, ricerca), pallone, eventi, titolo, avvio
+    index.html                documento completo per Pages, generato da `export`
+    data.json                 giocatori, proiezioni, valutazioni e regole della lega
+  tools/
+    pallone.py              genera l'SVG del pallone del bottone Modalità asta
 data/raw/                   snapshot in Parquet
 data/ref/                   tabelle curate a mano: override dei nomi, calendario
                             ufficiale con le giornate, fasce FantaLab

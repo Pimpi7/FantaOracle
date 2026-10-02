@@ -20,7 +20,7 @@ db:
 model:
 	$(PY) -m fantaoracle model
 
-# Dati per il tool web in web/data.json.
+# Dati per il tool web in src/web/data.json.
 export:
 	$(PY) -m fantaoracle export
 

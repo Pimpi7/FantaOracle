@@ -1,4 +1,4 @@
-# Pubblica il tool (cartella web/) su GitHub Pages.
+# Pubblica il tool (cartella src/web/) su GitHub Pages.
 # Parte a ogni modifica del tool e dopo ogni aggiornamento automatico dei dati:
 # un push fatto da un workflow non avvia altri workflow, quindi serve workflow_run.
 name: Pubblica il tool
@@ -6,7 +6,7 @@ name: Pubblica il tool
 on:
   push:
     branches: [main]
-    paths: ["web/**"]
+    paths: ["src/web/**"]
   workflow_run:
     workflows: ["Aggiorna i dati"]
     types: [completed]
@@ -35,6 +35,6 @@ jobs:
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: web
+          path: src/web
       - id: deploy
         uses: actions/deploy-pages@v5
