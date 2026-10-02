@@ -122,7 +122,7 @@ function renderRosa() {
     if (miei.length) h += grp("", "Presi");
     for (const x of miei) {
       h += `<div class="slot"><span class="role ${r}">${r}</span>
-        <span class="who">${dotFascia(x.g)}<b>${esc(x.g.nome)}</b><small>${esc(nomeSq(x.g.sq))}</small></span>
+        <span class="who">${dotFascia(x.g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${x.g.id}" title="Apri la scheda"><b>${esc(x.g.nome)}</b></button>${tagSalute(x.g)}<small>${esc(nomeSq(x.g.sq))}</small></span>
         <span class="num"><b>${fmt(x.g.pg, 2)}</b> pt/g</span>
         <span class="num"><b>${x.p}</b> cr</span>
         <button class="ic" data-add="${x.g.id}" title="Togli dalla rosa" aria-label="Togli">−</button></div>`;
@@ -149,7 +149,7 @@ function renderRosa() {
           <button class="btn small" data-alt="${c.g.id}" aria-expanded="${!!aperta}">${aperta ? "Chiudi" : "Altri"}</button>
         </span>
         ${aperta ? `<div class="alts">${(SUGG.alt[c.g.id] || []).map((a) => `<div>
-            <span class="n">${dotFascia(a.c.g)}<b>${esc(a.c.g.nome)}</b> <small style="text-transform:capitalize">${esc(nomeSq(a.c.g.sq))}</small></span>
+            <span class="n">${dotFascia(a.c.g)}<button class="ic" style="width:auto;padding:0 6px;border:0;background:none;color:inherit" data-open="${a.c.g.id}" title="Apri la scheda"><b>${esc(a.c.g.nome)}</b></button> <small style="text-transform:capitalize">${esc(nomeSq(a.c.g.sq))}</small></span>
             <span>${fmt(a.c.g.pg, 2)} pt/g</span><span><b>${a.c.p}</b> cr</span>
             <button class="btn small" data-prendi="${a.c.g.id}">Scegli</button></div>`).join("") || "<span class='lbl'>Nessuna alternativa nel budget.</span>"}</div>` : ""}
       </div>`;
