@@ -230,13 +230,21 @@ td.big { font-weight: 700; }
 .pos { color: var(--go); } .neg { color: var(--bad); }
 .role { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 4px; color: #fff; font: 700 12px/1 var(--font-display); }
 .role.P { background: var(--r-p); } .role.D { background: var(--r-d); } .role.C { background: var(--r-c); } .role.A { background: var(--r-a); }
-.tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 5px; vertical-align: 1px; border: 1px solid currentColor; letter-spacing: 0.02em; }
-.tag.rig { color: var(--r-c); } .tag.tifo { color: var(--warn); } .tag.uno { color: inherit; opacity: 0.8; }
-/* Infortuni: rosso pieno chi e' fuori, contorno per i dubbi, arancio per la propensione. */
-.tag.out { color: #fff; background: var(--bad); border-color: var(--bad); cursor: help; }
-.tag.dubbio { color: var(--warn); border-style: dashed; cursor: help; }
+/* Etichette come bollini da tabellone: font condensato, pieni. Chi e' fuori ha la chiave scura
+   (OUT, SQ) e accanto il rientro; il tifo porta le strisce coi colori della squadra (--t1, --t2). */
+.tag { display: inline-flex; align-items: center; font: 700 12px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 5px 2px; border-radius: 3px; margin-left: 5px; vertical-align: 1px; white-space: nowrap; overflow: hidden;
+  color: var(--ink-2); box-shadow: inset 0 0 0 1.5px currentColor; }
+.tag i { font-style: normal; margin: -3px 4px -2px -5px; padding: 3px 5px 2px; background: rgb(0 0 0 / 0.24); }
+.tag.rig { color: #fff; background: #2d68b8; box-shadow: none; }
+/* un velo scuro sulle strisce: le bianche (Lazio, Juve, Napoli...) restano chiare ma la scritta si legge */
+.tag.tifo { color: #fff; background: linear-gradient(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.3)), repeating-linear-gradient(135deg, var(--t1) 0 6px, var(--t2) 6px 12px);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.3); text-shadow: 0 1px 1.5px rgb(0 0 0 / 0.9); }
+.tag.uno { color: inherit; opacity: 0.8; }
+.tag.out { color: #fff; background: #c5302a; box-shadow: none; cursor: help; }
+.tag.dubbio, .tag.diff { color: #3a2a00; background: #f7c948; box-shadow: none; cursor: help; }
 .tag.fragile { color: var(--bad); cursor: help; }
-.tag.rischio { color: var(--ink-2); border-style: dotted; cursor: help; }
+.tag.rischio { color: #fff; background: #7a867e; box-shadow: none; cursor: help; }
 td.act { display: flex; gap: 4px; justify-content: flex-end; }
 .ic { width: 26px; height: 26px; display: inline-grid; place-items: center; border: 1px solid var(--rule); background: var(--sheet); border-radius: 5px; font-weight: 700; line-height: 1; }
 .ic:hover { border-color: var(--ink); }
@@ -356,7 +364,7 @@ table.compagni button[aria-pressed="true"] { background: var(--ink); color: var(
 .sch-chi { min-width: 0; }
 :is(.scheda, .chiamato) h3 { font-size: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 :is(.scheda, .chiamato) h3 .role { width: 26px; height: 26px; font-size: 15px; border-radius: 6px; }
-:is(.scheda, .chiamato) h3 .tag { margin-left: 0; font-family: var(--font-body); }
+:is(.scheda, .chiamato) h3 .tag { margin-left: 0; }
 :is(.scheda, .chiamato) h3 .fd { margin: 0 3px 0 2px; vertical-align: 0; }
 .sch-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
 .sch-meta .mt { font-size: 12px; line-height: 1.45; padding: 2px 10px; border-radius: 999px; background: var(--tint); color: var(--ink-2); white-space: nowrap; }
@@ -627,7 +635,7 @@ button.box, .comp { font: inherit; cursor: pointer; }
 .giro-ctl { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
 .giro-ctl .ic { font-size: 16px; }
 .giro.mio .ic, .giro.mio .btn { color: var(--ink); }
-.tag.turno { color: var(--live-fg); background: var(--live); border-color: var(--live-edge); }
+.tag.turno { color: var(--live-fg); background: var(--live); box-shadow: inset 0 0 0 1px var(--live-edge); }
 .risultati button.fuori { opacity: 0.55; }
 /* occasioni: il conto del ruolo in cinque riquadri stretti, le fasce ancora libere, poi la lista */
 .boxes.fase-box { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
@@ -778,7 +786,7 @@ table.sq td.lib { font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; 
 .lr.zero { opacity: 0.35; }
 .log div { display: flex; gap: 8px; justify-content: space-between; font-size: 13px; padding: 4px 0; border-top: 1px dashed var(--rule); }
 .log div:first-child { border-top: 0; }
-.tag.own { color: var(--ink-2); } .tag.obj { color: var(--live-fg); background: var(--live); border-color: var(--live-edge); }
+.tag.own { color: var(--ink-2); } .tag.obj { color: var(--live-fg); background: var(--live); box-shadow: inset 0 0 0 1px var(--live-edge); }
 .nomi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
 .nomi label { display: grid; gap: 3px; font-size: 12px; color: var(--ink-2); }
 .nomi input { padding: 7px 9px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper); font-size: 14px; color: var(--ink); }
