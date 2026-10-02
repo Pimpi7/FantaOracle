@@ -327,26 +327,39 @@ function compagni(g) {
 // La griglia: una riga per giocatore, una casella per giornata con l'avversario, colorata
 // con la sua fascia. Con due giocatori si sbiadisce chi resta in panchina quella giornata.
 function griglia(g, q) {
-  const righe = q ? [g, q] : [g];
-  let h = `<div class="griglia" style="--n:${NG}"><span class="nome"></span>${META.giornate_cal.map((gi) => `<span class="gi">${gi}</span>`).join("")}`;
-  for (const x of righe) {
-    h += `<span class="nome" title="${esc(x.nome)}">${esc(x.nome)}</span>`;
-    const y = q ? (x === g ? q : g) : null;
-    for (let k = 0; k < NG; k++) {
-      const c = CAL[x.sq]?.[k];
-      if (!c) { h += `<span class="c vuota" title="Partita gia' giocata"></span>`; continue; }
-      const f = fasciaFL(c.avv, g.r);
-      const gioca = !y || x.v[k] > y.v[k] || (x.v[k] === y.v[k] && x === g);
-      // infortunato o squalificato in quella giornata: i suoi punti sono gia' zero
-      const out = fuori(x) && (x.inf.fs || (x.inf.g != null && c.gi < x.inf.g));
-      const t = `${c.gi}ª giornata: ${nomeSq(c.avv)} ${c.casa ? "in casa" : "fuori"} · ${f || "fascia ignota"} · `
-        + (out ? `${x.inf.t === "squalificato" ? "squalificato" : "infortunato"}${x.inf.m ? ` (${x.inf.m})` : ""}` : `${fmt(x.v[k], 2)} pt attesi`);
-      h += `<span class="c ${f ? FASCIA_CL[f] : ""}${gioca && !out ? "" : " off"}${out ? " out" : ""}" title="${esc(t)}">${c.casa ? sigla(c.avv) : sigla(c.avv).toLowerCase()}</span>`;
+  const righe = q ? [g, q] : [g], gc = META.giornate_cal;
+  // su schermo largo le giornate vanno su due righe, cosi' la stagione si vede tutta senza scorrere
+  const perRiga = NG > 20 && innerWidth >= 640 ? Math.ceil(NG / 2) : NG;
+  let h = "";
+  for (let da = 0; da < NG; da += perRiga) {
+    const a = Math.min(NG, da + perRiga), vuote = "<span></span>".repeat(perRiga - (a - da));
+    h += `<div class="griglia${perRiga < NG ? " piena" : ""}" style="--n:${perRiga}"><span class="nome"></span>`;
+    for (let k = da; k < a; k++) h += `<span class="gi">${gc[k]}</span>`;
+    h += vuote;
+    for (const x of righe) {
+      h += `<span class="nome" title="${esc(x.nome)}">${esc(x.nome)}</span>`;
+      const y = q ? (x === g ? q : g) : null;
+      for (let k = da; k < a; k++) {
+        const c = CAL[x.sq]?.[k];
+        if (!c) { h += `<span class="c vuota" title="Partita già giocata"></span>`; continue; }
+        const f = fasciaFL(c.avv, g.r);
+        const gioca = !y || x.v[k] > y.v[k] || (x.v[k] === y.v[k] && x === g);
+        // infortunato o squalificato in quella giornata: i suoi punti sono gia' zero
+        const out = fuori(x) && (x.inf.fs || (x.inf.g != null && c.gi < x.inf.g));
+        const t = `${c.gi}ª giornata: ${nomeSq(c.avv)} ${c.casa ? "in casa" : "fuori"} · ${f || "fascia ignota"} · `
+          + (out ? `${x.inf.t === "squalificato" ? "squalificato" : "infortunato"}${x.inf.m ? ` (${x.inf.m})` : ""}` : `${fmt(x.v[k], 2)} pt attesi`);
+        h += `<span class="c ${f ? FASCIA_CL[f] : ""}${gioca && !out ? "" : " off"}${out ? " out" : ""}" title="${esc(t)}">${c.casa ? sigla(c.avv) : sigla(c.avv).toLowerCase()}</span>`;
+      }
+      h += vuote;
     }
+    h += "</div>";
   }
-  return h + "</div>";
+  return h;
 }
 
+// Sezione della scheda di portieri e attaccanti: com'e' il calendario da solo, i compagni con
+// cui alternarlo (un riquadro ciascuno: toccarlo mette la coppia nella griglia) e la griglia.
+// La tabella completa dei compagni resta chiusa finche' non la si apre.
 function sezioneAlternanza(g) {
   if (!PER_GIORNATA[g.r] || !g.v) return "";
   const lista = compagni(g);
@@ -359,6 +372,28 @@ function sezioneAlternanza(g) {
     || (miei[0] || top[0])?.q || null;
   const io = abbinamento([g], g.r);
   const gc = META.giornate_cal;
+  const chi = g.r === "P" ? "portiere" : "attaccante";
+
+  const solo = [
+    box({ v: io.facile, l: "partite facili", ic: "ok", tono: "ok" }),
+    box({ v: io.media, l: "medie", ic: "pari", tono: "med" }),
+    box({ v: io.difficile, l: "difficili", ic: "no", tono: "ko" }),
+    box({ v: io.voto, l: "voto FantaLab da solo", ic: "bersaglio", sub: "su 100",
+      title: "Il voto che la griglia di FantaLab dà a questo calendario: 100 vuol dire ogni giornata contro una squadra facile" }),
+  ];
+  if (g.r === "A" && g.cal) {
+    const d = (g.cal - 1) * 100;
+    solo.push(box({ v: `${d < 0 ? "−" : "+"}${fmt(Math.abs(d), 0)}%`, l: "gol attesi dal calendario", ic: "pallone", tono: d < 0 ? "meno" : "piu",
+      sub: "rispetto a uno medio" }));
+  }
+
+  // I compagni in evidenza: chi hai gia' in rosa, i tre migliori, due da pochi crediti.
+  const carte = [...miei.slice(0, 2).map((c) => [c, "In rosa"]), ...top.slice(0, 3).map((c) => [c, ""]), ...low.slice(0, 2).map((c) => [c, "Low cost"])];
+  const carta = ([c, nota]) => `<button type="button" class="comp" data-abb="${c.q.id}" aria-pressed="${c.q === scelto}" title="Metti ${esc(c.q.nome)} nella griglia accanto a ${esc(g.nome)}">
+      <span class="comp-n">${esc(c.q.nome)}<small>${esc(nomeSq(c.q.sq))}</small></span>
+      <b>+${fmt(c.d, 2)}<small>pt/g</small></b>
+      <span class="comp-d"><span><i class="c fl-f"></i>${c.a.facile}/${c.a.partite}</span><span>voto ${c.a.voto}</span><span>${c.p} cr</span></span>
+      ${nota ? `<span class="comp-t">${nota}</span>` : ""}</button>`;
   const riga = (c) => `<tr data-riga="${c.q.id}" class="${c.q === scelto ? "sel" : ""}">
       <td class="l nm"><button data-open="${c.q.id}">${esc(c.q.nome)}</button>${c.mio ? '<span class="tag own">IN ROSA</span>' : ""}</td>
       <td class="l sq hide-s">${esc(nomeSq(c.q.sq))}</td>
@@ -368,18 +403,23 @@ function sezioneAlternanza(g) {
       <td>${c.p}</td>
       <td><button class="btn small" data-abb="${c.q.id}" aria-pressed="${c.q === scelto}">Griglia</button></td></tr>`;
   const gruppo = (titolo, l) => (l.length ? `<tr class="gruppo"><td class="l" colspan="7">${titolo}</td></tr>${l.map(riga).join("")}` : "");
-  const chi = g.r === "P" ? "portiere" : "attaccante";
-  return `<div class="alternanza">
-    <div class="lbl">Calendario e abbinamenti · ${gc[0]}ª–${gc[gc.length - 1]}ª giornata</div>
-    <p class="nota">Da solo: <b>${io.facile}</b> partite facili, ${io.media} medie, ${io.difficile} difficili · voto FantaLab <b>${io.voto}</b>${g.r === "A" && g.cal ? ` · calendario ${g.cal >= 1 ? "+" : "−"}${fmt(Math.abs(g.cal - 1) * 100, 0)}% sui gol attesi rispetto a uno medio` : ""}.</p>
-    <div class="griglia-box" id="griglia-abb">${griglia(g, scelto)}</div>
-    <p class="nota legenda"><i class="c fl-f"></i>facile <i class="c fl-m"></i>media <i class="c fl-d"></i>difficile, dalla griglia FantaLab${DATA.fantalab?.letto_il ? ` (letta il ${DATA.fantalab.letto_il.split("-").reverse().join("/")})` : ""}. Maiuscolo in casa, minuscolo fuori; sbiadita la giornata in cui giochi l'altro, barrata quella che salta per infortunio o squalifica.</p>
-    ${lista.length ? `<div style="overflow-x:auto"><table class="compagni">
-      <thead><tr><th class="l">Da alternare con</th><th class="l hide-s">Squadra</th><th title="Giornate in cui almeno uno dei due ha una partita facile">Facili</th><th class="hide-s" title="Voto FantaLab dell'abbinamento, 0-100">Voto</th><th title="Punti a giornata in piu' schierando ogni turno chi ha la partita migliore">+Pt/g</th><th title="Prezzo atteso, o pagato se e' gia' tuo">Cr</th><th></th></tr></thead>
-      <tbody>${gruppo("Gia' nella tua rosa", miei)}${gruppo("I migliori", top)}${gruppo(`Low cost, fino a ${soglia} crediti`, low)}</tbody>
+  const tabella = lista.length ? pannello("pan-comp", `<div class="scorri"><table class="compagni">
+      <thead><tr><th class="l">Da alternare con</th><th class="l hide-s">Squadra</th><th title="Giornate in cui almeno uno dei due ha una partita facile">Facili</th><th class="hide-s" title="Voto FantaLab dell'abbinamento, 0-100">Voto</th><th title="Punti a giornata in più schierando ogni turno chi ha la partita migliore">+Pt/g</th><th title="Prezzo atteso, o pagato se è già tuo">Cr</th><th></th></tr></thead>
+      <tbody>${gruppo("Già nella tua rosa", miei)}${gruppo("I migliori", top)}${gruppo(`Low cost, fino a ${soglia} crediti`, low)}</tbody>
     </table></div>
-    <p class="nota">+Pt/g: quanto rende in piu' la coppia se ogni giornata schieri il ${chi} con la partita migliore, rispetto a ${esc(g.nome)} sempre in campo. Il costruttore della rosa fa lo stesso conto su tutto il reparto.</p>` : ""}
-  </div>`;
+    <p class="lbl">+Pt/g: quanto rende in più la coppia se ogni giornata schieri il ${chi} con la partita migliore, rispetto a ${esc(g.nome)} sempre in campo. Il costruttore della rosa fa lo stesso conto su tutto il reparto. Il nome apre la scheda del compagno.</p>`) : "";
+
+  return sezione("abb", "calendario", "Griglia abbinamenti",
+    `${gc[0]}ª–${gc[gc.length - 1]}ª giornata${DATA.fantalab?.letto_il ? `, fasce FantaLab del ${dataIt(DATA.fantalab.letto_il).slice(0, 5)}` : ""}`,
+    `<div class="boxes">${solo.join("")}</div>
+    ${carte.length ? `<div class="sez-sub">${ico("persone")}Da alternare con</div>
+    <div class="comps">${carte.map(carta).join("")}
+      <button type="button" class="comp apre" data-espandi="pan-comp" aria-expanded="false" aria-controls="pan-comp">
+        <span class="comp-n">Tutti i compagni</span><span class="comp-d">migliori, low cost e già in rosa, in tabella</span><span class="box-chev">${ico("giu")}</span></button>
+    </div>${tabella}` : `<p class="lbl">Nessun compagno disponibile con cui alternarlo.</p>`}
+    <div class="griglia-box" id="griglia-abb">${griglia(g, scelto)}</div>
+    <p class="leg"><span><i class="c fl-f"></i>facile</span><span><i class="c fl-m"></i>media</span><span><i class="c fl-d"></i>difficile</span>
+      <span><b>ABC</b> in casa, <b>abc</b> fuori</span><span><i class="c fl-f off"></i>gioca l'altro</span><span><i class="c out"></i>infortunato o squalificato</span></p>`);
 }
 
 // Sotto portieri e attaccanti della rosa: quanto copre il reparto, giornata per giornata.
@@ -406,7 +446,7 @@ function mostraAbbinamento(id) {
   const box = document.getElementById("griglia-abb");
   if (box) box.innerHTML = griglia(g, q);
   document.querySelectorAll("table.compagni tr[data-riga]").forEach((tr) => tr.classList.toggle("sel", +tr.dataset.riga === id));
-  document.querySelectorAll("table.compagni [data-abb]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.abb === id)));
+  document.querySelectorAll(".dialog [data-abb]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.abb === id)));
 }
 
 // Quanti slot per ruolo riempire a 1 credito nella modalita' "top + 1 credito":
@@ -597,40 +637,46 @@ function tag(g) {
   return t + tagSalute(g);
 }
 
-// Sezione della scheda: chi e' fermo e quanto, poi lo storico che decide la propensione.
-function schedaInfortuni(g) {
-  const fonti = META.infortuni || {};
-  let h = "";
-  if (g.inf) {
-    const i = g.inf;
-    const pesa = (i.t === "infortunato" || i.t === "squalificato") && i.s > 0 && g.pgs != null;
-    h += `<div class="inf-box ${fuori(g) ? "out" : "dubbio"}">
-      <b>${esc(titoloInf(g).split(". ")[0])}</b>
-      ${i.m ? `<div>${esc(i.m)}</div>` : ""}
-      ${pesa ? `<div class="lbl">Da sano farebbe ${fmt(g.pgs, 2)} punti a giornata: le giornate che salta sono gia' tolte dai punti attesi e dal valore.</div>` : ""}
-      ${i.t === "acciaccato" ? `<div class="lbl">Segnalato solo da Transfermarkt, senza data di rientro: di solito e' un acciacco di pochi giorni, i punti attesi non lo scontano.</div>` : ""}
-    </div>`;
+// Sezione della scheda: come sta adesso, poi la propensione che viene dallo storico. L'elenco
+// degli stop resta chiuso: lo apre il riquadro che li conta.
+function sezioneInfortuni(g) {
+  const fonti = META.infortuni || {}, i = g.inf, f = g.fr;
+  const riquadri = [];
+  let nota = "", elenco = "";
+  if (!i) riquadri.push(box({ v: "Disponibile", l: "adesso", ic: "ok", tono: "ok", cls: "parola" }));
+  else {
+    const out = fuori(g), fermo = i.t === "infortunato" || i.t === "squalificato";
+    const v = i.fs ? "Stagione finita" : i.t === "squalificato" ? "Squalificato" : i.t === "diffidato" ? "Diffidato"
+      : i.t === "acciaccato" ? "Acciaccato" : out ? "Fuori" : "In dubbio";
+    const righe = [fermo && !i.fs ? rientro(i) : "", i.s > 0 ? `salta ${i.s} ${i.s === 1 ? "giornata" : "giornate"}` : "", i.m || ""].filter(Boolean);
+    riquadri.push(box({ v, l: "adesso", ic: out ? "no" : "allerta", tono: out ? "ko" : "med", cls: "parola largo", sub: righe.map(esc).join("<br>") }));
+    if (fermo && i.s > 0 && g.pgs != null) nota = `Da sano farebbe ${fmt(g.pgs, 2)} punti a giornata: le giornate che salta sono già tolte dai punti attesi e dal valore.`;
+    if (i.t === "acciaccato") nota = "Segnalato solo da Transfermarkt, senza data di rientro: di solito è un acciacco di pochi giorni, i punti attesi non lo scontano.";
   }
-  if (!g.fr) {
-    h += `<p class="lbl">Storico infortuni non disponibile: Transfermarkt non lo ha nella rosa di ${esc(nomeSq(g.sq))}.</p>`;
-  } else if (!g.fr.n) {
-    h += `<p class="lbl">Nessuno stop rilevante dalla 23/24.</p>`;
+  const origine = `Indisponibili: SosFanta ${dataIt(fonti.sosfanta)}, Transfermarkt ${dataIt(fonti.transfermarkt)}. Storico Transfermarkt; malattie e stop sotto i 10 giorni senza partite perse non contano.`;
+  if (!f) {
+    riquadri.push(box({ v: "Senza storico", l: "propensione agli infortuni", ic: "polso", cls: "parola largo",
+      sub: `Transfermarkt non lo ha nella rosa di ${esc(nomeSq(g.sq))}` }));
   } else {
-    const f = g.fr;
-    h += `<div class="kv inf-kv">
-        <div><b class="${f.l === "alta" ? "neg" : ""}">${f.l === "alta" ? "Fragile" : f.l === "media" ? "Delicato" : "Bassa"}</b><small>propensione</small></div>
-        <div><b>${f.n}</b><small>stop dalla 23/24${f.mu ? ` · ${f.mu} musc.` : ""}</small></div>
-        <div><b>${fmt(f.gg, 0)}</b><small>giorni fuori / stagione</small></div>
-        <div><b>${fmt(f.pp, 0)}</b><small>partite perse / stagione</small></div>
-      </div>
-      <div style="overflow-x:auto"><table class="inf-st">
-        <thead><tr><th class="l">Stag.</th><th class="l">Infortunio</th><th>Giorni</th><th>Partite</th></tr></thead>
-        <tbody>${f.e.map(([st, t, c, gg, pp]) => `<tr><td class="l">${st}</td><td class="l ${c === "grave" ? "neg" : c === "muscolare" ? "musc" : ""}">${esc(t)}</td><td>${gg ?? "–"}</td><td>${pp}</td></tr>`).join("")}</tbody>
-      </table></div>
-      ${f.n > f.e.length ? `<p class="lbl">e altri ${f.n - f.e.length} stop.</p>` : ""}`;
+    const [nome, tono] = f.l === "alta" ? ["Fragile", "ko"] : f.l === "media" ? ["Delicato", "med"] : ["Bassa", "ok"];
+    riquadri.push(box({ v: nome, l: "propensione agli infortuni", ic: "polso", tono, cls: "parola",
+      title: "È un avviso: lo storico delle presenze è già nella probabilità di voto" }));
+    if (!f.n) riquadri.push(box({ v: "0", l: "stop dalla 23/24", ic: "croce" }));
+    else {
+      riquadri.push(box({ v: f.n, l: "stop dalla 23/24", ic: "croce", apre: "pan-inf", title: "Apri l'elenco degli stop",
+        sub: [f.mu ? `${f.mu} muscolari` : "", f.gr ? `${f.gr} gravi` : ""].filter(Boolean).join(", ") }));
+      riquadri.push(box({ v: fmt(f.gg, 0), l: "giorni fuori a stagione", ic: "orologio" }));
+      riquadri.push(box({ v: fmt(f.pp, 0), l: "partite perse a stagione", ic: "no" }));
+      elenco = pannello("pan-inf", `<div class="scorri"><table class="inf-st">
+          <thead><tr><th class="l">Stag.</th><th class="l">Infortunio</th><th>Giorni</th><th>Partite</th></tr></thead>
+          <tbody>${f.e.map(([st, t, c, gg, pp]) => `<tr><td class="l">${st}</td><td class="l ${c === "grave" ? "neg" : c === "muscolare" ? "musc" : ""}">${esc(t)}</td><td>${gg ?? "–"}</td><td>${pp}</td></tr>`).join("")}</tbody>
+        </table></div>
+        ${f.n > f.e.length ? `<p class="lbl">e altri ${f.n - f.e.length} stop.</p>` : ""}
+        <p class="lbl">${origine} La propensione è un avviso: lo storico delle presenze è già nella probabilità di voto.</p>`);
+    }
   }
-  h += `<p class="lbl fonte">Indisponibili: SosFanta ${esc(fonti.sosfanta || "–")}, Transfermarkt ${esc(fonti.transfermarkt || "–")}. Storico Transfermarkt; malattie e stop sotto i 10 giorni senza partite perse non contano. La propensione e' un avviso: lo storico delle presenze e' gia' nella probabilita' di voto.</p>`;
-  return `<div class="lbl">Infortuni</div>${h}`;
+  return sezione("inf", "croce", "Infortuni", `<span title="${esc(origine)}">aggiornati al ${dataIt(fonti.sosfanta).slice(0, 5)}</span>`,
+    `<div class="boxes">${riquadri.join("")}</div>${nota ? `<p class="nota">${nota}</p>` : ""}${elenco}`);
 }
 
 function renderListone() {
@@ -970,52 +1016,160 @@ function campo(tutti) {
 function chiudi() { $("#overlay").hidden = true; $("#overlay").innerHTML = ""; }
 function apri(html, cls = "") { const o = $("#overlay"); o.innerHTML = `<div class="dialog ${cls}" role="dialog" aria-modal="true">${html}</div>`; o.hidden = false; const f = o.querySelector("input, button"); if (f) f.focus(); }
 
+// Icone della scheda: tratto unico su 24x24, nel colore del testo.
+const ICONE = {
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.2"/>',
+  croce: '<path d="M9.5 3.5h5v6h6v5h-6v6h-5v-6h-6v-5h6z"/>',
+  barre: '<path d="M5 20v-7M12 20V5M19 20V9"/>',
+  calendario: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  sale: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  ok: '<circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.7 2.7L16 9.6"/>',
+  pari: '<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>',
+  no: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+  allerta: '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.3v.2"/>',
+  orologio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+  gemma: '<path d="M6.5 4h11L22 9.5 12 20.5 2 9.5z"/><path d="M2 9.5h20M9 4L7.5 9.5 12 20.5l4.5-11L15 4"/>',
+  cartellino: '<path d="M20.5 13.5l-7 7a1.8 1.8 0 01-2.6 0L3 12.6V3.5h9.1l8.4 8.4a1.2 1.2 0 010 1.6z"/><path d="M7.6 8h.2"/>',
+  stella: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z"/>',
+  pallone: '<circle cx="12" cy="12" r="9"/><path d="M12 8.2l3.4 2.5-1.3 4H9.9l-1.3-4z"/><path d="M12 3v5.2M20.6 9.4l-5.2 1.3M17.2 19.3l-3.1-4.6M6.8 19.3l3.1-4.6M3.4 9.4l5.2 1.3"/>',
+  assist: '<circle cx="5.5" cy="17.5" r="2.2"/><path d="M9 15.5C11.5 11 15 9 20 8.5"/><path d="M16.5 5l4 3.4-3.2 4"/>',
+  rigore: '<path d="M3 13V5h18v8"/><path d="M12 18.4v.2" stroke-width="3.6"/>',
+  cartello: '<rect x="7.5" y="3.5" width="9.5" height="15" rx="1.6" transform="rotate(10 12 11)"/>',
+  porta: '<path d="M3 20V6h18v14"/><path d="M8.5 13l2.5 2.5 4.5-5"/>',
+  rete: '<path d="M3 20V6h18v14"/><circle cx="12" cy="14" r="2.8"/>',
+  scudo: '<path d="M12 3l8 3v6c0 4.6-3.2 7.8-8 9-4.8-1.2-8-4.4-8-9V6z"/>',
+  taratura: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/>',
+  polso: '<path d="M3 12h4l2.5-6 4 12 2.5-6h5"/>',
+  persone: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5a3.2 3.2 0 010 6M18 14.4c1.8.9 3 2.9 3 5.6"/>',
+  bersaglio: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12v.2" stroke-width="3"/>',
+  giu: '<path d="M6 9l6 6 6-6"/>',
+  uguale: '<path d="M5 9h14M5 15h14"/>',
+};
+const ico = (n) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONE[n] || ""}</svg>`;
+
+// Un riquadro: il valore in grande, sotto l'etichetta con la sua icona e un'eventuale riga di
+// dettaglio. `tono` colora tutto il riquadro (ok, med, ko), solo il valore (piu, meno, zero)
+// o lo mette in evidenza (eroe, tot). Con `apre` il riquadro e' un bottone che apre il
+// pannello con quell'id: e' cosi' che tabelle ed elenchi restano chiusi finche' non servono.
+function box({ v, l, ic = "", sub = "", tono = "", cls = "", title = "", apre = "" }) {
+  const c = ["box", tono, cls, apre ? "apre" : ""].filter(Boolean).join(" ");
+  const t = title ? ` title="${esc(title)}"` : "";
+  const dentro = `<b>${v}</b><span class="box-l">${ic ? ico(ic) : ""}<span>${l}</span></span>${sub ? `<span class="box-s">${sub}</span>` : ""}`;
+  return apre
+    ? `<button type="button" class="${c}" data-espandi="${apre}" aria-expanded="false" aria-controls="${apre}"${t}>${dentro}<span class="box-chev">${ico("giu")}</span></button>`
+    : `<div class="${c}"${t}>${dentro}</div>`;
+}
+const barra = (p, tono = "") => `<i class="barra ${tono}" style="--p:${Math.round(Math.max(0, Math.min(1, p || 0)) * 100)}%"></i>`;
+const pannello = (id, html) => `<div class="pannello" id="${id}"><div><div class="pan-in">${html}</div></div></div>`;
+const sezione = (id, icona, titolo, riepilogo, corpo) => `<section class="sez" aria-labelledby="sez-${id}">
+    <header class="sez-h"><span class="sez-ic">${ico(icona)}</span><h4 id="sez-${id}">${titolo}</h4>${riepilogo ? `<span class="sez-r">${riepilogo}</span>` : ""}</header>
+    ${corpo}</section>`;
+const conSegno = (x) => (x < 0 ? "−" : "+") + fmt(Math.abs(x), 2);
+const dataIt = (iso) => (iso ? iso.split("-").reverse().join("/") : "–");
+const tonoQuota = (x) => (x >= 0.75 ? "ok" : x >= 0.5 ? "med" : "ko");
+
+function espandi(btn) {
+  const p = document.getElementById(btn.dataset.espandi); if (!p) return;
+  const aperto = p.classList.toggle("aperto");
+  btn.setAttribute("aria-expanded", String(aperto));
+  // una volta aperto, il pannello deve stare tutto in vista
+  if (aperto) setTimeout(() => p.scrollIntoView({ block: "nearest",
+    behavior: matchMedia("(prefers-reduced-motion: no-preference)").matches ? "smooth" : "auto" }), 240);
+}
+
+// Informazioni: i numeri che decidono, poi come si arriva al fantavoto. I pezzi mostrati
+// sommano al fantavoto: quello che manca e' la taratura misurata sul backtest.
+function sezioneInfo(g) {
+  const por = g.r === "P", r2 = (x) => Math.round((x || 0) * 100) / 100;
+  const delRuolo = DATA.giocatori.filter((x) => x.r === g.r);
+  const pos = 1 + delRuolo.filter((x) => x.pg > g.pg).length;
+  const prezzo = prezzoAtteso(g), diff = Math.round(g.val ?? 0) - prezzo;
+  const affare = `<span class="esito ${diff > 0 ? "ok" : diff < 0 ? "ko" : ""}" title="Valore meno prezzo atteso">affare ${segno(diff)}</span>`;
+  const daSano = g.pgs != null && Math.abs(g.pgs - g.pg) >= 0.005 ? `da sano ${fmt(g.pgs, 2)}` : "";
+  const numeri = [
+    box({ v: fmt(g.pg, 2), l: "punti a giornata", ic: "sale", tono: "eroe", sub: daSano,
+      title: "Probabilità di voto per fantavoto atteso, sulle giornate che restano" }),
+    box({ v: pct(g.pv), l: "prob. di voto", ic: "ok", sub: barra(g.pv, tonoQuota(g.pv)) }),
+    box({ v: pct(g.pt), l: "da titolare", ic: "orologio", sub: `${fmt(g.min, 0)}' a presenza` }),
+    box({ v: fmt(g.val, 0), l: "valore in crediti", ic: "gemma" }),
+    box({ v: prezzo, l: "prezzo atteso", ic: "cartellino", sub: affare }),
+  ];
+  const pezzi = por ? [
+    { l: "voto atteso", x: g.va, ic: "stella", base: true },
+    { l: "porta inviolata", x: g.cs, ic: "porta", title: "Un punto per la probabilità di non subire gol" },
+    { l: "gol subiti", x: -(g.gs || 0), ic: "rete", title: "Gol subiti attesi a partita" },
+  ] : [
+    { l: "voto atteso", x: g.va, ic: "stella", base: true },
+    { l: "gol", x: (g.gol || 0) * 3, ic: "pallone", sub: `${fmt(g.gol, 2)} × 3` },
+    { l: "assist", x: g.ass, ic: "assist" },
+    { l: "rigori", x: (g.rig || 0) * 1.68, ic: "rigore", sub: `tira il ${pct(g.qrig)}`, title: "La quota dei rigori della squadra che calcia lui" },
+    { l: "malus", x: -(g.ma || 0), ic: "cartello", sub: "cartellini", title: "Ammonizioni, espulsioni e autogol attesi" },
+  ];
+  const resto = r2(g.fm) - pezzi.reduce((a, p) => a + r2(p.x), 0);
+  if (Math.abs(resto) >= 0.005) pezzi.push({ l: por ? "taratura e altro" : "taratura", x: resto, ic: "taratura",
+    title: "Lo scarto fra fantavoto previsto e reale misurato sulle stagioni passate" + (por ? ", più rigori parati e cartellini" : "") });
+  const somma = pezzi.map((p) => box({ v: p.base ? fmt(p.x, 2) : conSegno(r2(p.x)), l: p.l, ic: p.ic, sub: p.sub || "", title: p.title || "",
+    tono: p.base ? "" : Math.abs(r2(p.x)) < 0.005 ? "zero" : p.x < 0 ? "meno" : "piu" }));
+  somma.push(box({ v: fmt(g.fm, 2), l: "fantavoto quando gioca", ic: "uguale", tono: "tot" }));
+  if (g.qm) somma.push(box({ v: conSegno(g.qm), l: "mod. difesa", ic: "scudo", tono: g.qm < 0 ? "meno" : "piu",
+    title: "La sua quota del modificatore difesa: si aggiunge al fantavoto nei punti a giornata" }));
+  return sezione("info", "info", "Informazioni", `${pos}° su ${delRuolo.length} ${NOMI_RUOLO[g.r].toLowerCase()} per punti`,
+    `<div class="boxes">${numeri.join("")}</div>
+    <div class="sez-sub">Come nasce il fantavoto</div>
+    <div class="boxes somma">${somma.join("")}</div>`);
+}
+
+// Fantavoti di questa stagione: una colonna per giornata giocata (verde sopra il 6,5, rossa
+// sotto il 5,5, vuota se non ha giocato) e i numeri dell'anno. Le stagioni passate stanno
+// nel pannello che si apre dal riquadro delle presenze.
+function sezioneFantavoti(g) {
+  const giocate = META.giornata || 0, H = 64;
+  const cur = g.st.find((s) => s[0] === META.stagione);
+  const voti = new Map(g.ul);
+  // la scala arriva al fantavoto piu' alto (almeno 8), cosi' anche i portieri riempiono il grafico
+  const tetto = Math.max(8, ...g.ul.map(([, fv]) => fv ?? 0));
+  let colonne = "";
+  for (let gi = 1; gi <= giocate; gi++) {
+    const c = voti.has(gi), fv = voti.get(gi);
+    const cls = !c ? "nd" : fv == null ? "sv" : fv >= 6.5 ? "ok" : fv < 5.5 ? "ko" : "";
+    const h = fv == null ? 0 : Math.round(Math.max(0.06, fv / tetto) * H);
+    colonne += `<span class="col ${cls}" title="${gi}ª giornata: ${!c ? "non ha giocato" : fv == null ? "senza voto" : "fantavoto " + fmt(fv, 1)}">`
+      + `<i style="height:${h}px"><em>${!c ? "–" : fv == null ? "sv" : fmt(fv, 1)}</em></i><small>${gi}</small></span>`;
+  }
+  const n = cur ? cur[2] : 0;
+  const numeri = [box({ v: `${n}/${giocate}`, l: "presenze con voto", ic: "ok", sub: barra(giocate ? n / giocate : 0, tonoQuota(giocate ? n / giocate : 0)),
+    apre: g.st.length ? "pan-st" : "", title: g.st.length ? "Apri le stagioni precedenti" : "" })];
+  if (cur) {
+    numeri.push(box({ v: fmt(cur[3], 2), l: "media voto", ic: "stella" }), box({ v: fmt(cur[4], 2), l: "fantamedia", ic: "sale" }));
+    if (g.r !== "P") numeri.push(box({ v: cur[5], l: "gol", ic: "pallone" }), box({ v: cur[6], l: "assist", ic: "assist" }));
+  }
+  const stagioni = g.st.length ? pannello("pan-st", `<div class="scorri"><table>
+      <thead><tr><th class="l">Stagione</th><th class="l">Squadra</th><th>Pres.</th><th>Media</th><th>FM</th><th>Gol</th><th>Ass.</th></tr></thead>
+      <tbody>${g.st.slice().reverse().map((s) => `<tr><td class="l">${s[0]}</td><td class="l sq">${esc(nomeSq(s[1]))}</td><td>${s[2]}</td><td>${fmt(s[3], 2)}</td><td>${fmt(s[4], 2)}</td><td>${s[5]}</td><td>${s[6]}</td></tr>`).join("")}</tbody>
+    </table></div>`) : `<p class="lbl">Nessuna presenza in Serie A negli ultimi tre anni.</p>`;
+  const grafico = giocate && g.ul.length ? `<div class="box grafico"><span class="box-l">${ico("barre")}<span>fantavoto per giornata, la linea è il 6</span></span>
+      <div class="fv" style="--sei:${Math.round(6 / tetto * H)}px">${colonne}</div></div>` : "";
+  return sezione("fv", "barre", "Fantavoti di questa stagione", `${giocate} ${giocate === 1 ? "giornata giocata" : "giornate giocate"}`,
+    `<div class="fv-riga${giocate > 12 || !grafico ? " lunga" : ""}${giocate > 24 ? " fitta" : ""}">${grafico}<div class="boxes">${numeri.join("")}</div></div>${stagioni}`);
+}
+
 function scheda(id) {
   const g = BY_ID.get(id); if (!g) return;
   if (SCHEDA.id !== id) SCHEDA = { id, abb: null };
-  const por = g.r === "P";
-  const righe = por ? [
-    ["Voto atteso", fmt(g.va, 2)],
-    ["Imbattibilita' (prob. clean sheet)", "+" + fmt(g.cs, 2)],
-    ["Gol subiti attesi", "−" + fmt(g.gs, 2)],
-  ] : [
-    ["Voto atteso", fmt(g.va, 2)],
-    [`Gol attesi (${fmt(g.gol, 2)} x 3)`, "+" + fmt((g.gol || 0) * 3, 2)],
-    [`Assist attesi`, "+" + fmt(g.ass, 2)],
-    [`Rigori (${pct(g.qrig)} dei rigori della squadra)`, "+" + fmt((g.rig || 0) * 1.68, 2)],
-    ["Malus attesi (cartellini, autogol)", "−" + fmt(g.ma, 2)],
-  ];
-  const ul = g.ul.map(([gi, fv]) => `<span class="${fv == null ? "sv" : ""}" style="height:${fv == null ? 8 : Math.max(6, Math.min(100, (fv / 16) * 100))}%" title="Giornata ${gi}: ${fv == null ? "senza voto" : fv}"><em>${fv == null ? "sv" : fmt(fv, 1)}</em></span>`).join("");
+  const azioni = inAsta()
+    ? (OWNER.has(g.id) ? `<span class="lbl">Preso da ${esc(S.asta.squadre[OWNER.get(g.id)].nome)} a ${S.asta.squadre[OWNER.get(g.id)].rosa[g.id]} crediti</span>` : `<button class="btn primary" data-chiama="${g.id}">Chiama all'asta</button>`)
+    : `<button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti fra i disponibili" : "Escludi"}</button>
+      <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>`;
   apri(`
-    <div class="row" style="justify-content:space-between;align-items:flex-start">
-      <div><h3><span class="role ${g.r}" style="vertical-align:4px">${g.r}</span> ${dotFascia(g)}${esc(g.nome)}${tag(g)}</h3>
-        <div class="sub">${esc(nomeSq(g.sq))} · quotazione ${fmt(g.qa, 0)} (iniziale ${fmt(g.qi, 0)}) · FVM ${fmt(g.fvm, 0)}</div></div>
+    <header class="sch-top">
+      <div class="sch-chi">
+        <h3><span class="role ${g.r}">${g.r}</span>${dotFascia(g)}<span class="sch-nome">${esc(g.nome)}</span>${tag(g)}</h3>
+        <div class="sch-meta"><span class="mt sq"><b>${esc(nomeSq(g.sq))}</b></span><span class="mt">Quotazione <b>${fmt(g.qa, 0)}</b>, iniziale ${fmt(g.qi, 0)}</span><span class="mt">FVM <b>${fmt(g.fvm, 0)}</b></span>${g.fa == null ? "" : `<span class="mt" title="${g.fi ? "Fascia stimata da noi: SOS Fanta lo segna fra gli infortunati" : "Fascia secondo la guida all'asta di SOS Fanta"}">Fascia <b>${esc(META.fasce[g.fa])}</b>${g.fi ? ", stimata" : ""}</span>`}</div>
+      </div>
       <button class="ic" data-close aria-label="Chiudi">✕</button>
-    </div>
-    <div class="kv">
-      <div><b>${fmt(g.pg, 2)}</b><small>punti a giornata</small></div>
-      <div><b>${pct(g.pv)}</b><small>prob. di voto</small></div>
-      <div><b>${fmt(g.val, 0)}</b><small>valore (crediti)</small></div>
-      <div><b>${prezzoAtteso(g)}</b><small>prezzo atteso</small></div>
-    </div>
-    <div class="breakdown">
-      ${righe.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("")}
-      <div class="tot"><span>Fantavoto atteso quando gioca</span><span>${fmt(g.fm, 2)}</span></div>
-      ${g.qm ? `<div><span>Quota del modificatore difesa</span><b>${g.qm > 0 ? "+" : ""}${fmt(g.qm, 2)}</b></div>` : ""}
-      <div><span>Da titolare / minuti a presenza</span><b>${pct(g.pt)} · ${fmt(g.min, 0)}'</b></div>
-    </div>
-    ${ul ? `<div class="lbl">Fantavoti di questa stagione</div><div class="spark">${ul}</div>` : ""}
-    ${schedaInfortuni(g)}
-    ${sezioneAlternanza(g)}
-    <div style="overflow-x:auto"><table>
-      <thead><tr><th class="l">Stagione</th><th class="l">Squadra</th><th>Pres.</th><th>Media</th><th>FM</th><th>Gol</th><th>Ass.</th></tr></thead>
-      <tbody>${g.st.slice().reverse().map((s) => `<tr><td class="l">${s[0]}</td><td class="l sq">${esc(nomeSq(s[1]))}</td><td>${s[2]}</td><td>${fmt(s[3], 2)}</td><td>${fmt(s[4], 2)}</td><td>${s[5]}</td><td>${s[6]}</td></tr>`).join("") || '<tr><td colspan="7" class="l">Nessuna presenza in Serie A negli ultimi tre anni.</td></tr>'}</tbody>
-    </table></div>
-    <div class="actions">${inAsta()
-      ? (OWNER.has(g.id) ? `<span class="lbl">Preso da ${esc(S.asta.squadre[OWNER.get(g.id)].nome)} a ${S.asta.squadre[OWNER.get(g.id)].rosa[g.id]} crediti</span>` : `<button class="btn primary" data-chiama="${g.id}">Chiama all'asta</button>`)
-      : `<button class="btn" data-taken="${g.id}">${S.presi[g.id] ? "Rimetti fra i disponibili" : "Escludi"}</button>
-      <button class="btn primary" data-add="${g.id}">${mia()[g.id] != null ? "Togli dalla mia rosa" : "Metti nella mia rosa"}</button>`}
-    </div>`, PER_GIORNATA[g.r] && g.v ? "larga" : "");
+    </header>
+    <div class="sch-corpo">${sezioneInfo(g)}${sezioneInfortuni(g)}${sezioneFantavoti(g)}${sezioneAlternanza(g)}</div>
+    <footer class="sch-azioni">${azioni}</footer>`, `scheda r-${g.r}`);
 }
 
 function chiediPrezzo(id) {
@@ -1559,6 +1713,7 @@ document.addEventListener("click", (e) => {
   if (!t) return;
   const d = t.dataset;
   if (d.close !== undefined) return chiudi();
+  if (d.espandi) return espandi(t);
   if (d.open) return scheda(+d.open);
   if (d.abb) return mostraAbbinamento(+d.abb);
   if (d.chiama) { chiudi(); return chiama(+d.chiama); }
