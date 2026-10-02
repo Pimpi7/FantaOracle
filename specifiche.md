@@ -164,11 +164,11 @@ nessuno, e chi comincia). Da lì la testata diventa la fascia scura
 "In asta" e compare la sezione **Asta**.
 
 La pagina è su due colonne che scorrono ognuna per conto suo: a sinistra il
-giocatore chiamato, sotto "Cosa fare adesso" e poi l'andamento del mercato; a
+giocatore chiamato, sotto l'andamento del mercato e poi "Cosa fare adesso"; a
 destra le squadre, le occasioni e gli ultimi acquisti. Su telefono si impilano in
 quest'ordine. Nel dettaglio:
 
-- **Cosa fare adesso**, sotto il giocatore chiamato. È il consiglio che segue
+- **Cosa fare adesso**, sotto l'andamento del mercato. È il consiglio che segue
   l'asta: si rifà a ogni acquisto, di chiunque, a partire dalla rosa reale e dai
   crediti rimasti. Un riquadro per ruolo dice quanti crediti la rosa migliore
   ancora possibile mette in quel ruolo (*da spendere*, con gli slot liberi),
