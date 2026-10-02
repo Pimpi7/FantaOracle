@@ -5,10 +5,11 @@ function renderListone() {
   const l = filtrati();
   const { pos, tot } = posizioni();
   const m = mia();
-  const nSugg = DATA.giocatori.filter(suggerito).length;
-  $("#count").textContent = `${l.length} giocatori${S.nascondiSugg ? ` · ${nSugg} suggeriti nascosti` : ""}`;
-  $("#hide-sugg").checked = !!S.nascondiSugg;
-  $("#hide-sugg-lbl").textContent = `Nascondi i suggeriti (${nSugg})`;
+  const nStrat = DATA.giocatori.filter(strategia).length;
+  $("#count").textContent = `${l.length} giocatori${strategiaNascosta() ? ` · ${nStrat} della tua strategia nascosti` : ""}`;
+  $("#hide-strat").checked = !!S.nascondiStrategia;
+  $("#hide-strat").closest("label").hidden = inAsta();   // in asta l'interruttore non serve
+  $("#hide-strat-lbl").textContent = `Nascondi la mia strategia (${nStrat})`;
   const nEscl = Object.keys(S.presi).length;
   $("#hide-lbl").textContent = inAsta() ? `Nascondi i presi (${nEscl})` : nEscl ? `Nascondi gli esclusi (${nEscl})` : "Nascondi gli esclusi";
   const out = [];
@@ -36,7 +37,7 @@ function renderListone() {
       <td class="${aff > 0 ? "pos" : aff < 0 ? "neg" : ""}">${segno(aff)}</td>
       <td class="act">${azioni}</td></tr>`);
   }
-  $("#rows").innerHTML = out.join("") || '<tr><td colspan="13" class="l loading">Nessun giocatore con questi filtri.</td></tr>';
+  $("#rows").innerHTML = out.join("") || `<tr><td colspan="13" class="l loading">Nessun giocatore con questi filtri${strategiaNascosta() ? " (la tua strategia e' nascosta)" : ""}.</td></tr>`;
   document.querySelectorAll("th[data-k]").forEach((th) => {
     th.classList.toggle("sorted", th.dataset.k === S.sort.k);
     th.classList.toggle("asc", th.dataset.k === S.sort.k && S.sort.dir === 1);

@@ -21,7 +21,7 @@ const S = {
   f: { q: "", r: "", sq: "", pmax: null, hide: false, salute: "" },
   sort: { k: "pg", dir: -1 },
   aperte: {},                        // alternative aperte per slot suggerito
-  nascondiSugg: false,               // listone senza i giocatori evidenziati dall'algoritmo
+  nascondiStrategia: false,          // listone senza la mia strategia: i miei presi e i suggeriti dall'algoritmo (pre-asta)
   rosaChiusa: false,                 // pannello della rosa ridotto a una barra (solo da computer)
   asta: null,                        // asta in corso o sospesa
   archivio: [],                      // aste concluse, con le rose finali
@@ -31,13 +31,13 @@ let SUGG = { ids: new Set(), lista: [], forza: 0, costo: 0, errore: null, alt: {
 
 function salva() {
   try { localStorage.setItem(KEY, JSON.stringify({ piano: S.piano, piani: S.piani, presi: S.presi,
-    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, nSq: S.nSq, cred: S.cred, asta: S.asta, archivio: S.archivio, campoChiuso: !!S.campoChiuso, nascondiSugg: !!S.nascondiSugg, rosaChiusa: !!S.rosaChiusa })); } catch (e) { /* storage non disponibile */ }
+    margine: S.margine, esenzioneP: S.esenzioneP, tetto: S.tetto, modo: S.modo, budgetRuolo: S.budgetRuolo, nSq: S.nSq, cred: S.cred, asta: S.asta, archivio: S.archivio, campoChiuso: !!S.campoChiuso, nascondiStrategia: !!S.nascondiStrategia, rosaChiusa: !!S.rosaChiusa })); } catch (e) { /* storage non disponibile */ }
 }
 function carica() {
   try {
     const x = JSON.parse(localStorage.getItem(KEY) || "null");
     if (x) Object.assign(S, { piano: x.piano || "A", piani: Object.assign({ A: {}, B: {}, C: {} }, x.piani || {}),
-      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, nSq: x.nSq || null, cred: x.cred || null, asta: x.asta || null, archivio: x.archivio || [], campoChiuso: !!x.campoChiuso, nascondiSugg: !!x.nascondiSugg, rosaChiusa: !!x.rosaChiusa });
+      presi: x.presi || {}, margine: x.margine ?? 0.10, esenzioneP: x.esenzioneP ?? true, tetto: x.tetto ?? 3, modo: x.modo || "omogenea", budgetRuolo: x.budgetRuolo || null, nSq: x.nSq || null, cred: x.cred || null, asta: x.asta || null, archivio: x.archivio || [], campoChiuso: !!x.campoChiuso, nascondiStrategia: !!x.nascondiStrategia, rosaChiusa: !!x.rosaChiusa });
   } catch (e) { /* storage non disponibile */ }
 }
 // In asta "la mia rosa" e' la rosa reale, non piu' un piano.

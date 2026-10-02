@@ -56,7 +56,7 @@ Tabelle ed elenchi (gli stop dalla 23/24, le stagioni passate, tutti i compagni)
 
 Aggiungi chi vuoi, al prezzo che pensi di pagarlo, con il **+** nel listone o dalla scheda. Il tool riempie gli slot vuoti con la combinazione più forte che sta nel budget che ti resta, la evidenzia in giallo e la ricalcola a ogni tuo cambiamento. Per ogni suggerito trovi le alternative (**Altri**) e puoi sceglierlo con un clic.
 
-Vuoi guardare il listone senza farti influenzare? L'interruttore **Nascondi i suggeriti** toglie i giocatori evidenziati in giallo (i tuoi restano). E con la freccia in alto a sinistra di *La mia rosa* comprimi il pannello in una barra stretta: il listone prende tutta la larghezza, un clic sulla barra e la rosa torna. Entrambe le scelte restano salvate nel browser.
+Vuoi guardare il listone prima dell'asta senza farti influenzare? L'interruttore **Nascondi la mia strategia** toglie i giocatori che hai già in rosa e quelli evidenziati in giallo dall'algoritmo: restano tutti gli altri (con l'asta in corso non cambia nulla e l'interruttore sparisce). E con la freccia in alto a sinistra di *La mia rosa* comprimi il pannello in una barra stretta: il listone prende tutta la larghezza, un clic sulla barra e la rosa torna. Entrambe le scelte restano salvate nel browser.
 
 Rispetta sempre la rosa 3-8-8-6, i 500 crediti e il limite di giocatori della stessa squadra reale. In cima trovi la **formazione tipo** disegnata sul campo, nel modulo che rende di più.
 

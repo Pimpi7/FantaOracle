@@ -107,7 +107,7 @@ document.addEventListener("change", (e) => {
   if (id === "esenzione") { S.esenzioneP = e.target.checked; aggiorna(); }
   if (id === "sq") { S.f.sq = e.target.value; renderListone(); }
   if (id === "hide") { S.f.hide = e.target.checked; renderListone(); }
-  if (id === "hide-sugg") { S.nascondiSugg = e.target.checked; salva(); renderListone(); }
+  if (id === "hide-strat") { S.nascondiStrategia = e.target.checked; salva(); renderListone(); }
   if (id === "salute") { S.f.salute = e.target.value; renderListone(); }
 });
 $("#q").addEventListener("input", (e) => { S.f.q = e.target.value; renderListone(); });

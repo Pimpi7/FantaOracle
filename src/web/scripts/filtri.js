@@ -28,6 +28,10 @@ function posizioni() {
 
 // Evidenziato dall'algoritmo: suggerito e ne' tuo ne' escluso (chi e' tuo o escluso ha il suo colore).
 const suggerito = (g) => SUGG.ids.has(g.id) && mia()[g.id] == null && !S.presi[g.id];
+// La mia strategia: chi ho gia' in rosa (o nel piano) e chi l'algoritmo mi suggerisce per il resto.
+const strategia = (g) => mia()[g.id] != null || suggerito(g);
+// La modalita' e' per il listone prima dell'asta: con l'asta in corso non si applica.
+const strategiaNascosta = () => S.nascondiStrategia && !inAsta();
 
 function filtrati() {
   const q = S.f.q.trim().toLowerCase();
@@ -35,7 +39,7 @@ function filtrati() {
     (!S.f.r || g.r === S.f.r) && (!S.f.sq || g.sq === S.f.sq) &&
     (!q || g.nome.toLowerCase().includes(q)) &&
     (!S.f.pmax || prezzoAtteso(g) <= S.f.pmax) &&
-    (!S.f.hide || !S.presi[g.id]) && (!S.nascondiSugg || !suggerito(g)) && filtroSalute(g, S.f.salute));
+    (!S.f.hide || !S.presi[g.id]) && (!strategiaNascosta() || !strategia(g)) && filtroSalute(g, S.f.salute));
   l.sort(confronta);
   return l;
 }
